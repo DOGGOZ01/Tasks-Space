@@ -1,0 +1,110 @@
+.page-loading {
+  display: flex;
+  place-content: center;
+  place-items: center;
+  flex-grow: 1;
+  font-family: var(--display);
+  color: var(--text-h);
+}
+
+.auth-page {
+  display: flex;
+  place-content: center;
+  place-items: center;
+  flex-grow: 1;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 15% 20%, var(--accent-bg), transparent 45%),
+    var(--bg);
+}
+
+.auth-form {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 32px;
+  border: 2px solid var(--text-h);
+  border-radius: 2px;
+  background: var(--bg-alt);
+  box-shadow: 6px 6px 0 var(--shadow-ink);
+}
+
+.auth-form h1 {
+  margin: 0 0 4px;
+  font-size: 28px;
+}
+
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.auth-form input {
+  padding: 9px 10px;
+  border: 2px solid var(--border);
+  border-radius: 2px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.auth-form button {
+  margin-top: 4px;
+  padding: 11px;
+  border: 2px solid var(--text-h);
+  border-radius: 2px;
+  clip-path: var(--notch);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  filter: drop-shadow(3px 3px 0 var(--shadow-ink));
+  transition: transform 0.1s ease, filter 0.1s ease;
+}
+
+.auth-form button:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  filter: drop-shadow(4px 4px 0 var(--shadow-ink));
+}
+
+.auth-form button:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  filter: drop-shadow(1px 1px 0 var(--shadow-ink));
+}
+
+.auth-form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+  filter: none;
+}
+
+.auth-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 14px;
+}
+
+.auth-form p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.auth-form a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 2px solid var(--accent);
+}
+
+.auth-form a:hover {
+  border-bottom-style: dotted;
+}

@@ -1,0 +1,46 @@
+# Claude Code project settings/config -- local tooling, not part of the app
+.claude/
+
+# Old pre-rewrite app, kept locally for reference only
+taskTracker/
+
+# Environment/secrets (never commit real values -- see .env.example for the
+# variables a fresh checkout needs to set)
+.env
+.env.*
+!.env.example
+
+# Node / Vite (frontend)
+node_modules/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Python / Django (backend)
+__pycache__/
+*.pyc
+venv/
+db.sqlite3
+media/
+staticfiles/
+
+# Logs
+*.log
+logs/
+
+# Editors / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

@@ -1,0 +1,15 @@
+import { Container } from './Container'
+import { CustomHtmlBlock } from './blocks/CustomHtmlBlock'
+import { DailyTaskListBlock } from './blocks/DailyTaskListBlock'
+import { ImageBlock } from './blocks/ImageBlock'
+import { NoteBlock } from './blocks/NoteBlock'
+import { WeeklyTaskListBlock } from './blocks/WeeklyTaskListBlock'
+
+export const resolver = {
+  Container,
+  NoteBlock,
+  DailyTaskListBlock,
+  WeeklyTaskListBlock,
+  ImageBlock,
+  CustomHtmlBlock,
+}
