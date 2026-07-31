@@ -158,6 +158,9 @@ MAX_TASK_TEXT_LENGTH = 500
 MAX_TASKS_PER_DATE = 200
 MAX_TASKS_JSON_BYTES = 500_000
 
+MAX_SAVED_DESIGN_NAME_LENGTH = 80
+MAX_SAVED_DESIGNS_PER_USER = 30
+
 # WARNING -- SECURITY: with this on, <script> tags in a Custom HTML/CSS
 # block's markup are no longer stripped, and the block's preview iframe is
 # granted the "allow-scripts" sandbox permission, so that script actually

@@ -4,8 +4,11 @@ import json
 from django.conf import settings
 from rest_framework import serializers
 
-from .models import Page, TaskBoard, UploadedImage
+from .models import Page, SavedDesign, TaskBoard, UploadedImage
 from .sanitize import sanitize_board_background, sanitize_header_style, sanitize_layout
+
+SAVED_DESIGN_KIND = "task-tracker-board-design"
+SAVED_DESIGN_VERSION = 1
 
 
 def _clean_layout(value, field_label):
@@ -90,6 +93,58 @@ class TaskBoardSerializer(serializers.ModelSerializer):
 
     def validate_weekly_tasks(self, value):
         return _clean_tasks_by_date(value)
+
+
+def _clean_design_payload(value):
+    if not isinstance(value, dict):
+        raise serializers.ValidationError("Design must be a JSON object.")
+
+    size = len(json.dumps(value))
+    if size > settings.MAX_LAYOUT_JSON_BYTES:
+        raise serializers.ValidationError("Design is too large.")
+
+    layout = value.get("layout")
+    if not isinstance(layout, dict):
+        raise serializers.ValidationError("Design is missing a layout.")
+
+    device = value.get("device")
+    if device not in ("desktop", "mobile"):
+        device = "desktop"
+
+    background = value.get("background")
+    header_style = value.get("headerStyle")
+
+    return {
+        "kind": SAVED_DESIGN_KIND,
+        "version": SAVED_DESIGN_VERSION,
+        "device": device,
+        "layout": sanitize_layout(layout),
+        "background": sanitize_board_background(background if isinstance(background, dict) else {}),
+        "headerStyle": sanitize_header_style(header_style if isinstance(header_style, dict) else {}),
+    }
+
+
+class SavedDesignSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SavedDesign
+        fields = ("id", "name", "design", "created_at")
+        read_only_fields = ("id", "created_at")
+
+    def validate_name(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("Name can't be empty.")
+        return value[: settings.MAX_SAVED_DESIGN_NAME_LENGTH]
+
+    def validate_design(self, value):
+        return _clean_design_payload(value)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        design = data.get("design")
+        if isinstance(design, dict):
+            data["design"] = _clean_design_payload(design)
+        return data
 
 
 class UploadedImageSerializer(serializers.ModelSerializer):

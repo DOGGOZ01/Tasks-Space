@@ -7,11 +7,13 @@ import { DailyTaskListBlock } from './blocks/DailyTaskListBlock'
 import { clamp } from './geometry'
 import { ImageBlock } from './blocks/ImageBlock'
 import { NoteBlock } from './blocks/NoteBlock'
+import { OverdueTaskListBlock } from './blocks/OverdueTaskListBlock'
 import { WeeklyTaskListBlock } from './blocks/WeeklyTaskListBlock'
 
 const PALETTE: Array<{ label: string; render: () => ReactElement }> = [
   { label: 'Daily tasks', render: () => <DailyTaskListBlock /> },
   { label: 'Weekly tasks', render: () => <WeeklyTaskListBlock /> },
+  { label: 'Overdue', render: () => <OverdueTaskListBlock /> },
   { label: 'Note', render: () => <NoteBlock /> },
   { label: 'Image', render: () => <ImageBlock /> },
   { label: 'Custom HTML', render: () => <CustomHtmlBlock /> },

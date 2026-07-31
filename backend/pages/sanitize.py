@@ -60,7 +60,7 @@ BACKGROUND_CSS_PROPERTIES = [
 _background_css_sanitizer = CSSSanitizer(allowed_css_properties=BACKGROUND_CSS_PROPERTIES)
 
 HEX_COLOR_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
-SAFE_URL_RE = re.compile(r"^(https://|/)", re.IGNORECASE)
+SAFE_URL_RE = re.compile(r"^(https?://|/)", re.IGNORECASE)
 
 _STYLE_TAG_RE = re.compile(r"(<style\b[^>]*>)(.*?)(</style>)", re.IGNORECASE | re.DOTALL)
 _UNSAFE_CSS_VALUE_RE = re.compile(r"expression\(|-moz-binding|behavior\s*:|javascript:", re.IGNORECASE)

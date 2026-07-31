@@ -54,13 +54,15 @@ export function buildBoardDesignExport(
   layout: SerializedNodes,
   background: BoardBackground,
   headerStyle: HeaderStyle,
+  options: { stripImages?: boolean } = {},
 ): BoardDesignExport {
+  const stripImages = options.stripImages ?? true
   return {
     kind: EXPORT_KIND,
     version: EXPORT_VERSION,
     device,
-    layout: stripImageUrls(layout),
-    background: stripBackgroundImage(background),
+    layout: stripImages ? stripImageUrls(layout) : (JSON.parse(JSON.stringify(layout ?? {})) as SerializedNodes),
+    background: stripImages ? stripBackgroundImage(background) : { ...(background ?? {}) },
     headerStyle: headerStyle ?? {},
   }
 }

@@ -24,6 +24,8 @@ import { GRID_SIZE } from './geometry'
 import { DEFAULT_HEADER_STYLE, HEADER_STYLE_TARGETS } from './headerStyle'
 import type { HeaderStyle, HeaderStyleTarget } from './headerStyle'
 import { resolver } from './resolver'
+import { applySavedDesign, createSavedDesign, deleteSavedDesign, listSavedDesigns } from './savedDesigns'
+import type { SavedDesignSummary } from './savedDesigns'
 import { TaskBoardProvider } from './TaskBoardContext'
 import { Toolbox } from './Toolbox'
 import { useIsMobileDevice } from './useIsMobileDevice'
@@ -202,6 +204,7 @@ function ImportDesignButton() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [pending, setPending] = useState<BoardDesignExport | null>(null)
+  const [pendingName, setPendingName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null)
 
@@ -225,6 +228,7 @@ function ImportDesignButton() {
     reader.onload = () => {
       try {
         setPending(parseBoardDesignImport(String(reader.result)))
+        setPendingName(file.name.replace(/\.json$/i, '').trim() || 'Imported design')
         setError(null)
       } catch (err) {
         setPending(null)
@@ -251,6 +255,7 @@ function ImportDesignButton() {
     actions.deserialize(pending.layout)
     setBackground(pending.background)
     setHeaderStyle(pending.headerStyle)
+    createSavedDesign(pendingName, pending).catch(() => {})
     close()
   }
 
@@ -298,6 +303,253 @@ function ImportDesignButton() {
                     </button>
                     <button type="button" className="confirm-popover-danger" onClick={confirmImport}>
                       Import
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </>,
+          document.body,
+        )}
+    </>
+  )
+}
+
+type DesignsScreen =
+  | { kind: 'list' }
+  | { kind: 'save' }
+  | { kind: 'confirm-use'; item: SavedDesignSummary }
+  | { kind: 'confirm-delete'; item: SavedDesignSummary }
+
+function DesignsButton() {
+  const { actions, query } = useEditor()
+  const { device, background, headerStyle, setBackground, setHeaderStyle } = useBoardUi()
+  const { anchor, toggleRef, toggle, close } = useAnchoredPanel(TRANSFER_POPOVER_WIDTH)
+  const [designs, setDesigns] = useState<SavedDesignSummary[] | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [screen, setScreen] = useState<DesignsScreen>({ kind: 'list' })
+  const [saveName, setSaveName] = useState('')
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [applying, setApplying] = useState(false)
+  const [applyError, setApplyError] = useState<string | null>(null)
+  const [flash, setFlash] = useState<string | null>(null)
+  const flashTimeoutRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (flashTimeoutRef.current) window.clearTimeout(flashTimeoutRef.current)
+    }
+  }, [])
+
+  function showFlash(message: string) {
+    setFlash(message)
+    if (flashTimeoutRef.current) window.clearTimeout(flashTimeoutRef.current)
+    flashTimeoutRef.current = window.setTimeout(() => setFlash(null), 2200)
+  }
+
+  function open() {
+    setScreen({ kind: 'list' })
+    if (!anchor) {
+      setDesigns(null)
+      setLoadError(null)
+      listSavedDesigns()
+        .then(setDesigns)
+        .catch(() => setLoadError('Could not load saved designs.'))
+    }
+    toggle()
+  }
+
+  function openSaveScreen() {
+    setSaveName('')
+    setSaveError(null)
+    setScreen({ kind: 'save' })
+  }
+
+  function handleSave() {
+    const trimmed = saveName.trim()
+    if (!trimmed) {
+      setSaveError("Name can't be empty.")
+      return
+    }
+    const layout = JSON.parse(query.serialize()) as SerializedNodes
+    const design = buildBoardDesignExport(device, layout, background, headerStyle, { stripImages: false })
+    setSaving(true)
+    setSaveError(null)
+    createSavedDesign(trimmed, design)
+      .then((created) => {
+        setDesigns((prev) => (prev ? [created, ...prev] : [created]))
+        setScreen({ kind: 'list' })
+        showFlash(`Design saved: "${created.name}"`)
+      })
+      .catch(() => setSaveError('Could not save that design. Try again?'))
+      .finally(() => setSaving(false))
+  }
+
+  function applyDesign(item: SavedDesignSummary) {
+    setApplying(true)
+    setApplyError(null)
+    applySavedDesign(item.id)
+      .then((design) => {
+        actions.deserialize(design.layout)
+        setBackground(design.background)
+        setHeaderStyle(design.headerStyle)
+        close()
+      })
+      .catch(() => setApplyError('Could not apply that design. Try again?'))
+      .finally(() => setApplying(false))
+  }
+
+  function removeDesign(item: SavedDesignSummary) {
+    deleteSavedDesign(item.id)
+      .then(() => setDesigns((prev) => prev?.filter((d) => d.id !== item.id) ?? prev))
+      .catch(() => setLoadError('Could not delete that design.'))
+    setScreen({ kind: 'list' })
+  }
+
+  return (
+    <>
+      <button
+        ref={toggleRef}
+        type="button"
+        className="board-bg-toggle"
+        onClick={open}
+        aria-pressed={anchor != null}
+        title="Save, use, or delete board designs"
+      >
+        Designs
+      </button>
+      {anchor &&
+        createPortal(
+          <>
+            <div className="block-style-backdrop" onClick={close} />
+            <div
+              className="confirm-popover saved-designs-popover"
+              style={{ top: anchor.top, left: anchor.left, width: TRANSFER_POPOVER_WIDTH }}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              {screen.kind === 'save' && (
+                <>
+                  <p>Save current design</p>
+                  <input
+                    type="text"
+                    className="confirm-popover-input"
+                    value={saveName}
+                    onChange={(e) => setSaveName(e.target.value)}
+                    placeholder="Design name"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSave()
+                    }}
+                  />
+                  {saveError && <p className="confirm-popover-hint">{saveError}</p>}
+                  <div className="confirm-popover-actions">
+                    <button type="button" onClick={() => setScreen({ kind: 'list' })}>
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="confirm-popover-primary"
+                      onClick={handleSave}
+                      disabled={saving}
+                    >
+                      {saving ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {screen.kind === 'confirm-use' && (
+                <>
+                  <p>Replace this board's design with "{screen.item.name}"?</p>
+                  <p className="confirm-popover-hint">
+                    Overwrites the current layout, background, and button styling.
+                  </p>
+                  {applyError && <p className="confirm-popover-hint">{applyError}</p>}
+                  <div className="confirm-popover-actions">
+                    <button
+                      type="button"
+                      onClick={() => setScreen({ kind: 'list' })}
+                      disabled={applying}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="confirm-popover-danger"
+                      onClick={() => applyDesign(screen.item)}
+                      disabled={applying}
+                    >
+                      {applying ? 'Applying...' : 'Use'}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {screen.kind === 'confirm-delete' && (
+                <>
+                  <p>Delete saved design "{screen.item.name}"?</p>
+                  <p className="confirm-popover-hint">This can't be undone.</p>
+                  <div className="confirm-popover-actions">
+                    <button type="button" onClick={() => setScreen({ kind: 'list' })}>
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="confirm-popover-danger"
+                      onClick={() => removeDesign(screen.item)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {screen.kind === 'list' && (
+                <>
+                  <p>Designs</p>
+                  {flash && <p className="confirm-popover-flash">{flash}</p>}
+                  <button type="button" className="design-menu-item" onClick={openSaveScreen}>
+                    Save current design...
+                  </button>
+                  {designs === null && !loadError && <p className="confirm-popover-hint">Loading...</p>}
+                  {loadError && <p className="confirm-popover-hint">{loadError}</p>}
+                  {designs && designs.length === 0 && (
+                    <p className="confirm-popover-hint">No saved designs yet.</p>
+                  )}
+                  {designs && designs.length > 0 && (
+                    <ul className="saved-designs-list">
+                      {designs.map((item) => (
+                        <li key={item.id}>
+                          <span className="saved-designs-item-name" title={item.name}>
+                            {item.name}
+                          </span>
+                          <div className="saved-designs-item-actions">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setApplyError(null)
+                                setScreen({ kind: 'confirm-use', item })
+                              }}
+                            >
+                              Use
+                            </button>
+                            <button
+                              type="button"
+                              className="saved-designs-item-delete"
+                              aria-label={`Delete "${item.name}"`}
+                              onClick={() => setScreen({ kind: 'confirm-delete', item })}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="confirm-popover-actions">
+                    <button type="button" onClick={close}>
+                      Close
                     </button>
                   </div>
                 </>
@@ -529,6 +781,7 @@ function BoardChrome({
         <div className="board-topbar-group">
           {editMode && <ExportDesignButton />}
           {editMode && <ImportDesignButton />}
+          {editMode && <DesignsButton />}
           {editMode && !isRealMobile && <DeviceToggle />}
           {editMode && isRealMobile && <MobileDesignMenu />}
           {editMode && !isRealMobile && <BackgroundToggle />}

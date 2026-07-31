@@ -3,6 +3,8 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 
 def user_upload_path(instance, filename):
@@ -24,6 +26,21 @@ class Page(models.Model):
         return f"Page(owner={self.owner_id})"
 
 
+class SavedDesign(models.Model):
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="saved_designs"
+    )
+    name = models.CharField(max_length=80)
+    design = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"SavedDesign({self.pk}, owner={self.owner_id})"
+
+
 class TaskBoard(models.Model):
     owner = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="task_board"
@@ -40,6 +57,17 @@ class UploadedImage(models.Model):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="uploaded_images"
     )
+    # An image belongs to exactly one owning surface: the live board (page) or
+    # one specific saved snapshot (saved_design). Never both -- "Save design"
+    # and "Use design" duplicate the file across surfaces rather than share a
+    # row, so deleting one design can never blow away another design's (or
+    # the live board's) images.
+    page = models.ForeignKey(
+        Page, null=True, blank=True, on_delete=models.CASCADE, related_name="images"
+    )
+    saved_design = models.ForeignKey(
+        SavedDesign, null=True, blank=True, on_delete=models.CASCADE, related_name="images"
+    )
     image = models.ImageField(upload_to=user_upload_path)
     content_type = models.CharField(max_length=32)
     width = models.PositiveIntegerField()
@@ -48,3 +76,9 @@ class UploadedImage(models.Model):
 
     def __str__(self):
         return f"UploadedImage({self.pk}, owner={self.owner_id})"
+
+
+@receiver(post_delete, sender=UploadedImage)
+def _delete_uploaded_image_file(sender, instance, **kwargs):
+    if instance.image:
+        instance.image.delete(save=False)
