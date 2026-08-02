@@ -47,6 +47,20 @@ const LAYOUT_FIELD: Record<DeviceMode, string> = {
   mobile: 'mobile_layout',
 }
 
+const BLANK_LAYOUT: SerializedNodes = {
+  ROOT: {
+    type: { resolvedName: 'Container' },
+    isCanvas: true,
+    props: {},
+    displayName: 'Container',
+    custom: {},
+    hidden: false,
+    nodes: [],
+    linkedNodes: {},
+    parent: null,
+  },
+}
+
 function BoardLoader({ layout, onLoaded }: { layout: SerializedNodes; onLoaded: () => void }) {
   const { actions } = useEditor()
 
@@ -320,10 +334,12 @@ type DesignsScreen =
   | { kind: 'save' }
   | { kind: 'confirm-use'; item: SavedDesignSummary }
   | { kind: 'confirm-delete'; item: SavedDesignSummary }
+  | { kind: 'confirm-revert' }
 
 function DesignsButton() {
   const { actions, query } = useEditor()
-  const { device, background, headerStyle, setBackground, setHeaderStyle } = useBoardUi()
+  const { device, background, headerStyle, setBackground, setHeaderStyle, revertToOriginalDesign } =
+    useBoardUi()
   const { anchor, toggleRef, toggle, close } = useAnchoredPanel(TRANSFER_POPOVER_WIDTH)
   const [designs, setDesigns] = useState<SavedDesignSummary[] | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -405,6 +421,13 @@ function DesignsButton() {
       .then(() => setDesigns((prev) => prev?.filter((d) => d.id !== item.id) ?? prev))
       .catch(() => setLoadError('Could not delete that design.'))
     setScreen({ kind: 'list' })
+  }
+
+  function confirmRevert() {
+    actions.deserialize(BLANK_LAYOUT)
+    revertToOriginalDesign()
+    setScreen({ kind: 'list' })
+    showFlash('Reverted to the original design')
   }
 
   return (
@@ -505,6 +528,26 @@ function DesignsButton() {
                 </>
               )}
 
+              {screen.kind === 'confirm-revert' && (
+                <>
+                  <p>Revert to the original site design?</p>
+                  <p className="confirm-popover-hint">
+                    Wipes your layout, background, and top bar styling on both desktop and mobile
+                    back to the blank starting design. This can't be undone, and it isn't saved as
+                    a design you can bring back later -- save your current design first if you
+                    might want it again.
+                  </p>
+                  <div className="confirm-popover-actions">
+                    <button type="button" onClick={() => setScreen({ kind: 'list' })}>
+                      Cancel
+                    </button>
+                    <button type="button" className="confirm-popover-danger" onClick={confirmRevert}>
+                      Revert
+                    </button>
+                  </div>
+                </>
+              )}
+
               {screen.kind === 'list' && (
                 <>
                   <p>Designs</p>
@@ -547,6 +590,13 @@ function DesignsButton() {
                       ))}
                     </ul>
                   )}
+                  <button
+                    type="button"
+                    className="design-menu-item design-menu-item-danger"
+                    onClick={() => setScreen({ kind: 'confirm-revert' })}
+                  >
+                    Revert to original design...
+                  </button>
                   <div className="confirm-popover-actions">
                     <button type="button" onClick={close}>
                       Close
@@ -894,6 +944,30 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
     scheduleFieldSave('header_style', next)
   }
 
+  function revertToOriginalDesign() {
+    Object.values(fieldSaveTimeoutsRef.current).forEach((timeoutId) => {
+      if (timeoutId) window.clearTimeout(timeoutId)
+    })
+    fieldSaveTimeoutsRef.current = {}
+
+    setLayouts({ desktop: {}, mobile: {} })
+    setBackgroundState(DEFAULT_BOARD_BACKGROUND)
+    setHeaderStyleState(DEFAULT_HEADER_STYLE)
+
+    setStatus('saving')
+    apiFetch('/api/page/', {
+      method: 'PATCH',
+      body: JSON.stringify({
+        layout: {},
+        mobile_layout: {},
+        background: DEFAULT_BOARD_BACKGROUND,
+        header_style: DEFAULT_HEADER_STYLE,
+      }),
+    })
+      .then(() => setStatus('saved'))
+      .catch(() => setStatus('error'))
+  }
+
   function handleNodesChange(forDevice: DeviceMode, query: { serialize: () => string }) {
     if (!readyRef.current) return
     const parsedLayout = JSON.parse(query.serialize()) as SerializedNodes
@@ -917,6 +991,7 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
         onBackgroundChange={setBackground}
         headerStyle={headerStyle}
         onHeaderStyleChange={setHeaderStyle}
+        onRevertToOriginalDesign={revertToOriginalDesign}
       >
         <BoardEditor
           layout={layouts[device]}

@@ -77,9 +77,6 @@ def clone_uploaded_image(source, *, owner, page=None, saved_design=None):
 
 
 def duplicate_referenced_images(request, *, source_images, referenced_urls, owner, page=None, saved_design=None):
-    """Clone every source image referenced by `referenced_urls` into the given
-    owning surface (page or saved_design), returning an {old_url: new_url} map
-    for rewriting the design/layout that referenced them."""
     if not referenced_urls:
         return {}
 

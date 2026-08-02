@@ -118,11 +118,6 @@ class SavedDesignDetailView(APIView):
 
 
 class SavedDesignUseView(APIView):
-    """Duplicates a saved design's images into the live board's own copies
-    and returns the design with URLs rewritten to point at those copies, so
-    applying a saved design never leaves the live board depending on images
-    owned by a design that could later be deleted."""
-
     def post(self, request, pk):
         design_obj = get_object_or_404(SavedDesign, pk=pk, owner=request.user)
         page, _ = Page.objects.get_or_create(owner=request.user)

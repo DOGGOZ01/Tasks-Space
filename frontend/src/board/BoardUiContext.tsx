@@ -19,6 +19,7 @@ interface BoardUiValue {
   setBackground: (background: BoardBackground) => void
   headerStyle: HeaderStyle
   setHeaderStyle: (style: HeaderStyle) => void
+  revertToOriginalDesign: () => void
 }
 
 const BoardUiContext = createContext<BoardUiValue | null>(null)
@@ -34,6 +35,7 @@ interface BoardUiProviderProps {
   onBackgroundChange: (background: BoardBackground) => void
   headerStyle: HeaderStyle
   onHeaderStyleChange: (style: HeaderStyle) => void
+  onRevertToOriginalDesign: () => void
 }
 
 export function BoardUiProvider({
@@ -47,6 +49,7 @@ export function BoardUiProvider({
   onBackgroundChange,
   headerStyle,
   onHeaderStyleChange,
+  onRevertToOriginalDesign,
 }: BoardUiProviderProps) {
   const [scale, setScale] = useState(1)
 
@@ -65,6 +68,7 @@ export function BoardUiProvider({
       setBackground: onBackgroundChange,
       headerStyle,
       setHeaderStyle: onHeaderStyleChange,
+      revertToOriginalDesign: onRevertToOriginalDesign,
     }),
     [
       editMode,
@@ -77,6 +81,7 @@ export function BoardUiProvider({
       onBackgroundChange,
       headerStyle,
       onHeaderStyleChange,
+      onRevertToOriginalDesign,
     ],
   )
 

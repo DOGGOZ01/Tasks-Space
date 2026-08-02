@@ -739,6 +739,16 @@ select.block-quick-menu-item {
   background: var(--accent-bg);
 }
 
+.design-menu-item-danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.design-menu-item-danger:hover {
+  background: var(--danger);
+  color: white;
+}
+
 .block-style-full-button {
   padding: 8px 10px;
   border: 2px solid var(--text-h);

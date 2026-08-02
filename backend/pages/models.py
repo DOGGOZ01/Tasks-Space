@@ -57,11 +57,6 @@ class UploadedImage(models.Model):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="uploaded_images"
     )
-    # An image belongs to exactly one owning surface: the live board (page) or
-    # one specific saved snapshot (saved_design). Never both -- "Save design"
-    # and "Use design" duplicate the file across surfaces rather than share a
-    # row, so deleting one design can never blow away another design's (or
-    # the live board's) images.
     page = models.ForeignKey(
         Page, null=True, blank=True, on_delete=models.CASCADE, related_name="images"
     )
