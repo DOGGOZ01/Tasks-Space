@@ -300,6 +300,11 @@ def sanitize_header_style(value) -> dict:
     return cleaned
 
 
+BLOCK_STYLE_PROP_NAMES = ("style", "headerStyle", "inputStyle", "addButtonStyle")
+MAX_BLOCK_TITLE_LENGTH = 80
+MAX_BLOCK_BUTTON_ICON_LENGTH = 4
+
+
 def sanitize_layout(layout: dict) -> dict:
     if not isinstance(layout, dict):
         return layout
@@ -313,7 +318,13 @@ def sanitize_layout(layout: dict) -> dict:
                 html_props["html"] = sanitize_custom_html(html_props["html"])
 
         props = node.get("props")
-        if isinstance(props, dict) and "style" in props:
-            props["style"] = sanitize_block_style(props["style"])
+        if isinstance(props, dict):
+            for prop_name in BLOCK_STYLE_PROP_NAMES:
+                if prop_name in props:
+                    props[prop_name] = sanitize_block_style(props[prop_name])
+            if isinstance(props.get("titleOverride"), str):
+                props["titleOverride"] = props["titleOverride"][:MAX_BLOCK_TITLE_LENGTH]
+            if isinstance(props.get("addButtonIcon"), str):
+                props["addButtonIcon"] = props["addButtonIcon"][:MAX_BLOCK_BUTTON_ICON_LENGTH]
 
     return layout

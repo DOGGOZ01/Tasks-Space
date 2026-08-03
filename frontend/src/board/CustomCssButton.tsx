@@ -15,7 +15,7 @@ export function CustomCssButton({
   value,
   onChange,
   className = 'block-quick-menu-item',
-  label = 'Custom CSS...',
+  label = 'Custom CSS',
   placeholder = 'background: linear-gradient(...); font-family: cursive;',
 }: CustomCssButtonProps) {
   const toggleRef = useRef<HTMLButtonElement>(null)

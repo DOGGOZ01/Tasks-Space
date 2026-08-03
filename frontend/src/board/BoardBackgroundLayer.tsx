@@ -7,6 +7,17 @@ import type { BoardBackground } from './boardBackground'
 const BG_FORBID_TAGS = ['iframe', 'object', 'embed', 'link', 'meta', 'form']
 const BG_IFRAME_CSP = `style-src 'unsafe-inline'; img-src data: ${API_BASE};`
 
+// Used as the <iframe>'s React key so a content change forces a full remount
+// instead of relying on the browser to notice the srcDoc attribute changed --
+// that update path doesn't reliably reset e.g. a running animation loop.
+function hashString(value: string): string {
+  let hash = 0
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash * 31 + value.charCodeAt(i)) | 0
+  }
+  return hash.toString(36)
+}
+
 function buildBackgroundSrcDoc(html: string, allowScripts: boolean): string {
   const safe = DOMPurify.sanitize(html, {
     FORBID_TAGS: allowScripts ? BG_FORBID_TAGS : [...BG_FORBID_TAGS, 'script'],
@@ -29,6 +40,7 @@ export function BoardBackgroundLayer({ background }: { background: BoardBackgrou
 
   return (
     <iframe
+      key={hashString(srcDoc)}
       className="board-background-frame"
       sandbox={allowCustomScripts ? 'allow-scripts' : ''}
       srcDoc={srcDoc}

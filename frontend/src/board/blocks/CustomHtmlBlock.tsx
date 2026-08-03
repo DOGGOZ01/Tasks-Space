@@ -7,14 +7,32 @@ import type { BlockStyle } from '../blockStyle'
 import { useBoardUi } from '../BoardUiContext'
 import { useAuth } from '../../context/AuthContext'
 import { applyGeometry } from '../geometry'
+import { useTaskBoard } from '../TaskBoardContext'
+import { startOfWeekKey, todayKey, type TasksByDate } from './taskListHelpers'
 
 const BASE_FORBID_TAGS = ['iframe', 'object', 'embed', 'link', 'meta', 'form']
 
 const BASE_IFRAME_CSP = `style-src 'unsafe-inline'; img-src data: ${API_BASE};`
 
+interface TaskBoardData {
+  dailyTasks: TasksByDate
+  weeklyTasks: TasksByDate
+  todayKey: string
+  startOfWeekKey: string
+}
+
+// Escaping "<" prevents the JSON payload from being able to close the
+// </script> tag early (e.g. a task whose text contains "</script>").
+function serializeForScriptTag(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c')
+}
+
 // allowScripts mirrors the backend's ALLOW_CUSTOM_SCRIPTS setting (see
-// tasks/settings.py) -- real enforcement is server-side.
-function buildSrcDoc(html: string, allowScripts: boolean): string {
+// tasks/settings.py) -- real enforcement is server-side. Task data is only
+// injected when scripts are allowed: without `allow-scripts` on the iframe
+// sandbox, no script (ours or the user's) can execute at all, so there'd be
+// nothing able to read it anyway.
+function buildSrcDoc(html: string, allowScripts: boolean, taskData: TaskBoardData): string {
   const safe = DOMPurify.sanitize(html, {
     FORBID_TAGS: allowScripts ? BASE_FORBID_TAGS : [...BASE_FORBID_TAGS, 'script'],
     ADD_TAGS: allowScripts ? ['script'] : [],
@@ -23,7 +41,10 @@ function buildSrcDoc(html: string, allowScripts: boolean): string {
   const csp = allowScripts
     ? `default-src 'none'; script-src 'unsafe-inline'; ${BASE_IFRAME_CSP}`
     : `default-src 'none'; ${BASE_IFRAME_CSP}`
-  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}"><style>body{margin:8px;font-family:sans-serif;overflow-wrap:anywhere;}</style></head><body>${safe}</body></html>`
+  const dataScript = allowScripts
+    ? `<script>window.taskBoardData = ${serializeForScriptTag(taskData)};</script>`
+    : ''
+  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}">${dataScript}<style>body{margin:8px;font-family:sans-serif;overflow-wrap:anywhere;}</style></head><body>${safe}</body></html>`
 }
 
 export function CustomHtmlBlock() {
@@ -48,13 +69,20 @@ export function CustomHtmlBlock() {
   const { actions } = useEditor()
   const { editMode } = useBoardUi()
   const { allowCustomScripts } = useAuth()
+  const { dailyTasks, weeklyTasks } = useTaskBoard()
   const [mode, setMode] = useState<'preview' | 'edit'>('preview')
   const [draft, setDraft] = useState(html)
 
   const effectiveMode = editMode ? mode : 'preview'
   const srcDoc = useMemo(
-    () => buildSrcDoc(effectiveMode === 'edit' ? draft : html, allowCustomScripts),
-    [effectiveMode, draft, html, allowCustomScripts],
+    () =>
+      buildSrcDoc(effectiveMode === 'edit' ? draft : html, allowCustomScripts, {
+        dailyTasks,
+        weeklyTasks,
+        todayKey: todayKey(),
+        startOfWeekKey: startOfWeekKey(),
+      }),
+    [effectiveMode, draft, html, allowCustomScripts, dailyTasks, weeklyTasks],
   )
 
   return (

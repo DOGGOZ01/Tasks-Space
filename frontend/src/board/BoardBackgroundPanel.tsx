@@ -161,7 +161,7 @@ export function BoardBackgroundPanel({ background, onChange, onClose }: BoardBac
           </p>
           <CustomCssButton
             className="block-style-full-button"
-            label="Edit HTML/JS..."
+            label="Edit HTML/JS"
             value={background.html ?? ''}
             onChange={(html) => onChange({ ...background, type: 'html', html })}
             placeholder='<div style="color:#0ff">Hello</div><script>/* runs if enabled */</script>'

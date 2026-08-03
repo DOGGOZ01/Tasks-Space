@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { apiFetch } from '../lib/api'
+import { AiAssistantButton } from './ai/AiAssistantPanel'
 import { BlockStylePanel } from './BlockStylePanel'
 import { BoardBackgroundLayer } from './BoardBackgroundLayer'
 import { BoardBackgroundPanel } from './BoardBackgroundPanel'
@@ -68,13 +69,14 @@ function BoardLoader({ layout, onLoaded }: { layout: SerializedNodes; onLoaded: 
     if (Object.keys(layout).length > 0) {
       actions.deserialize(layout)
     }
+    actions.history.clear()
     onLoaded()
   }, [])
 
   return null
 }
 
-function useAnchoredPanel(panelWidth: number) {
+export function useAnchoredPanel(panelWidth: number) {
   const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null)
   const toggleRef = useRef<HTMLButtonElement>(null)
 
@@ -97,6 +99,36 @@ function useAnchoredPanel(panelWidth: number) {
 }
 
 const PANEL_WIDTH = 300
+
+function UndoRedoControls() {
+  const { actions, canUndo, canRedo } = useEditor((_state, query) => ({
+    canUndo: query.history.canUndo(),
+    canRedo: query.history.canRedo(),
+  }))
+
+  return (
+    <div className="board-undo-redo" role="group" aria-label="Undo or redo">
+      <button
+        type="button"
+        className="board-bg-toggle"
+        onClick={() => actions.history.undo()}
+        disabled={!canUndo}
+        title="Undo"
+      >
+        Undo
+      </button>
+      <button
+        type="button"
+        className="board-bg-toggle"
+        onClick={() => actions.history.redo()}
+        disabled={!canRedo}
+        title="Redo"
+      >
+        Redo
+      </button>
+    </div>
+  )
+}
 
 function EditModeToggle() {
   const { editMode, toggleEditMode, headerStyle } = useBoardUi()
@@ -553,7 +585,7 @@ function DesignsButton() {
                   <p>Designs</p>
                   {flash && <p className="confirm-popover-flash">{flash}</p>}
                   <button type="button" className="design-menu-item" onClick={openSaveScreen}>
-                    Save current design...
+                    Save current design
                   </button>
                   {designs === null && !loadError && <p className="confirm-popover-hint">Loading...</p>}
                   {loadError && <p className="confirm-popover-hint">{loadError}</p>}
@@ -595,7 +627,7 @@ function DesignsButton() {
                     className="design-menu-item design-menu-item-danger"
                     onClick={() => setScreen({ kind: 'confirm-revert' })}
                   >
-                    Revert to original design...
+                    Revert to original design
                   </button>
                   <div className="confirm-popover-actions">
                     <button type="button" onClick={close}>
@@ -832,6 +864,8 @@ function BoardChrome({
           {editMode && <ExportDesignButton />}
           {editMode && <ImportDesignButton />}
           {editMode && <DesignsButton />}
+          {editMode && <AiAssistantButton />}
+          {editMode && <UndoRedoControls />}
           {editMode && !isRealMobile && <DeviceToggle />}
           {editMode && isRealMobile && <MobileDesignMenu />}
           {editMode && !isRealMobile && <BackgroundToggle />}

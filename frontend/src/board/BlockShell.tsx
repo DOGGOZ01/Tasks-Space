@@ -17,6 +17,10 @@ interface BlockShellProps extends Geometry {
   decorative?: boolean
   style?: BlockStyle
   onStyleChange?: (style: BlockStyle) => void
+  titleOverride?: string
+  onTitleChange?: (title: string) => void
+  headerStyle?: BlockStyle
+  onHeaderStyleChange?: (style: BlockStyle) => void
   headerActions?: ReactNode
   craftRef?: (dom: HTMLElement) => HTMLElement
   onGeometryChange: (geometry: Geometry) => void
@@ -33,6 +37,10 @@ export function BlockShell({
   decorative = false,
   style = DEFAULT_BLOCK_STYLE,
   onStyleChange,
+  titleOverride,
+  onTitleChange,
+  headerStyle = DEFAULT_BLOCK_STYLE,
+  onHeaderStyleChange,
   headerActions,
   craftRef,
   onGeometryChange,
@@ -41,8 +49,10 @@ export function BlockShell({
 }: BlockShellProps) {
   const { editMode, scale, canvasWidth, canvasHeight } = useBoardUi()
   const bare = decorative && !editMode
+  const displayTitle = titleOverride?.trim() ? titleOverride : title
   const [menuAnchor, setMenuAnchor] = useState<{ top: number; left: number } | null>(null)
   const [panelAnchor, setPanelAnchor] = useState<{ top: number; left: number } | null>(null)
+  const [headerPanelAnchor, setHeaderPanelAnchor] = useState<{ top: number; left: number } | null>(null)
   const [confirmAnchor, setConfirmAnchor] = useState<{ top: number; left: number } | null>(null)
   const menuToggleRef = useRef<HTMLButtonElement>(null)
   const geometryRef = useRef<Geometry>({ x, y, width, height })
@@ -130,6 +140,18 @@ export function BlockShell({
     setPanelAnchor({ top, left: Math.max(12, left) })
   }
 
+  function openHeaderPanel() {
+    setMenuAnchor(null)
+    const rect = menuToggleRef.current?.getBoundingClientRect()
+    if (!rect) {
+      setHeaderPanelAnchor({ top: 80, left: 80 })
+      return
+    }
+    const left = Math.min(rect.left, window.innerWidth - PANEL_WIDTH - 12)
+    const top = Math.min(rect.bottom + 6, window.innerHeight - 12)
+    setHeaderPanelAnchor({ top, left: Math.max(12, left) })
+  }
+
   const CONFIRM_WIDTH = 220
   function requestRemove() {
     setMenuAnchor(null)
@@ -150,9 +172,9 @@ export function BlockShell({
       className="block-shell-menu-toggle"
       onClick={toggleMenu}
       onPointerDown={(e) => e.stopPropagation()}
-      aria-label={`${title} block menu`}
+      aria-label={`${displayTitle} block menu`}
       aria-pressed={menuAnchor != null}
-      title={title}
+      title={displayTitle}
     >
       ⋯
     </button>
@@ -167,8 +189,12 @@ export function BlockShell({
       style={{ left: x, top: y, width, height, ...resolveBlockStyle(style, bare) }}
     >
       {!decorative && (
-        <div className="block-shell-header" onPointerDown={startDrag}>
-          <span className="block-shell-title">{title}</span>
+        <div
+          className="block-shell-header"
+          onPointerDown={startDrag}
+          style={resolveBlockStyle(headerStyle, false)}
+        >
+          <span className="block-shell-title">{displayTitle}</span>
           {editMode && menuToggle}
         </div>
       )}
@@ -196,14 +222,19 @@ export function BlockShell({
               className="block-quick-menu"
               style={{ top: menuAnchor.top, left: menuAnchor.left, width: MENU_WIDTH }}
             >
-              <div className="block-quick-menu-title">{title}</div>
+              <div className="block-quick-menu-title">{displayTitle}</div>
+              {(onTitleChange || onHeaderStyleChange) && (
+                <button type="button" className="block-quick-menu-item" onClick={openHeaderPanel}>
+                  Header
+                </button>
+              )}
               {headerActions}
               {onStyleChange && (
                 <button type="button" className="block-quick-menu-item" onClick={openStylePanel}>
-                  Style...
+                  Body style
                 </button>
               )}
-              {onStyleChange && !headerActions && (
+              {onStyleChange && (
                 <CustomCssButton
                   value={style.customCss ?? ''}
                   onChange={(customCss) => onStyleChange({ ...style, customCss })}
@@ -236,6 +267,41 @@ export function BlockShell({
                 onClose={() => setPanelAnchor(null)}
                 showCustomCss={false}
               />
+            </div>
+          </>,
+          document.body,
+        )}
+      {editMode &&
+        headerPanelAnchor &&
+        (onTitleChange || onHeaderStyleChange) &&
+        createPortal(
+          <>
+            <div className="block-style-backdrop" onClick={() => setHeaderPanelAnchor(null)} />
+            <div
+              className="block-style-panel-wrap"
+              style={{ top: headerPanelAnchor.top, left: headerPanelAnchor.left }}
+            >
+              <BlockStylePanel
+                title="Header"
+                style={headerStyle}
+                onChange={(next) => onHeaderStyleChange?.(next)}
+                onClose={() => setHeaderPanelAnchor(null)}
+                showCustomCss={false}
+              >
+                {onTitleChange && (
+                  <label className="block-style-row">
+                    <span className="block-style-label">Title</span>
+                    <input
+                      type="text"
+                      className="confirm-popover-input"
+                      value={titleOverride ?? ''}
+                      placeholder={title}
+                      maxLength={80}
+                      onChange={(e) => onTitleChange(e.target.value)}
+                    />
+                  </label>
+                )}
+              </BlockStylePanel>
             </div>
           </>,
           document.body,

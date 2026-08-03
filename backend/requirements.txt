@@ -6,3 +6,4 @@ django-environ==0.14.0
 Pillow==12.3.0
 bleach==6.4.0
 tinycss2==1.5.1
+requests==2.34.2

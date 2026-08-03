@@ -1,3 +1,5 @@
+import { resolveBlockStyle } from '../blockStyle'
+import type { BlockStyle } from '../blockStyle'
 import type { Task } from './taskListHelpers'
 
 interface TaskListViewProps {
@@ -10,6 +12,9 @@ interface TaskListViewProps {
   onRemoveTask: (taskId: number) => void
   onPrev: () => void
   onNext: () => void
+  inputStyle?: BlockStyle
+  buttonStyle?: BlockStyle
+  buttonIcon?: string
 }
 
 export function TaskListView({
@@ -22,6 +27,9 @@ export function TaskListView({
   onRemoveTask,
   onPrev,
   onNext,
+  inputStyle = {},
+  buttonStyle = {},
+  buttonIcon,
 }: TaskListViewProps) {
   return (
     <div className="task-list-block">
@@ -63,8 +71,11 @@ export function TaskListView({
           value={draft}
           onChange={(e) => onDraftChange(e.target.value)}
           placeholder="Add a task..."
+          style={resolveBlockStyle(inputStyle, false)}
         />
-        <button type="submit">+</button>
+        <button type="submit" style={resolveBlockStyle(buttonStyle, false)}>
+          {buttonIcon || '+'}
+        </button>
       </form>
     </div>
   )

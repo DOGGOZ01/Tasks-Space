@@ -8,11 +8,18 @@ export interface User {
   email: string
 }
 
+export interface AiAssistantHostConfig {
+  enabled: boolean
+  provider: string | null
+  model: string | null
+}
+
 interface AuthContextValue {
   user: User | null
   loading: boolean
   registrationOpen: boolean
   allowCustomScripts: boolean
+  aiAssistant: AiAssistantHostConfig
   login: (username: string, password: string) => Promise<void>
   register: (username: string, password: string, email?: string) => Promise<void>
   logout: () => Promise<void>
@@ -20,11 +27,14 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+const DEFAULT_AI_ASSISTANT: AiAssistantHostConfig = { enabled: false, provider: null, model: null }
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [registrationOpen, setRegistrationOpen] = useState(true)
   const [allowCustomScripts, setAllowCustomScripts] = useState(false)
+  const [aiAssistant, setAiAssistant] = useState<AiAssistantHostConfig>(DEFAULT_AI_ASSISTANT)
 
   useEffect(() => {
     let cancelled = false
@@ -34,10 +44,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const status = await apiFetch<{
           registration_open: boolean
           allow_custom_scripts: boolean
+          ai_assistant_enabled: boolean
+          ai_assistant_provider: string | null
+          ai_assistant_model: string | null
         }>('/api/auth/registration-status/')
         if (!cancelled) {
           setRegistrationOpen(status.registration_open)
           setAllowCustomScripts(status.allow_custom_scripts)
+          setAiAssistant({
+            enabled: status.ai_assistant_enabled,
+            provider: status.ai_assistant_provider,
+            model: status.ai_assistant_model,
+          })
         }
       } catch {
       }
@@ -84,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, registrationOpen, allowCustomScripts, login, register, logout }}
+      value={{ user, loading, registrationOpen, allowCustomScripts, aiAssistant, login, register, logout }}
     >
       {children}
     </AuthContext.Provider>

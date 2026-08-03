@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    AiAssistantChatView,
     ImageUploadView,
     PageView,
     SavedDesignDetailView,
@@ -16,4 +17,5 @@ urlpatterns = [
     path("designs/", SavedDesignListView.as_view(), name="saved-design-list"),
     path("designs/<int:pk>/", SavedDesignDetailView.as_view(), name="saved-design-detail"),
     path("designs/<int:pk>/use/", SavedDesignUseView.as_view(), name="saved-design-use"),
+    path("ai/chat/", AiAssistantChatView.as_view(), name="ai-chat"),
 ]

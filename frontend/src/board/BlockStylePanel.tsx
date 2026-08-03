@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { CustomCssButton } from './CustomCssButton'
 import { STYLE_PRESETS } from './blockStyle'
 import type { BlockStyle } from './blockStyle'
@@ -8,6 +9,7 @@ interface BlockStylePanelProps {
   onChange: (next: BlockStyle) => void
   onClose: () => void
   showCustomCss?: boolean
+  children?: ReactNode
 }
 
 function set<K extends keyof BlockStyle>(
@@ -25,6 +27,7 @@ export function BlockStylePanel({
   onChange,
   onClose,
   showCustomCss = true,
+  children,
 }: BlockStylePanelProps) {
   return (
     <div className="block-style-panel" onPointerDown={(e) => e.stopPropagation()}>
@@ -144,6 +147,7 @@ export function BlockStylePanel({
         </div>
       </label>
 
+      {children}
     </div>
   )
 }

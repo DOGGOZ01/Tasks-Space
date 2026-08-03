@@ -10,6 +10,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .ai_providers import ProviderRequestError, send_chat
 from .image_gc import (
     collect_background_image_url,
     collect_design_image_urls,
@@ -163,3 +164,41 @@ class ImageUploadView(APIView):
             UploadedImageSerializer(image, context={"request": request}).data,
             status=status.HTTP_201_CREATED,
         )
+
+
+class AiAssistantChatView(APIView):
+    throttle_scope = "ai_chat"
+
+    def post(self, request):
+        if not settings.AI_ASSISTANT_ENABLED or not settings.AI_ASSISTANT_API_KEY:
+            return Response(
+                {"detail": "The AI assistant is not enabled on this server."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if len(request.body) > settings.MAX_AI_REQUEST_BYTES:
+            return Response({"detail": "Request too large."}, status=status.HTTP_400_BAD_REQUEST)
+
+        system_prompt = request.data.get("systemPrompt")
+        conversation = request.data.get("conversation")
+        tools = request.data.get("tools")
+        if (
+            not isinstance(system_prompt, str)
+            or not isinstance(conversation, list)
+            or not isinstance(tools, list)
+        ):
+            return Response({"detail": "Invalid request body."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            assistant_text, tool_calls = send_chat(
+                settings.AI_ASSISTANT_PROVIDER,
+                settings.AI_ASSISTANT_API_KEY,
+                settings.AI_ASSISTANT_MODEL,
+                system_prompt,
+                conversation,
+                tools,
+            )
+        except ProviderRequestError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+        return Response({"assistantText": assistant_text, "toolCalls": tool_calls})

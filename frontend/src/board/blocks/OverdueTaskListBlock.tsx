@@ -46,6 +46,8 @@ export function OverdueTaskListBlock() {
     width,
     height,
     style,
+    headerStyle,
+    titleOverride,
     actions: { setProp },
   } = useNode((node) => ({
     x: node.data.props.x as number,
@@ -53,6 +55,8 @@ export function OverdueTaskListBlock() {
     width: node.data.props.width as number,
     height: node.data.props.height as number,
     style: (node.data.props.style ?? {}) as BlockStyle,
+    headerStyle: (node.data.props.headerStyle ?? {}) as BlockStyle,
+    titleOverride: (node.data.props.titleOverride ?? '') as string,
   }))
   const { actions } = useEditor()
   const { dailyTasks, weeklyTasks, setDailyTasksForDate, setWeeklyTasksForDate } = useTaskBoard()
@@ -75,6 +79,10 @@ export function OverdueTaskListBlock() {
       height={height}
       style={style}
       onStyleChange={(next) => setProp((props: Record<string, any>) => { props.style = next })}
+      titleOverride={titleOverride}
+      onTitleChange={(next) => setProp((props: Record<string, any>) => { props.titleOverride = next })}
+      headerStyle={headerStyle}
+      onHeaderStyleChange={(next) => setProp((props: Record<string, any>) => { props.headerStyle = next })}
       onGeometryChange={(geometry) => applyGeometry(setProp, geometry)}
       onRemove={() => actions.delete(id)}
     >
@@ -121,5 +129,5 @@ export function OverdueTaskListBlock() {
 
 OverdueTaskListBlock.craft = {
   displayName: 'OverdueTaskListBlock',
-  props: { x: 40, y: 400, width: 280, height: 320, style: {} },
+  props: { x: 40, y: 400, width: 280, height: 320, style: {}, headerStyle: {}, titleOverride: '' },
 }

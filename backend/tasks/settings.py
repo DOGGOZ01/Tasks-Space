@@ -10,6 +10,7 @@ env = environ.Env(
     COOKIE_SECURE=(bool, False),
     ALLOW_CUSTOM_SCRIPTS=(bool, False),
     ALLOW_PUBLIC_REGISTRATION=(bool, False),
+    AI_ASSISTANT_ENABLED=(bool, False),
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
@@ -134,6 +135,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "auth_login": "10/min",
         "auth_register": "5/min",
+        "ai_chat": "20/min",
     },
 }
 
@@ -172,3 +174,10 @@ MAX_SAVED_DESIGNS_PER_USER = 30
 ALLOW_CUSTOM_SCRIPTS = env("ALLOW_CUSTOM_SCRIPTS")
 
 ALLOW_PUBLIC_REGISTRATION = env("ALLOW_PUBLIC_REGISTRATION")
+
+AI_ASSISTANT_ENABLED = env("AI_ASSISTANT_ENABLED")
+AI_ASSISTANT_PROVIDER = env("AI_ASSISTANT_PROVIDER", default="anthropic")
+AI_ASSISTANT_MODEL = env("AI_ASSISTANT_MODEL", default="claude-sonnet-5")
+AI_ASSISTANT_API_KEY = env("AI_ASSISTANT_API_KEY", default="")
+
+MAX_AI_REQUEST_BYTES = 200_000

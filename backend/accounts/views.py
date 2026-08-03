@@ -22,12 +22,16 @@ class RegistrationStatusView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
+        ai_assistant_enabled = settings.AI_ASSISTANT_ENABLED and bool(settings.AI_ASSISTANT_API_KEY)
         return Response(
             {
                 "registration_open": (
                     settings.ALLOW_PUBLIC_REGISTRATION and SiteConfig.get_solo().registration_open
                 ),
                 "allow_custom_scripts": settings.ALLOW_CUSTOM_SCRIPTS,
+                "ai_assistant_enabled": ai_assistant_enabled,
+                "ai_assistant_provider": settings.AI_ASSISTANT_PROVIDER if ai_assistant_enabled else None,
+                "ai_assistant_model": settings.AI_ASSISTANT_MODEL if ai_assistant_enabled else None,
             }
         )
 

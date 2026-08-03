@@ -13,6 +13,8 @@ export function NoteBlock() {
     height,
     text,
     style,
+    headerStyle,
+    titleOverride,
     actions: { setProp },
   } = useNode((node) => ({
     x: node.data.props.x as number,
@@ -21,6 +23,8 @@ export function NoteBlock() {
     height: node.data.props.height as number,
     text: (node.data.props.text ?? '') as string,
     style: (node.data.props.style ?? {}) as BlockStyle,
+    headerStyle: (node.data.props.headerStyle ?? {}) as BlockStyle,
+    titleOverride: (node.data.props.titleOverride ?? '') as string,
   }))
   const { actions } = useEditor()
 
@@ -34,6 +38,10 @@ export function NoteBlock() {
       height={height}
       style={style}
       onStyleChange={(next) => setProp((props: Record<string, any>) => { props.style = next })}
+      titleOverride={titleOverride}
+      onTitleChange={(next) => setProp((props: Record<string, any>) => { props.titleOverride = next })}
+      headerStyle={headerStyle}
+      onHeaderStyleChange={(next) => setProp((props: Record<string, any>) => { props.headerStyle = next })}
       onGeometryChange={(geometry) => applyGeometry(setProp, geometry)}
       onRemove={() => actions.delete(id)}
     >
@@ -54,5 +62,5 @@ export function NoteBlock() {
 
 NoteBlock.craft = {
   displayName: 'NoteBlock',
-  props: { x: 40, y: 40, width: 260, height: 160, text: '', style: {} },
+  props: { x: 40, y: 40, width: 260, height: 160, text: '', style: {}, headerStyle: {}, titleOverride: '' },
 }

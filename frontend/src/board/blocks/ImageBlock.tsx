@@ -76,7 +76,7 @@ function ImageFitButton({
         onPointerDown={(e) => e.stopPropagation()}
         aria-pressed={anchor != null}
       >
-        Fit & zoom...
+        Fit & zoom
       </button>
       {anchor &&
         createPortal(

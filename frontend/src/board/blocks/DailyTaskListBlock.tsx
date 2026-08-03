@@ -4,6 +4,7 @@ import { BlockShell } from '../BlockShell'
 import type { BlockStyle } from '../blockStyle'
 import { applyGeometry } from '../geometry'
 import { useTaskBoard } from '../TaskBoardContext'
+import { TaskInputStyleButton } from './TaskInputStyleButton'
 import { TaskListView } from './TaskListView'
 import { addDays, todayKey, type Task } from './taskListHelpers'
 
@@ -16,6 +17,11 @@ export function DailyTaskListBlock() {
     width,
     height,
     style,
+    headerStyle,
+    titleOverride,
+    inputStyle,
+    addButtonStyle,
+    addButtonIcon,
     actions: { setProp },
   } = useNode((node) => ({
     x: node.data.props.x as number,
@@ -23,6 +29,11 @@ export function DailyTaskListBlock() {
     width: node.data.props.width as number,
     height: node.data.props.height as number,
     style: (node.data.props.style ?? {}) as BlockStyle,
+    headerStyle: (node.data.props.headerStyle ?? {}) as BlockStyle,
+    titleOverride: (node.data.props.titleOverride ?? '') as string,
+    inputStyle: (node.data.props.inputStyle ?? {}) as BlockStyle,
+    addButtonStyle: (node.data.props.addButtonStyle ?? {}) as BlockStyle,
+    addButtonIcon: (node.data.props.addButtonIcon ?? '') as string,
   }))
   const { actions } = useEditor()
   const { dailyTasks, setDailyTasksForDate } = useTaskBoard()
@@ -45,6 +56,20 @@ export function DailyTaskListBlock() {
       height={height}
       style={style}
       onStyleChange={(next) => setProp((props: Record<string, any>) => { props.style = next })}
+      titleOverride={titleOverride}
+      onTitleChange={(next) => setProp((props: Record<string, any>) => { props.titleOverride = next })}
+      headerStyle={headerStyle}
+      onHeaderStyleChange={(next) => setProp((props: Record<string, any>) => { props.headerStyle = next })}
+      headerActions={
+        <TaskInputStyleButton
+          inputStyle={inputStyle}
+          onInputStyleChange={(next) => setProp((props: Record<string, any>) => { props.inputStyle = next })}
+          buttonStyle={addButtonStyle}
+          onButtonStyleChange={(next) => setProp((props: Record<string, any>) => { props.addButtonStyle = next })}
+          buttonIcon={addButtonIcon}
+          onButtonIconChange={(next) => setProp((props: Record<string, any>) => { props.addButtonIcon = next })}
+        />
+      }
       onGeometryChange={(geometry) => applyGeometry(setProp, geometry)}
       onRemove={() => actions.delete(id)}
     >
@@ -64,6 +89,9 @@ export function DailyTaskListBlock() {
         onRemoveTask={(taskId) => updateTasks(tasks.filter((t) => t.id !== taskId))}
         onPrev={() => setDateKey((d) => addDays(d, -1))}
         onNext={() => setDateKey((d) => addDays(d, 1))}
+        inputStyle={inputStyle}
+        buttonStyle={addButtonStyle}
+        buttonIcon={addButtonIcon}
       />
     </BlockShell>
   )
@@ -71,5 +99,16 @@ export function DailyTaskListBlock() {
 
 DailyTaskListBlock.craft = {
   displayName: 'DailyTaskListBlock',
-  props: { x: 40, y: 40, width: 280, height: 320, style: {} },
+  props: {
+    x: 40,
+    y: 40,
+    width: 280,
+    height: 320,
+    style: {},
+    headerStyle: {},
+    titleOverride: '',
+    inputStyle: {},
+    addButtonStyle: {},
+    addButtonIcon: '',
+  },
 }

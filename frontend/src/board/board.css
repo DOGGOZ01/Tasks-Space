@@ -121,6 +121,18 @@
   color: var(--accent-ink);
 }
 
+.board-bg-toggle:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 2px 2px 0 var(--shadow-ink);
+}
+
+.board-undo-redo {
+  display: flex;
+  gap: 6px;
+}
+
 .board-edit-toggle {
   padding: 7px 16px;
   border: 2px solid var(--text-h);
@@ -1117,4 +1129,126 @@ select.block-quick-menu-item {
   font-size: 11px;
   line-height: 1.4;
   opacity: 0.7;
+}
+
+.ai-assistant-popover {
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.ai-field-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.ai-key-link {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.ai-forget-link {
+  margin-right: auto;
+  background: none !important;
+  border: none !important;
+  color: var(--danger) !important;
+  text-decoration: underline;
+  font-weight: 600 !important;
+}
+
+.ai-assistant-confirm-forget {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-assistant-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.ai-assistant-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+}
+
+.ai-agent-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.ai-chat-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 40vh;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.ai-chat-turn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 3px;
+}
+
+.ai-chat-turn p {
+  margin: 0;
+}
+
+.ai-chat-turn-user {
+  background: var(--bg-alt);
+  align-self: flex-end;
+  max-width: 90%;
+}
+
+.ai-chat-turn-assistant {
+  background: var(--accent-bg);
+}
+
+.ai-chat-proposed {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ai-chat-proposed ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+}
+
+.ai-chat-applied {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+}
+
+.ai-chat-applied-ok {
+  color: var(--text-h);
+}
+
+.ai-chat-applied-error {
+  color: var(--danger);
+}
+
+.ai-chat-input-row {
+  display: flex;
+  gap: 6px;
+}
+
+.ai-chat-input-row .confirm-popover-input {
+  flex: 1;
 }
