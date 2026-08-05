@@ -43,9 +43,14 @@ export function resolveBoardBackground(background: BoardBackground): CSSProperti
   const customCss = sanitizeBackgroundCustomCss(background.customCss ?? '')
   switch (background.type) {
     case 'color':
-      return { ...(background.color ? { background: background.color } : {}), ...customCss }
+      return {
+        backgroundAttachment: 'local',
+        ...(background.color ? { background: background.color } : {}),
+        ...customCss,
+      }
     case 'image':
       return {
+        backgroundAttachment: 'local',
         ...(background.imageUrl
           ? {
               backgroundImage: `url(${JSON.stringify(background.imageUrl)})`,
@@ -55,7 +60,7 @@ export function resolveBoardBackground(background: BoardBackground): CSSProperti
         ...customCss,
       }
     case 'custom':
-      return customCss
+      return { backgroundAttachment: 'local', ...customCss }
     case 'html':
       return {}
     default:

@@ -92,7 +92,7 @@ async function sendAnthropicChat(params: SendChatParams): Promise<ChatTurnResult
     },
     body: JSON.stringify({
       model: params.model,
-      max_tokens: 4096,
+      max_tokens: 16000,
       system: params.systemPrompt,
       messages: toAnthropicMessages(params.conversation),
       tools: params.tools.map((t) => ({
@@ -161,6 +161,7 @@ function openAiCompatibleAdapter(baseUrl: string) {
       },
       body: JSON.stringify({
         model: params.model,
+        max_tokens: 16000,
         messages: [{ role: 'system', content: params.systemPrompt }, ...toOpenAiMessages(params.conversation)],
         tools: params.tools.map((t) => ({
           type: 'function',

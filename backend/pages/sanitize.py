@@ -37,6 +37,10 @@ ALLOWED_CSS_PROPERTIES = [
     "position", "top", "left", "right", "bottom", "z-index", "transform", "cursor",
     "vertical-align", "list-style", "list-style-type", "gap", "flex", "flex-direction",
     "align-items", "justify-content", "grid-template-columns", "grid-gap",
+    "transform-origin", "transition", "transition-property", "transition-duration",
+    "transition-timing-function", "transition-delay", "animation", "animation-name",
+    "animation-duration", "animation-timing-function", "animation-iteration-count",
+    "animation-delay", "animation-direction", "animation-fill-mode", "animation-play-state",
 ]
 
 _css_sanitizer = CSSSanitizer(allowed_css_properties=ALLOWED_CSS_PROPERTIES)
@@ -63,7 +67,7 @@ HEX_COLOR_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
 SAFE_URL_RE = re.compile(r"^(https?://|/)", re.IGNORECASE)
 
 _STYLE_TAG_RE = re.compile(r"(<style\b[^>]*>)(.*?)(</style>)", re.IGNORECASE | re.DOTALL)
-_UNSAFE_CSS_VALUE_RE = re.compile(r"expression\(|-moz-binding|behavior\s*:|javascript:", re.IGNORECASE)
+_UNSAFE_CSS_VALUE_RE = re.compile(r"expression\s*\(|-moz-binding|behavior\s*:|javascript\s*:", re.IGNORECASE)
 _CSS_URL_RE = re.compile(r"url\(\s*(['\"]?)(.*?)\1\s*\)", re.IGNORECASE)
 
 
@@ -90,6 +94,12 @@ def sanitize_style_tag_css(raw_css: str) -> str:
     rules = tinycss2.parse_stylesheet(raw_css, skip_whitespace=True, skip_comments=True)
     kept_rules = []
     for rule in rules:
+        if rule.type == "at-rule" and rule.lower_at_keyword == "keyframes":
+            kept = _keep_keyframes_rule(rule)
+            if kept:
+                kept_rules.append(kept)
+            continue
+
         if rule.type != "qualified-rule":
             continue
         selector = tinycss2.serialize(rule.prelude).strip()
@@ -119,6 +129,47 @@ def sanitize_style_tag_css(raw_css: str) -> str:
             kept_rules.append(f"{selector} {{ {'; '.join(kept_declarations)}; }}")
 
     return "\n".join(kept_rules)
+
+
+def _keep_keyframes_rule(rule) -> str:
+    name = tinycss2.serialize(rule.prelude).strip() if rule.prelude is not None else ""
+    if not _KEYFRAME_NAME_RE.match(name) or name.lower() in _RESERVED_KEYFRAME_NAMES or rule.content is None:
+        return ""
+    try:
+        steps = tinycss2.parse_rule_list(rule.content, skip_whitespace=True, skip_comments=True)
+    except Exception:
+        return ""
+
+    kept_steps = []
+    for step in steps:
+        if step.type != "qualified-rule" or step.prelude is None:
+            continue
+        step_selector = tinycss2.serialize(step.prelude).strip()
+        tokens = [token.strip() for token in step_selector.split(",")]
+        if not tokens or not all(_KEYFRAME_STEP_RE.match(token) for token in tokens):
+            continue
+        try:
+            declarations = tinycss2.parse_declaration_list(step.content, skip_whitespace=True, skip_comments=True)
+        except Exception:
+            continue
+        kept_declarations = []
+        for decl in declarations:
+            if decl.type != "declaration":
+                continue
+            prop = decl.lower_name
+            if prop not in _ALLOWED_CSS_PROPERTIES_SET:
+                continue
+            value = tinycss2.serialize(decl.value).strip()
+            if not value or not _is_safe_css_value(value):
+                continue
+            important = " !important" if decl.important else ""
+            kept_declarations.append(f"{prop}: {value}{important}")
+        if kept_declarations:
+            kept_steps.append(f"{step_selector} {{ {'; '.join(kept_declarations)}; }}")
+
+    if not kept_steps:
+        return ""
+    return f"@keyframes {name} {{ {' '.join(kept_steps)} }}"
 
 
 def _sanitize_style_tags(html: str) -> str:
@@ -182,6 +233,89 @@ def sanitize_custom_block_css(raw_css: str) -> str:
     return _block_style_css_sanitizer.sanitize_css(raw_css)
 
 
+ANIMATION_CSS_PROPERTIES = set(BLOCK_STYLE_CSS_PROPERTIES) | {
+    "transform", "transform-origin", "transition", "transition-property",
+    "transition-duration", "transition-timing-function", "transition-delay",
+    "animation", "animation-name", "animation-duration", "animation-timing-function",
+    "animation-iteration-count", "animation-delay", "animation-direction", "animation-fill-mode",
+}
+
+ANIMATION_SELECTOR_ALLOWLIST = {"&", "&:hover", "&:active", "&:focus", "&:focus-within"}
+_KEYFRAME_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*$")
+_RESERVED_KEYFRAME_NAMES = {"none", "inherit", "initial", "unset", "revert"}
+_KEYFRAME_STEP_RE = re.compile(r"^(from|to|\d{1,3}(\.\d+)?%)$", re.IGNORECASE)
+
+
+def _sanitize_animation_declarations(content) -> list:
+    if content is None:
+        return []
+    try:
+        declarations = tinycss2.parse_declaration_list(content, skip_whitespace=True, skip_comments=True)
+    except Exception:
+        return []
+
+    kept = []
+    for decl in declarations:
+        if decl.type != "declaration":
+            continue
+        prop = decl.lower_name
+        if prop not in ANIMATION_CSS_PROPERTIES:
+            continue
+        value = tinycss2.serialize(decl.value).strip()
+        if not value or not _is_safe_css_value(value):
+            continue
+        important = " !important" if decl.important else ""
+        kept.append(f"{prop}: {value}{important}")
+    return kept
+
+
+def sanitize_animation_css(raw_css: str) -> str:
+    if not raw_css:
+        return ""
+    raw_css = raw_css[: settings.MAX_CUSTOM_CSS_LENGTH]
+
+    try:
+        rules = tinycss2.parse_stylesheet(raw_css, skip_whitespace=True, skip_comments=True)
+    except Exception:
+        return ""
+
+    kept_rules = []
+    for rule in rules:
+        if rule.type == "qualified-rule":
+            selector = tinycss2.serialize(rule.prelude).strip() if rule.prelude is not None else ""
+            if selector not in ANIMATION_SELECTOR_ALLOWLIST:
+                continue
+            declarations = _sanitize_animation_declarations(rule.content)
+            if declarations:
+                kept_rules.append(f"{selector} {{ {'; '.join(declarations)}; }}")
+
+        elif rule.type == "at-rule" and rule.lower_at_keyword == "keyframes":
+            name = tinycss2.serialize(rule.prelude).strip() if rule.prelude is not None else ""
+            if not _KEYFRAME_NAME_RE.match(name) or name.lower() in _RESERVED_KEYFRAME_NAMES or rule.content is None:
+                continue
+            try:
+                steps = tinycss2.parse_rule_list(rule.content, skip_whitespace=True, skip_comments=True)
+            except Exception:
+                continue
+
+            kept_steps = []
+            for step in steps:
+                if step.type != "qualified-rule" or step.prelude is None:
+                    continue
+                step_selector = tinycss2.serialize(step.prelude).strip()
+                tokens = [token.strip() for token in step_selector.split(",")]
+                if not tokens or not all(_KEYFRAME_STEP_RE.match(token) for token in tokens):
+                    continue
+                step_declarations = _sanitize_animation_declarations(step.content)
+                if step_declarations:
+                    kept_steps.append(f"{step_selector} {{ {'; '.join(step_declarations)}; }}")
+
+            if kept_steps:
+                kept_rules.append(f"@keyframes {name} {{ {' '.join(kept_steps)} }}")
+
+    return "\n".join(kept_rules)
+
+
 def _clean_hex_color(value) -> str:
     if isinstance(value, str) and HEX_COLOR_RE.match(value):
         return value
@@ -220,7 +354,7 @@ def sanitize_block_style(style) -> dict:
     border_width = _clean_number(style.get("borderWidth"), 0, 12)
     if border_width is not None:
         cleaned["borderWidth"] = border_width
-    opacity = _clean_number(style.get("opacity"), 0.1, 1)
+    opacity = _clean_number(style.get("opacity"), 0, 1)
     if opacity is not None:
         cleaned["opacity"] = opacity
 
@@ -229,6 +363,18 @@ def sanitize_block_style(style) -> dict:
         sanitized_css = sanitize_custom_block_css(custom_css)
         if sanitized_css:
             cleaned["customCss"] = sanitized_css
+
+    animation_css = style.get("animationCss")
+    if isinstance(animation_css, str) and animation_css:
+        sanitized_animation_css = sanitize_animation_css(animation_css)
+        if sanitized_animation_css:
+            cleaned["animationCss"] = sanitized_animation_css
+
+    overlay_html = style.get("overlayHtml")
+    if isinstance(overlay_html, str) and overlay_html:
+        sanitized_overlay_html = sanitize_custom_html(overlay_html)
+        if sanitized_overlay_html:
+            cleaned["overlayHtml"] = sanitized_overlay_html
 
     return cleaned
 
@@ -303,6 +449,41 @@ def sanitize_header_style(value) -> dict:
 BLOCK_STYLE_PROP_NAMES = ("style", "headerStyle", "inputStyle", "addButtonStyle")
 MAX_BLOCK_TITLE_LENGTH = 80
 MAX_BLOCK_BUTTON_ICON_LENGTH = 4
+ELEMENT_LAYOUT_KEYS = {"header", "body", "addRow"}
+
+
+def _clean_element_rect(value) -> dict:
+    if not isinstance(value, dict):
+        return {}
+
+    x = _clean_number(value.get("x"), 0, 100)
+    y = _clean_number(value.get("y"), 0, 100)
+    width = _clean_number(value.get("width"), 5, 100)
+    height = _clean_number(value.get("height"), 5, 100)
+    if x is None or y is None or width is None or height is None:
+        return {}
+
+    x = min(x, 100 - width)
+    y = min(y, 100 - height)
+
+    cleaned = {"x": x, "y": y, "width": width, "height": height}
+    if value.get("hidden") is True:
+        cleaned["hidden"] = True
+    return cleaned
+
+
+def sanitize_element_layout(value) -> dict:
+    if not isinstance(value, dict):
+        return {}
+
+    cleaned = {}
+    for key in ELEMENT_LAYOUT_KEYS:
+        if key not in value:
+            continue
+        rect = _clean_element_rect(value.get(key))
+        if rect:
+            cleaned[key] = rect
+    return cleaned
 
 
 def sanitize_layout(layout: dict) -> dict:
@@ -326,5 +507,10 @@ def sanitize_layout(layout: dict) -> dict:
                 props["titleOverride"] = props["titleOverride"][:MAX_BLOCK_TITLE_LENGTH]
             if isinstance(props.get("addButtonIcon"), str):
                 props["addButtonIcon"] = props["addButtonIcon"][:MAX_BLOCK_BUTTON_ICON_LENGTH]
+            if "elementLayout" in props:
+                props["elementLayout"] = sanitize_element_layout(props["elementLayout"])
+            if "zIndex" in props:
+                z_index = _clean_number(props["zIndex"], 0, 100000)
+                props["zIndex"] = z_index if z_index is not None else 0
 
     return layout

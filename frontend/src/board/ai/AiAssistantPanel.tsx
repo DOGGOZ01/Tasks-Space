@@ -1,6 +1,6 @@
 import { useEditor } from '@craftjs/core'
 import type { SerializedNodes } from '@craftjs/core'
-import { useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useAnchoredPanel } from '../BoardCanvas'
 import { useBoardUi } from '../BoardUiContext'
@@ -10,42 +10,23 @@ import { applyToolCall, describeToolCall } from './applyToolCalls'
 import { summarizeBoardState } from './boardState'
 import {
   clearCredentials,
+  getSessionCredentials,
   hasStoredCredentials,
   saveCredentials,
   unlockCredentials,
   WrongPassphraseError,
 } from './keyStore'
 import type { StoredCredentials } from './keyStore'
+import { clearConversationMemory, loadConversationMemory, saveConversationMemory } from './memory'
 import { PROVIDERS, sendChat, sendChatViaBackend } from './providers'
 import type { ProviderId } from './providers'
+import { buildSystemPrompt } from './systemPrompt'
 import { buildTools } from './tools'
 import type { ConversationEntry, ToolCallRequest } from './types'
 import { ProviderRequestError } from './types'
 
 const PANEL_WIDTH = 340
-const MAX_AGENT_STEPS = 8
-
-const SYSTEM_PROMPT_PREFIX =
-  "You are a design assistant embedded in a personal task-tracker web app's board editor. " +
-  'The user describes visual changes in plain language and you make them using the tools ' +
-  "provided. Only use the tools -- never ask the user to write code or edit files themselves. " +
-  'Keep replies short (1-3 sentences) describing what you changed, or ask a clarifying question ' +
-  'if the request is ambiguous. Block ids in tool calls must come from the board state below. ' +
-  'When your request needs several steps, call one tool at a time and use each result to decide ' +
-  'the next step; say a brief closing sentence once everything is done and stop calling tools. ' +
-  "A block can have up to four independently stylable parts via update_block/add_block's " +
-  "partStyles argument: body (the block itself), header (its title bar), input (the \"Add a " +
-  'task..." field), addButton (the "+" button next to it) -- match the user\'s wording to the ' +
-  "right part instead of defaulting to body, and never put color/border fields directly on " +
-  "partStyles itself, they go one level deeper inside body/header/input/addButton."
-
-function scriptsNote(allowCustomScripts: boolean): string {
-  return allowCustomScripts
-    ? 'Custom HTML blocks and the "html" board background may include <script> tags -- they run ' +
-        "sandboxed in an iframe. Feel free to use JavaScript for animation/interactivity there when it's asked for."
-    : 'Custom HTML blocks and the "html" board background do NOT support <script> tags on this ' +
-        'server -- any <script> you write will be silently stripped. Use CSS animations/transitions instead.'
-}
+const MAX_AGENT_STEPS = 24
 
 type Screen = 'loading' | 'setup' | 'unlock' | 'chat'
 
@@ -74,7 +55,7 @@ export function AiAssistantButton() {
   const { anchor, toggleRef, toggle, close } = useAnchoredPanel(PANEL_WIDTH)
 
   const [screen, setScreen] = useState<Screen>('loading')
-  const [credentials, setCredentials] = useState<StoredCredentials | null>(null)
+  const [credentials, setCredentials] = useState<StoredCredentials | null>(getSessionCredentials)
   const [confirmForget, setConfirmForget] = useState(false)
 
   const [setupProvider, setSetupProvider] = useState<ProviderId>(PROVIDERS[0].id)
@@ -87,17 +68,34 @@ export function AiAssistantButton() {
   const [unlockPassphrase, setUnlockPassphrase] = useState('')
   const [unlockError, setUnlockError] = useState<string | null>(null)
 
-  const [conversation, setConversation] = useState<ConversationEntry[]>([])
+  const [conversation, setConversation] = useState<ConversationEntry[]>(loadConversationMemory)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [running, setRunning] = useState(false)
   const [agentMode, setAgentMode] = useState(false)
   const [chatError, setChatError] = useState<string | null>(null)
   const stopRequestedRef = useRef(false)
+  const chatScrollRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    saveConversationMemory(conversation)
+  }, [conversation])
+
+  useLayoutEffect(() => {
+    if (screen !== 'chat' || !anchor) return
+    const el = chatScrollRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [screen, anchor, conversation, sending])
+
+  function clearChat() {
+    setConversation([])
+    clearConversationMemory()
+    setChatError(null)
+  }
 
   function open() {
     if (!anchor && screen === 'loading') {
-      if (aiAssistant.enabled) {
+      if (aiAssistant.enabled || getSessionCredentials()) {
         setScreen('chat')
       } else {
         hasStoredCredentials()
@@ -160,6 +158,7 @@ export function AiAssistantButton() {
     clearCredentials().then(() => {
       setCredentials(null)
       setConversation([])
+      clearConversationMemory()
       setSetupKey('')
       setSetupPassphrase('')
       setSetupPassphraseConfirm('')
@@ -177,6 +176,7 @@ export function AiAssistantButton() {
       query,
       canvasWidth,
       canvasHeight,
+      allowCustomScripts,
       get background() {
         return draftBackground
       },
@@ -218,9 +218,17 @@ export function AiAssistantButton() {
 
         const layout = JSON.parse(query.serialize()) as SerializedNodes
         const boardState = summarizeBoardState(layout, device, background, headerStyle)
-        const systemPrompt =
-          `${SYSTEM_PROMPT_PREFIX} ${scriptsNote(allowCustomScripts)}\n\n` +
-          `Current board state (JSON):\n${JSON.stringify(boardState)}`
+        const systemPrompt = buildSystemPrompt({
+          allowCustomScripts,
+          agentMode,
+          boardStateJson: JSON.stringify(boardState),
+          memoryNote:
+            conv.length > 1
+              ? 'Some of the conversation above may be restored from this browser\'s local storage ' +
+                "(kept for up to 24 hours) rather than from this exact session -- treat it as real " +
+                "prior context you already agreed to, not something to redo or re-explain."
+              : '',
+        })
 
         const result = aiAssistant.enabled
           ? await sendChatViaBackend({ systemPrompt, conversation: conv, tools })
@@ -255,7 +263,12 @@ export function AiAssistantButton() {
 
         if (step === MAX_AGENT_STEPS) cappedOut = true
       }
-      if (cappedOut) setChatError(`Stopped after ${MAX_AGENT_STEPS} steps to avoid an unbounded loop.`)
+      if (cappedOut) {
+        setChatError(
+          `Paused after ${MAX_AGENT_STEPS} steps to avoid an unbounded loop -- the request may be only ` +
+            'partly done. Just send another message (e.g. "continue") and it will keep going from here.',
+        )
+      }
     } catch (err) {
       setChatError(
         err instanceof ProviderRequestError ? err.message : 'Something went wrong talking to the provider.',
@@ -451,17 +464,33 @@ export function AiAssistantButton() {
                 <div className="ai-assistant-chat">
                   <div className="ai-assistant-chat-header">
                     <span>AI Assistant</span>
-                    {!aiAssistant.enabled && (
-                      <button type="button" className="ai-forget-link" onClick={() => setConfirmForget(true)}>
-                        Change key
-                      </button>
-                    )}
+                    <div className="ai-assistant-chat-header-actions">
+                      {conversation.length > 0 && (
+                        <button
+                          type="button"
+                          className="ai-forget-link"
+                          onClick={clearChat}
+                          disabled={sending || running}
+                        >
+                          Clear chat
+                        </button>
+                      )}
+                      {!aiAssistant.enabled && (
+                        <button type="button" className="ai-forget-link" onClick={() => setConfirmForget(true)}>
+                          Change key
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {aiAssistant.enabled && (
                     <p className="confirm-popover-hint">
                       Using this server's shared {aiAssistant.provider} key -- no key of your own needed.
                     </p>
                   )}
+                  <p className="confirm-popover-hint ai-memory-note">
+                    Chat history is kept in this browser for 24 hours (not sent anywhere extra), then
+                    cleared automatically -- use "Clear chat" to reset it sooner.
+                  </p>
                   <label className="ai-agent-mode-row">
                     <input
                       type="checkbox"
@@ -471,7 +500,7 @@ export function AiAssistantButton() {
                     />
                     Agent mode -- run multiple steps and apply automatically
                   </label>
-                  <div className="ai-chat-scroll">
+                  <div className="ai-chat-scroll" ref={chatScrollRef}>
                     {conversation.length === 0 && (
                       <p className="confirm-popover-hint">
                         Describe a change, e.g. "make the background a soft blue" or "add a note

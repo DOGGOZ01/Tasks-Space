@@ -25,6 +25,7 @@ from .serializers import (
     SavedDesignSerializer,
     TaskBoardSerializer,
     UploadedImageSerializer,
+    _clean_design_payload,
 )
 
 IMAGE_PRUNE_GRACE = timedelta(seconds=60)
@@ -133,7 +134,7 @@ class SavedDesignUseView(APIView):
             page=page,
         )
         design = rewrite_design_image_urls(design_obj.design, url_map) if url_map else design_obj.design
-        return Response(design)
+        return Response(_clean_design_payload(design))
 
 
 class ImageUploadView(APIView):

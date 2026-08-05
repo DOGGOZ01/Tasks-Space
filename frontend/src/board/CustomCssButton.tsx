@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useDragOffset } from './useDragOffset'
 
 const CSS_PANEL_WIDTH = 280
 
@@ -20,12 +21,14 @@ export function CustomCssButton({
 }: CustomCssButtonProps) {
   const toggleRef = useRef<HTMLButtonElement>(null)
   const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null)
+  const { offset, dragHandleProps, reset: resetOffset } = useDragOffset()
 
   function toggle() {
     if (anchor) {
       setAnchor(null)
       return
     }
+    resetOffset()
     const rect = toggleRef.current?.getBoundingClientRect()
     if (!rect) {
       setAnchor({ top: 80, left: 80 })
@@ -52,15 +55,23 @@ export function CustomCssButton({
         createPortal(
           <>
             <div className="block-style-backdrop" onClick={() => setAnchor(null)} />
-            <div className="block-style-panel-wrap" style={{ top: anchor.top, left: anchor.left }}>
+            <div
+              className="block-style-panel-wrap"
+              style={{ top: anchor.top, left: anchor.left, transform: `translate3d(${offset.dx}px, ${offset.dy}px, 0)` }}
+            >
               <div
                 className="block-style-panel"
                 style={{ width: CSS_PANEL_WIDTH }}
                 onPointerDown={(e) => e.stopPropagation()}
               >
-                <div className="block-style-panel-header">
+                <div className="block-style-panel-header" {...dragHandleProps}>
                   <span>Custom CSS</span>
-                  <button type="button" onClick={() => setAnchor(null)} aria-label="Close custom CSS editor">
+                  <button
+                    type="button"
+                    onClick={() => setAnchor(null)}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    aria-label="Close custom CSS editor"
+                  >
                     ×
                   </button>
                 </div>

@@ -1,38 +1,24 @@
+import { useRef } from 'react'
+import { AnimationOverlay } from '../AnimationOverlay'
+import { scopeKeyFor } from '../animationCss'
 import { resolveBlockStyle } from '../blockStyle'
 import type { BlockStyle } from '../blockStyle'
+import { useAuth } from '../../context/AuthContext'
+import { ScopedAnimationStyle } from '../ScopedAnimationStyle'
 import type { Task } from './taskListHelpers'
 
-interface TaskListViewProps {
+interface TaskListBodyProps {
   label: string
   tasks: Task[]
-  draft: string
-  onDraftChange: (value: string) => void
-  onAdd: () => void
   onToggle: (taskId: number) => void
   onRemoveTask: (taskId: number) => void
   onPrev: () => void
   onNext: () => void
-  inputStyle?: BlockStyle
-  buttonStyle?: BlockStyle
-  buttonIcon?: string
 }
 
-export function TaskListView({
-  label,
-  tasks,
-  draft,
-  onDraftChange,
-  onAdd,
-  onToggle,
-  onRemoveTask,
-  onPrev,
-  onNext,
-  inputStyle = {},
-  buttonStyle = {},
-  buttonIcon,
-}: TaskListViewProps) {
+export function TaskListBody({ label, tasks, onToggle, onRemoveTask, onPrev, onNext }: TaskListBodyProps) {
   return (
-    <div className="task-list-block">
+    <div className="task-list-view-body">
       <div className="task-list-nav">
         <button type="button" onPointerDown={(e) => e.stopPropagation()} onClick={onPrev}>
           ‹
@@ -60,23 +46,60 @@ export function TaskListView({
           </li>
         ))}
       </ul>
-      <form
-        className="task-list-add"
-        onSubmit={(e) => {
-          e.preventDefault()
-          onAdd()
-        }}
-      >
+    </div>
+  )
+}
+
+interface TaskListAddRowProps {
+  nodeId: string
+  draft: string
+  onDraftChange: (value: string) => void
+  onAdd: () => void
+  inputStyle?: BlockStyle
+  buttonStyle?: BlockStyle
+  buttonIcon?: string
+}
+
+export function TaskListAddRow({
+  nodeId,
+  draft,
+  onDraftChange,
+  onAdd,
+  inputStyle = {},
+  buttonStyle = {},
+  buttonIcon,
+}: TaskListAddRowProps) {
+  const { allowCustomScripts } = useAuth()
+  const inputScope = scopeKeyFor(nodeId, 'input')
+  const buttonScope = scopeKeyFor(nodeId, 'addButton')
+  const inputWrapRef = useRef<HTMLDivElement>(null)
+  const buttonWrapRef = useRef<HTMLDivElement>(null)
+  return (
+    <form
+      className="task-list-add"
+      onSubmit={(e) => {
+        e.preventDefault()
+        onAdd()
+      }}
+    >
+      <ScopedAnimationStyle css={inputStyle.animationCss} scopeKey={inputScope} />
+      <ScopedAnimationStyle css={buttonStyle.animationCss} scopeKey={buttonScope} />
+      <div ref={inputWrapRef} className="task-list-add-input-wrap">
         <input
           value={draft}
           onChange={(e) => onDraftChange(e.target.value)}
           placeholder="Add a task..."
           style={resolveBlockStyle(inputStyle, false)}
+          data-anim-scope={inputScope}
         />
-        <button type="submit" style={resolveBlockStyle(buttonStyle, false)}>
+        <AnimationOverlay html={allowCustomScripts ? inputStyle.overlayHtml : undefined} targetRef={inputWrapRef} />
+      </div>
+      <div ref={buttonWrapRef} className="task-list-add-button-wrap">
+        <button type="submit" style={resolveBlockStyle(buttonStyle, false)} data-anim-scope={buttonScope}>
           {buttonIcon || '+'}
         </button>
-      </form>
-    </div>
+        <AnimationOverlay html={allowCustomScripts ? buttonStyle.overlayHtml : undefined} targetRef={buttonWrapRef} />
+      </div>
+    </form>
   )
 }

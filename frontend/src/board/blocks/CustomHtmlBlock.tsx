@@ -8,6 +8,7 @@ import { useBoardUi } from '../BoardUiContext'
 import { useAuth } from '../../context/AuthContext'
 import { applyGeometry } from '../geometry'
 import { useTaskBoard } from '../TaskBoardContext'
+import { reorderZIndex } from '../zOrder'
 import { startOfWeekKey, todayKey, type TasksByDate } from './taskListHelpers'
 
 const BASE_FORBID_TAGS = ['iframe', 'object', 'embed', 'link', 'meta', 'form']
@@ -57,6 +58,7 @@ export function CustomHtmlBlock() {
     height,
     html,
     style,
+    zIndex,
     actions: { setProp },
   } = useNode((node) => ({
     x: node.data.props.x as number,
@@ -65,8 +67,9 @@ export function CustomHtmlBlock() {
     height: node.data.props.height as number,
     html: (node.data.props.html ?? '') as string,
     style: (node.data.props.style ?? {}) as BlockStyle,
+    zIndex: (node.data.props.zIndex ?? 0) as number,
   }))
-  const { actions } = useEditor()
+  const { actions, query } = useEditor()
   const { editMode } = useBoardUi()
   const { allowCustomScripts } = useAuth()
   const { dailyTasks, weeklyTasks } = useTaskBoard()
@@ -87,6 +90,7 @@ export function CustomHtmlBlock() {
 
   return (
     <BlockShell
+      nodeId={id}
       craftRef={connect}
       title="Custom HTML"
       decorative
@@ -96,6 +100,10 @@ export function CustomHtmlBlock() {
       height={height}
       style={style}
       onStyleChange={(next) => setProp((props: Record<string, any>) => { props.style = next })}
+      zIndex={zIndex}
+      onBringToFront={() => reorderZIndex(query, actions, id, 'forward')}
+      onSendToBack={() => reorderZIndex(query, actions, id, 'backward')}
+      query={query}
       headerActions={
         <button
           type="button"
@@ -141,5 +149,5 @@ export function CustomHtmlBlock() {
 
 CustomHtmlBlock.craft = {
   displayName: 'CustomHtmlBlock',
-  props: { x: 40, y: 400, width: 340, height: 240, html: '', style: {} },
+  props: { x: 40, y: 400, width: 340, height: 240, html: '', style: {}, zIndex: 0 },
 }

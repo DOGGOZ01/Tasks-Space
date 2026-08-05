@@ -6,6 +6,7 @@ import { ApiError, apiFetch } from '../../lib/api'
 import { BlockShell } from '../BlockShell'
 import type { BlockStyle } from '../blockStyle'
 import { applyGeometry, clamp } from '../geometry'
+import { reorderZIndex } from '../zOrder'
 
 interface UploadedImageResponse {
   id: number
@@ -176,6 +177,7 @@ export function ImageBlock() {
     imageFocusX,
     imageFocusY,
     style,
+    zIndex,
     actions: { setProp },
   } = useNode((node) => ({
     x: node.data.props.x as number,
@@ -189,12 +191,13 @@ export function ImageBlock() {
     imageFocusX: (node.data.props.imageFocusX ?? 50) as number,
     imageFocusY: (node.data.props.imageFocusY ?? 50) as number,
     style: (node.data.props.style ?? {}) as BlockStyle,
+    zIndex: (node.data.props.zIndex ?? 0) as number,
   }))
   const fit = imageFit
   const zoom = clamp(imageZoom, 1, 4)
   const focusX = clamp(imageFocusX, 0, 100)
   const focusY = clamp(imageFocusY, 0, 100)
-  const { actions } = useEditor()
+  const { actions, query } = useEditor()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -225,6 +228,7 @@ export function ImageBlock() {
 
   return (
     <BlockShell
+      nodeId={id}
       craftRef={connect}
       title="Image"
       decorative
@@ -234,6 +238,10 @@ export function ImageBlock() {
       height={height}
       style={style}
       onStyleChange={(next) => setProp((props: Record<string, any>) => { props.style = next })}
+      zIndex={zIndex}
+      onBringToFront={() => reorderZIndex(query, actions, id, 'forward')}
+      onSendToBack={() => reorderZIndex(query, actions, id, 'backward')}
+      query={query}
       headerActions={
         <>
           <button
@@ -322,5 +330,6 @@ ImageBlock.craft = {
     imageFocusX: 50,
     imageFocusY: 50,
     style: {},
+    zIndex: 0,
   },
 }

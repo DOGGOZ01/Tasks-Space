@@ -29,6 +29,7 @@ import { applySavedDesign, createSavedDesign, deleteSavedDesign, listSavedDesign
 import type { SavedDesignSummary } from './savedDesigns'
 import { TaskBoardProvider } from './TaskBoardContext'
 import { Toolbox } from './Toolbox'
+import { useDragOffset } from './useDragOffset'
 import { useIsMobileDevice } from './useIsMobileDevice'
 
 interface PageResponse {
@@ -79,12 +80,14 @@ function BoardLoader({ layout, onLoaded }: { layout: SerializedNodes; onLoaded: 
 export function useAnchoredPanel(panelWidth: number) {
   const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null)
   const toggleRef = useRef<HTMLButtonElement>(null)
+  const { offset, dragHandleProps, reset: resetOffset } = useDragOffset()
 
   function toggle() {
     if (anchor) {
       setAnchor(null)
       return
     }
+    resetOffset()
     const rect = toggleRef.current?.getBoundingClientRect()
     if (!rect) {
       setAnchor({ top: 80, left: 80 })
@@ -95,7 +98,7 @@ export function useAnchoredPanel(panelWidth: number) {
     setAnchor({ top, left: Math.max(12, left) })
   }
 
-  return { anchor, toggleRef, toggle, close: () => setAnchor(null) }
+  return { anchor, offset, toggleRef, toggle, dragHandleProps, close: () => setAnchor(null) }
 }
 
 const PANEL_WIDTH = 300
@@ -127,6 +130,20 @@ function UndoRedoControls() {
         Redo
       </button>
     </div>
+  )
+}
+
+function HoverRevealToggle() {
+  const { hoverToRevealBlocks, setHoverToRevealBlocks } = useBoardUi()
+  return (
+    <label className="board-hover-reveal-toggle" title="When off, every block's edit controls always stay on top. When on, a block only surfaces on hover so overlapping blocks look right while you're not touching them.">
+      <input
+        type="checkbox"
+        checked={hoverToRevealBlocks}
+        onChange={(e) => setHoverToRevealBlocks(e.target.checked)}
+      />
+      Reveal on hover
+    </label>
   )
 }
 
@@ -171,7 +188,7 @@ function LogoutButton({ onLogout }: { onLogout: () => void }) {
 
 function HeaderStyleToggle() {
   const { headerStyle, setHeaderStyle } = useBoardUi()
-  const { anchor, toggleRef, toggle, close } = useAnchoredPanel(PANEL_WIDTH)
+  const { anchor, offset, toggleRef, toggle, dragHandleProps, close } = useAnchoredPanel(PANEL_WIDTH)
   const [target, setTarget] = useState<HeaderStyleTarget>('edit')
 
   return (
@@ -192,7 +209,7 @@ function HeaderStyleToggle() {
             <div className="block-style-backdrop" onClick={close} />
             <div
               className="block-style-panel-wrap header-style-panel-wrap"
-              style={{ top: anchor.top, left: anchor.left }}
+              style={{ top: anchor.top, left: anchor.left, transform: `translate3d(${offset.dx}px, ${offset.dy}px, 0)` }}
             >
               <div className="board-bg-type-tabs" role="tablist">
                 {HEADER_STYLE_TARGETS.map((t) => (
@@ -212,6 +229,7 @@ function HeaderStyleToggle() {
                 style={headerStyle[target] ?? {}}
                 onChange={(next) => setHeaderStyle({ ...headerStyle, [target]: next })}
                 onClose={close}
+                dragHandleProps={dragHandleProps}
               />
             </div>
           </>,
@@ -246,7 +264,7 @@ function ExportDesignButton() {
 
 function ImportDesignButton() {
   const { actions } = useEditor()
-  const { setBackground, setHeaderStyle } = useBoardUi()
+  const { applyDesignNow } = useBoardUi()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [pending, setPending] = useState<BoardDesignExport | null>(null)
@@ -299,8 +317,7 @@ function ImportDesignButton() {
   function confirmImport() {
     if (!pending) return
     actions.deserialize(pending.layout)
-    setBackground(pending.background)
-    setHeaderStyle(pending.headerStyle)
+    applyDesignNow(pending.layout, pending.background, pending.headerStyle)
     createSavedDesign(pendingName, pending).catch(() => {})
     close()
   }
@@ -370,8 +387,7 @@ type DesignsScreen =
 
 function DesignsButton() {
   const { actions, query } = useEditor()
-  const { device, background, headerStyle, setBackground, setHeaderStyle, revertToOriginalDesign } =
-    useBoardUi()
+  const { device, background, headerStyle, applyDesignNow, revertToOriginalDesign } = useBoardUi()
   const { anchor, toggleRef, toggle, close } = useAnchoredPanel(TRANSFER_POPOVER_WIDTH)
   const [designs, setDesigns] = useState<SavedDesignSummary[] | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -440,8 +456,7 @@ function DesignsButton() {
     applySavedDesign(item.id)
       .then((design) => {
         actions.deserialize(design.layout)
-        setBackground(design.background)
-        setHeaderStyle(design.headerStyle)
+        applyDesignNow(design.layout, design.background, design.headerStyle)
         close()
       })
       .catch(() => setApplyError('Could not apply that design. Try again?'))
@@ -671,7 +686,7 @@ function DeviceToggle() {
 
 function BackgroundToggle() {
   const { background, setBackground } = useBoardUi()
-  const { anchor, toggleRef, toggle, close } = useAnchoredPanel(PANEL_WIDTH)
+  const { anchor, offset, toggleRef, toggle, dragHandleProps, close } = useAnchoredPanel(PANEL_WIDTH)
 
   return (
     <>
@@ -689,8 +704,16 @@ function BackgroundToggle() {
         createPortal(
           <>
             <div className="block-style-backdrop" onClick={close} />
-            <div className="block-style-panel-wrap" style={{ top: anchor.top, left: anchor.left }}>
-              <BoardBackgroundPanel background={background} onChange={setBackground} onClose={close} />
+            <div
+              className="block-style-panel-wrap"
+              style={{ top: anchor.top, left: anchor.left, transform: `translate3d(${offset.dx}px, ${offset.dy}px, 0)` }}
+            >
+              <BoardBackgroundPanel
+                background={background}
+                onChange={setBackground}
+                onClose={close}
+                dragHandleProps={dragHandleProps}
+              />
             </div>
           </>,
           document.body,
@@ -703,7 +726,7 @@ type DesignMenuStep = 'menu' | 'background' | 'buttons'
 
 function MobileDesignMenu() {
   const { background, setBackground, headerStyle, setHeaderStyle } = useBoardUi()
-  const { anchor, toggleRef, toggle, close } = useAnchoredPanel(PANEL_WIDTH)
+  const { anchor, offset, toggleRef, toggle, dragHandleProps, close } = useAnchoredPanel(PANEL_WIDTH)
   const [step, setStep] = useState<DesignMenuStep>('menu')
   const [target, setTarget] = useState<HeaderStyleTarget>('edit')
 
@@ -730,13 +753,18 @@ function MobileDesignMenu() {
             <div className="block-style-backdrop" onClick={closeAll} />
             <div
               className="block-style-panel-wrap header-style-panel-wrap"
-              style={{ top: anchor.top, left: anchor.left }}
+              style={{ top: anchor.top, left: anchor.left, transform: `translate3d(${offset.dx}px, ${offset.dy}px, 0)` }}
             >
               {step === 'menu' && (
                 <div className="block-style-panel">
-                  <div className="block-style-panel-header">
+                  <div className="block-style-panel-header" {...dragHandleProps}>
                     <span>Design</span>
-                    <button type="button" onClick={closeAll} aria-label="Close">
+                    <button
+                      type="button"
+                      onClick={closeAll}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      aria-label="Close"
+                    >
                       ×
                     </button>
                   </div>
@@ -753,7 +781,12 @@ function MobileDesignMenu() {
                 </div>
               )}
               {step === 'background' && (
-                <BoardBackgroundPanel background={background} onChange={setBackground} onClose={closeAll} />
+                <BoardBackgroundPanel
+                  background={background}
+                  onChange={setBackground}
+                  onClose={closeAll}
+                  dragHandleProps={dragHandleProps}
+                />
               )}
               {step === 'buttons' && (
                 <>
@@ -775,6 +808,7 @@ function MobileDesignMenu() {
                     style={headerStyle[target] ?? {}}
                     onChange={(next) => setHeaderStyle({ ...headerStyle, [target]: next })}
                     onClose={closeAll}
+                    dragHandleProps={dragHandleProps}
                   />
                 </>
               )}
@@ -786,8 +820,38 @@ function MobileDesignMenu() {
   )
 }
 
+// Each line's position is independently rounded to the nearest *device* pixel from its true
+// snap-grid coordinate (i * GRID_SIZE * scale), not derived by repeating a rounded tile size --
+// repeating a rounded tile compounds its rounding error every repeat, so lines drift further and
+// further from where blocks actually snap the farther they are from the origin. Rounding each
+// line's own absolute position instead keeps every line within half a device pixel of its true
+// snapped coordinate, with no cumulative drift, while still landing on a crisp pixel boundary.
+function buildGridLineGradient(direction: 'to right' | 'to bottom', canvasSize: number, scale: number, dpr: number): string {
+  const lineWidth = Math.max(1, Math.round(dpr)) / dpr
+  const count = Math.floor(canvasSize / GRID_SIZE)
+  const stops: string[] = []
+  let lastEnd = -Infinity
+  for (let i = 0; i <= count; i++) {
+    const pos = Math.round(i * GRID_SIZE * scale * dpr) / dpr
+    if (pos < lastEnd) continue
+    stops.push(`transparent ${pos}px`, `#fff ${pos}px`, `#fff ${pos + lineWidth}px`, `transparent ${pos + lineWidth}px`)
+    lastEnd = pos + lineWidth
+  }
+  return `linear-gradient(${direction}, ${stops.join(', ')})`
+}
+
 function BoardStage({ children }: { children: ReactNode }) {
-  const { device, editMode, scale, setScale, canvasWidth, canvasHeight, background } = useBoardUi()
+  const {
+    device,
+    editMode,
+    scale,
+    setScale,
+    canvasWidth,
+    canvasHeight,
+    background,
+    hoverToRevealBlocks,
+    setControlsLayerNode,
+  } = useBoardUi()
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -811,14 +875,14 @@ function BoardStage({ children }: { children: ReactNode }) {
     return () => observer.disconnect()
   }, [device, canvasWidth, canvasHeight, setScale])
 
-  const gridSize = GRID_SIZE * scale
+  const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
   return (
     <div
       className={`board-stage board-stage-${device}`}
       ref={wrapperRef}
       style={resolveBoardBackground(background)}
     >
-      {background.type === 'html' && <BoardBackgroundLayer background={background} />}
+      {background.type === 'html' && device === 'desktop' && <BoardBackgroundLayer background={background} />}
       <div
         className="board-canvas-scaler"
         style={{
@@ -826,17 +890,27 @@ function BoardStage({ children }: { children: ReactNode }) {
           height: canvasHeight * scale,
         }}
       >
+        {background.type === 'html' && device === 'mobile' && <BoardBackgroundLayer background={background} />}
         {editMode && (
           <div
             className="board-canvas-grid-overlay"
-            style={{ backgroundSize: `${gridSize}px ${gridSize}px` }}
+            style={{
+              backgroundImage: [
+                buildGridLineGradient('to right', canvasWidth, scale, dpr),
+                buildGridLineGradient('to bottom', canvasHeight, scale, dpr),
+              ].join(', '),
+              backgroundRepeat: 'no-repeat',
+            }}
           />
         )}
         <div
-          className="board-canvas-inner"
+          className={`board-canvas-inner${hoverToRevealBlocks ? ' board-hover-reveal' : ''}`}
           style={{ width: canvasWidth, height: canvasHeight, transform: `scale(${scale})` }}
         >
           {children}
+          {editMode && !hoverToRevealBlocks && (
+            <div className="board-controls-layer" ref={setControlsLayerNode} />
+          )}
         </div>
       </div>
     </div>
@@ -870,6 +944,7 @@ function BoardChrome({
           {editMode && isRealMobile && <MobileDesignMenu />}
           {editMode && !isRealMobile && <BackgroundToggle />}
           {editMode && !isRealMobile && <HeaderStyleToggle />}
+          {editMode && <HoverRevealToggle />}
           <EditModeToggle />
           <LogoutButton onLogout={onLogout} />
         </div>
@@ -1002,6 +1077,29 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
       .catch(() => setStatus('error'))
   }
 
+  function applyDesignNow(nextLayout: SerializedNodes, nextBackground: BoardBackground, nextHeaderStyle: HeaderStyle) {
+    Object.values(fieldSaveTimeoutsRef.current).forEach((timeoutId) => {
+      if (timeoutId) window.clearTimeout(timeoutId)
+    })
+    fieldSaveTimeoutsRef.current = {}
+
+    setLayouts((prev) => (prev ? { ...prev, [device]: nextLayout } : prev))
+    setBackgroundState(nextBackground)
+    setHeaderStyleState(nextHeaderStyle)
+
+    setStatus('saving')
+    apiFetch('/api/page/', {
+      method: 'PATCH',
+      body: JSON.stringify({
+        [LAYOUT_FIELD[device]]: nextLayout,
+        background: nextBackground,
+        header_style: nextHeaderStyle,
+      }),
+    })
+      .then(() => setStatus('saved'))
+      .catch(() => setStatus('error'))
+  }
+
   function handleNodesChange(forDevice: DeviceMode, query: { serialize: () => string }) {
     if (!readyRef.current) return
     const parsedLayout = JSON.parse(query.serialize()) as SerializedNodes
@@ -1026,6 +1124,7 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
         headerStyle={headerStyle}
         onHeaderStyleChange={setHeaderStyle}
         onRevertToOriginalDesign={revertToOriginalDesign}
+        onApplyDesignNow={applyDesignNow}
       >
         <BoardEditor
           layout={layouts[device]}

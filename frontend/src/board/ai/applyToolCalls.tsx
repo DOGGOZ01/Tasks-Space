@@ -2,6 +2,7 @@ import { ROOT_NODE } from '@craftjs/core'
 import type { ReactElement } from 'react'
 import type { BlockStyle } from '../blockStyle'
 import type { BoardBackground } from '../boardBackground'
+import type { BlockElementId, ElementLayout, ElementRect } from '../elementLayout'
 import { clamp, MIN_BLOCK_HEIGHT, MIN_BLOCK_WIDTH } from '../geometry'
 import type { HeaderStyle, HeaderStyleTarget } from '../headerStyle'
 import { CustomHtmlBlock } from '../blocks/CustomHtmlBlock'
@@ -35,6 +36,7 @@ export interface ApplyContext {
   canvasHeight: number
   background: BoardBackground
   headerStyle: HeaderStyle
+  allowCustomScripts: boolean
   setBackground: (next: BoardBackground) => void
   setHeaderStyle: (next: HeaderStyle) => void
 }
@@ -45,7 +47,7 @@ export interface ApplyResult {
   error?: string
 }
 
-function cleanStyle(raw: unknown): BlockStyle {
+function cleanStyle(raw: unknown, allowCustomScripts: boolean): BlockStyle {
   if (!raw || typeof raw !== 'object') return {}
   const s = raw as Record<string, unknown>
   const out: BlockStyle = {}
@@ -56,6 +58,8 @@ function cleanStyle(raw: unknown): BlockStyle {
   if (typeof s.borderRadius === 'number') out.borderRadius = clamp(s.borderRadius, 0, 60)
   if (typeof s.opacity === 'number') out.opacity = clamp(s.opacity, 0.1, 1)
   if (typeof s.customCss === 'string') out.customCss = s.customCss.slice(0, 4000)
+  if (typeof s.animationCss === 'string') out.animationCss = s.animationCss.slice(0, 4000)
+  if (allowCustomScripts && typeof s.overlayHtml === 'string') out.overlayHtml = s.overlayHtml.slice(0, 20000)
   return out
 }
 
@@ -82,15 +86,56 @@ interface PartStyles {
   addButton: BlockStyle | null
 }
 
-function readPartStyles(args: Record<string, unknown>): PartStyles {
+function readPartStyles(args: Record<string, unknown>, allowCustomScripts: boolean): PartStyles {
   const raw = args.partStyles
   const parts = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
   return {
-    body: parts.body !== undefined ? cleanStyle(parts.body) : null,
-    header: parts.header !== undefined ? cleanStyle(parts.header) : null,
-    input: parts.input !== undefined ? cleanStyle(parts.input) : null,
-    addButton: parts.addButton !== undefined ? cleanStyle(parts.addButton) : null,
+    body: parts.body !== undefined ? cleanStyle(parts.body, allowCustomScripts) : null,
+    header: parts.header !== undefined ? cleanStyle(parts.header, allowCustomScripts) : null,
+    input: parts.input !== undefined ? cleanStyle(parts.input, allowCustomScripts) : null,
+    addButton: parts.addButton !== undefined ? cleanStyle(parts.addButton, allowCustomScripts) : null,
   }
+}
+
+function cleanElementRect(raw: unknown): ElementRect | null {
+  if (!raw || typeof raw !== 'object') return null
+  const r = raw as Record<string, unknown>
+  if (
+    typeof r.x !== 'number' ||
+    typeof r.y !== 'number' ||
+    typeof r.width !== 'number' ||
+    typeof r.height !== 'number'
+  ) {
+    return null
+  }
+  const width = clamp(r.width, 5, 100)
+  const height = clamp(r.height, 5, 100)
+  const x = clamp(Math.min(r.x, 100 - width), 0, 100)
+  const y = clamp(Math.min(r.y, 100 - height), 0, 100)
+  const out: ElementRect = { x, y, width, height }
+  if (r.hidden === true) out.hidden = true
+  return out
+}
+
+function cleanElementLayout(raw: unknown, elementIds: BlockElementId[]): ElementLayout {
+  if (!raw || typeof raw !== 'object') return {}
+  const source = raw as Record<string, unknown>
+  const out: ElementLayout = {}
+  for (const id of elementIds) {
+    if (!(id in source)) continue
+    const rect = cleanElementRect(source[id])
+    if (rect) out[id] = rect
+  }
+  return out
+}
+
+function elementIdsFor(blockType: BlockTypeName | undefined): BlockElementId[] {
+  if (!blockType) return ['body']
+  return [
+    ...(HEADER_STYLE_BLOCK_TYPES.has(blockType) ? (['header'] as const) : []),
+    'body' as const,
+    ...(INPUT_STYLE_BLOCK_TYPES.has(blockType) ? (['addRow'] as const) : []),
+  ]
 }
 
 function cleanGeometry(
@@ -139,7 +184,7 @@ function applySetHeaderStyle(call: ToolCallRequest, ctx: ApplyContext): ApplyRes
   if (target !== 'edit' && target !== 'logout' && target !== 'username') {
     return { toolCall: call, summary: '', error: `Invalid header target "${String(target)}".` }
   }
-  const style = cleanStyle(args.style)
+  const style = cleanStyle(args.style, false)
   ctx.setHeaderStyle({ ...ctx.headerStyle, [target as HeaderStyleTarget]: style })
   return { toolCall: call, summary: `Styled the ${target} button/label.` }
 }
@@ -162,7 +207,7 @@ function applyAddBlock(call: ToolCallRequest, ctx: ApplyContext): ApplyResult {
     height: (nodeProps.height as number) ?? 100,
   })
   Object.assign(nodeProps, geometry, cleanProps(blockType, args.props))
-  const partStyles = readPartStyles(args)
+  const partStyles = readPartStyles(args, ctx.allowCustomScripts)
   nodeProps.style = { ...(nodeProps.style as object), ...(partStyles.body ?? {}) }
 
   if (HEADER_STYLE_BLOCK_TYPES.has(blockType)) {
@@ -184,6 +229,13 @@ function applyAddBlock(call: ToolCallRequest, ctx: ApplyContext): ApplyResult {
       nodeProps.addButtonIcon = args.addButtonIcon.slice(0, 4)
     }
   }
+  if (args.elementLayout !== undefined) {
+    const elementLayoutUpdate = cleanElementLayout(args.elementLayout, elementIdsFor(blockType))
+    if (Object.keys(elementLayoutUpdate).length > 0) nodeProps.elementLayout = elementLayoutUpdate
+  }
+  if (typeof args.zIndex === 'number') {
+    nodeProps.zIndex = clamp(args.zIndex, 0, 100000)
+  }
 
   ctx.actions.addNodeTree(tree, ROOT_NODE)
   return { toolCall: call, summary: `Added a ${blockType} block (id ${rootId}).` }
@@ -204,9 +256,7 @@ function applyUpdateBlock(call: ToolCallRequest, ctx: ApplyContext): ApplyResult
   if (!existing) {
     return { toolCall: call, summary: '', error: `Block "${id}" not found.` }
   }
-  const blockType = (existing.data.type as { resolvedName?: string } | undefined)?.resolvedName as
-    | BlockTypeName
-    | undefined
+  const blockType = existing.data.name as BlockTypeName | undefined
   const currentProps = existing.data.props as Record<string, unknown>
 
   const geometry = cleanGeometry(args, ctx.canvasWidth, ctx.canvasHeight, {
@@ -216,12 +266,15 @@ function applyUpdateBlock(call: ToolCallRequest, ctx: ApplyContext): ApplyResult
     height: (currentProps.height as number) ?? 100,
   })
   const propUpdates = blockType ? cleanProps(blockType, args.props) : {}
-  const partStyles = readPartStyles(args)
+  const partStyles = readPartStyles(args, ctx.allowCustomScripts)
   const headerCapable = blockType != null && HEADER_STYLE_BLOCK_TYPES.has(blockType)
   const inputCapable = blockType != null && INPUT_STYLE_BLOCK_TYPES.has(blockType)
   const titleUpdate = headerCapable && typeof args.title === 'string' ? args.title.slice(0, 80) : null
   const addButtonIconUpdate =
     inputCapable && typeof args.addButtonIcon === 'string' ? args.addButtonIcon.slice(0, 4) : null
+  const elementLayoutUpdate =
+    args.elementLayout !== undefined ? cleanElementLayout(args.elementLayout, elementIdsFor(blockType)) : null
+  const zIndexUpdate = typeof args.zIndex === 'number' ? clamp(args.zIndex, 0, 100000) : null
 
   ctx.actions.setProp(id, (props: Record<string, unknown>) => {
     Object.assign(props, geometry, propUpdates)
@@ -237,6 +290,10 @@ function applyUpdateBlock(call: ToolCallRequest, ctx: ApplyContext): ApplyResult
       props.addButtonStyle = { ...(props.addButtonStyle as object), ...partStyles.addButton }
     }
     if (addButtonIconUpdate !== null) props.addButtonIcon = addButtonIconUpdate
+    if (elementLayoutUpdate && Object.keys(elementLayoutUpdate).length > 0) {
+      props.elementLayout = elementLayoutUpdate
+    }
+    if (zIndexUpdate !== null) props.zIndex = zIndexUpdate
   })
   return { toolCall: call, summary: `Updated block "${id}".` }
 }

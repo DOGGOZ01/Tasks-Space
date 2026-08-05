@@ -2,10 +2,12 @@ import { useEditor, useNode } from '@craftjs/core'
 import { useState } from 'react'
 import { BlockShell } from '../BlockShell'
 import type { BlockStyle } from '../blockStyle'
+import type { ElementLayout } from '../elementLayout'
 import { applyGeometry } from '../geometry'
 import { useTaskBoard } from '../TaskBoardContext'
+import { reorderZIndex } from '../zOrder'
 import { TaskInputStyleButton } from './TaskInputStyleButton'
-import { TaskListView } from './TaskListView'
+import { TaskListAddRow, TaskListBody } from './TaskListView'
 import { addDays, todayKey, type Task } from './taskListHelpers'
 
 export function DailyTaskListBlock() {
@@ -22,6 +24,8 @@ export function DailyTaskListBlock() {
     inputStyle,
     addButtonStyle,
     addButtonIcon,
+    elementLayout,
+    zIndex,
     actions: { setProp },
   } = useNode((node) => ({
     x: node.data.props.x as number,
@@ -34,8 +38,10 @@ export function DailyTaskListBlock() {
     inputStyle: (node.data.props.inputStyle ?? {}) as BlockStyle,
     addButtonStyle: (node.data.props.addButtonStyle ?? {}) as BlockStyle,
     addButtonIcon: (node.data.props.addButtonIcon ?? '') as string,
+    elementLayout: (node.data.props.elementLayout ?? {}) as ElementLayout,
+    zIndex: (node.data.props.zIndex ?? 0) as number,
   }))
-  const { actions } = useEditor()
+  const { actions, query } = useEditor()
   const { dailyTasks, setDailyTasksForDate } = useTaskBoard()
   const [dateKey, setDateKey] = useState(todayKey)
   const [draft, setDraft] = useState('')
@@ -48,6 +54,7 @@ export function DailyTaskListBlock() {
 
   return (
     <BlockShell
+      nodeId={id}
       craftRef={connect}
       title="Daily tasks"
       x={x}
@@ -70,28 +77,40 @@ export function DailyTaskListBlock() {
           onButtonIconChange={(next) => setProp((props: Record<string, any>) => { props.addButtonIcon = next })}
         />
       }
+      elementLayout={elementLayout}
+      onElementLayoutChange={(next) => setProp((props: Record<string, any>) => { props.elementLayout = next }, 500)}
+      bodyLabel="Tasks"
+      zIndex={zIndex}
+      onBringToFront={() => reorderZIndex(query, actions, id, 'forward')}
+      onSendToBack={() => reorderZIndex(query, actions, id, 'backward')}
+      query={query}
+      addRowSlot={
+        <TaskListAddRow
+          nodeId={id}
+          draft={draft}
+          onDraftChange={setDraft}
+          onAdd={() => {
+            if (!draft.trim()) return
+            updateTasks([...tasks, { id: Date.now(), text: draft.trim(), done: false }])
+            setDraft('')
+          }}
+          inputStyle={inputStyle}
+          buttonStyle={addButtonStyle}
+          buttonIcon={addButtonIcon}
+        />
+      }
       onGeometryChange={(geometry) => applyGeometry(setProp, geometry)}
       onRemove={() => actions.delete(id)}
     >
-      <TaskListView
+      <TaskListBody
         label={dateKey}
         tasks={tasks}
-        draft={draft}
-        onDraftChange={setDraft}
-        onAdd={() => {
-          if (!draft.trim()) return
-          updateTasks([...tasks, { id: Date.now(), text: draft.trim(), done: false }])
-          setDraft('')
-        }}
         onToggle={(taskId) =>
           updateTasks(tasks.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t)))
         }
         onRemoveTask={(taskId) => updateTasks(tasks.filter((t) => t.id !== taskId))}
         onPrev={() => setDateKey((d) => addDays(d, -1))}
         onNext={() => setDateKey((d) => addDays(d, 1))}
-        inputStyle={inputStyle}
-        buttonStyle={addButtonStyle}
-        buttonIcon={addButtonIcon}
       />
     </BlockShell>
   )
@@ -110,5 +129,7 @@ DailyTaskListBlock.craft = {
     inputStyle: {},
     addButtonStyle: {},
     addButtonIcon: '',
+    elementLayout: {},
+    zIndex: 0,
   },
 }

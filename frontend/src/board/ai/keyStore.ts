@@ -47,6 +47,38 @@ async function writePayload(payload: EncryptedPayload | null): Promise<void> {
   })
 }
 
+// Kept in JS memory so the passphrase doesn't need to be re-entered every time the AI assistant
+// button remounts (it lives inside <Editor key={device}> and behind `editMode &&`, so switching
+// device or leaving/re-entering edit mode both remount it). Also mirrored into sessionStorage --
+// user-requested tradeoff: this means the decrypted key is readable from devtools for as long as
+// the tab stays open, but it means a page reload during the same tab session no longer re-prompts
+// for the passphrase either. Still cleared when the tab/window actually closes (sessionStorage's own
+// lifetime), and "Forget this key" (clearCredentials) removes it immediately either way.
+const SESSION_STORAGE_KEY = 'task-tracker:ai-session-credentials'
+let sessionCredentials: StoredCredentials | null = readSessionStorageCredentials()
+
+function readSessionStorageCredentials(): StoredCredentials | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY)
+    return raw ? (JSON.parse(raw) as StoredCredentials) : null
+  } catch {
+    return null
+  }
+}
+
+function writeSessionStorageCredentials(credentials: StoredCredentials | null): void {
+  try {
+    if (credentials) sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(credentials))
+    else sessionStorage.removeItem(SESSION_STORAGE_KEY)
+  } catch {
+    // sessionStorage unavailable (e.g. private browsing quota) -- in-memory cache still works for this tab.
+  }
+}
+
+export function getSessionCredentials(): StoredCredentials | null {
+  return sessionCredentials
+}
+
 export async function hasStoredCredentials(): Promise<boolean> {
   return (await readPayload()) !== null
 }
@@ -57,16 +89,23 @@ export async function saveCredentials(
 ): Promise<void> {
   const payload = await encryptJson(credentials, passphrase)
   await writePayload(payload)
+  sessionCredentials = credentials
+  writeSessionStorageCredentials(credentials)
 }
 
 export async function unlockCredentials(passphrase: string): Promise<StoredCredentials> {
   const payload = await readPayload()
   if (!payload) throw new Error('No saved API key.')
-  return decryptJson<StoredCredentials>(payload, passphrase)
+  const credentials = await decryptJson<StoredCredentials>(payload, passphrase)
+  sessionCredentials = credentials
+  writeSessionStorageCredentials(credentials)
+  return credentials
 }
 
 export async function clearCredentials(): Promise<void> {
   await writePayload(null)
+  sessionCredentials = null
+  writeSessionStorageCredentials(null)
 }
 
 export { WrongPassphraseError }

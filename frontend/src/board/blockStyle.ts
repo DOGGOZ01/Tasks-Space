@@ -9,6 +9,8 @@ export interface BlockStyle {
   borderRadius?: number
   opacity?: number
   customCss?: string
+  animationCss?: string
+  overlayHtml?: string
 }
 
 export const DEFAULT_BLOCK_STYLE: BlockStyle = {}

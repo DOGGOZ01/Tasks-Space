@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BlockStylePanel } from '../BlockStylePanel'
 import type { BlockStyle } from '../blockStyle'
+import { useDragOffset } from '../useDragOffset'
 
 const PANEL_WIDTH = 300
 
@@ -30,12 +31,14 @@ export function TaskInputStyleButton({
   const toggleRef = useRef<HTMLButtonElement>(null)
   const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null)
   const [target, setTarget] = useState<RowTarget>('input')
+  const { offset, dragHandleProps, reset: resetOffset } = useDragOffset()
 
   function toggle() {
     if (anchor) {
       setAnchor(null)
       return
     }
+    resetOffset()
     const rect = toggleRef.current?.getBoundingClientRect()
     if (!rect) {
       setAnchor({ top: 80, left: 80 })
@@ -56,7 +59,7 @@ export function TaskInputStyleButton({
         onPointerDown={(e) => e.stopPropagation()}
         aria-pressed={anchor != null}
       >
-        Add row style
+        Input style
       </button>
       {anchor &&
         createPortal(
@@ -64,7 +67,7 @@ export function TaskInputStyleButton({
             <div className="block-style-backdrop" onClick={() => setAnchor(null)} />
             <div
               className="block-style-panel-wrap header-style-panel-wrap"
-              style={{ top: anchor.top, left: anchor.left }}
+              style={{ top: anchor.top, left: anchor.left, transform: `translate3d(${offset.dx}px, ${offset.dy}px, 0)` }}
               onPointerDown={(e) => e.stopPropagation()}
             >
               <div className="board-bg-type-tabs" role="tablist">
@@ -86,7 +89,7 @@ export function TaskInputStyleButton({
                   style={inputStyle}
                   onChange={onInputStyleChange}
                   onClose={() => setAnchor(null)}
-                  showCustomCss={false}
+                  dragHandleProps={dragHandleProps}
                 />
               )}
               {target === 'button' && (
@@ -95,7 +98,7 @@ export function TaskInputStyleButton({
                   style={buttonStyle}
                   onChange={onButtonStyleChange}
                   onClose={() => setAnchor(null)}
-                  showCustomCss={false}
+                  dragHandleProps={dragHandleProps}
                 >
                   <label className="block-style-row">
                     <span className="block-style-label">Icon</span>

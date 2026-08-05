@@ -1,12 +1,13 @@
 import type { SerializedNodes } from '@craftjs/core'
 import type { BoardBackground } from '../boardBackground'
+import type { ElementLayout } from '../elementLayout'
 import type { DeviceMode } from '../geometry'
 import { boardHeightFor, boardWidthFor } from '../geometry'
 import type { HeaderStyle } from '../headerStyle'
 import { BLOCK_PROP_KEYS, HEADER_STYLE_BLOCK_TYPES, INPUT_STYLE_BLOCK_TYPES } from './tools'
 import type { BlockTypeName } from './tools'
 
-const CONTENT_PREVIEW_LIMIT = 300
+const CONTENT_PREVIEW_LIMIT = 4000
 
 function truncate(value: unknown): unknown {
   if (typeof value === 'string' && value.length > CONTENT_PREVIEW_LIMIT) {
@@ -31,6 +32,8 @@ export interface BoardStateBlockSummary {
   }
   title?: string
   addButtonIcon?: string
+  elementLayout?: ElementLayout
+  zIndex?: number
 }
 
 export interface BoardStateSummary {
@@ -67,7 +70,10 @@ export function summarizeBoardState(
         height: nodeProps.height as number | undefined,
         props,
         partStyles: { body: (nodeProps.style as Record<string, unknown>) ?? {} },
+        zIndex: (nodeProps.zIndex as number | undefined) ?? 0,
       }
+      const elementLayout = (nodeProps.elementLayout as ElementLayout | undefined) ?? {}
+      if (Object.keys(elementLayout).length > 0) summary.elementLayout = elementLayout
       if (HEADER_STYLE_BLOCK_TYPES.has(type as BlockTypeName)) {
         summary.partStyles.header = (nodeProps.headerStyle as Record<string, unknown>) ?? {}
         summary.title = (nodeProps.titleOverride as string) ?? ''

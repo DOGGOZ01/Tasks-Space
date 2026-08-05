@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react'
-import { CustomCssButton } from './CustomCssButton'
+import type { HTMLAttributes, ReactNode } from 'react'
+import { CustomCodeButton } from './CustomCodeButton'
+import { useAuth } from '../context/AuthContext'
 import { STYLE_PRESETS } from './blockStyle'
 import type { BlockStyle } from './blockStyle'
 
@@ -9,6 +10,7 @@ interface BlockStylePanelProps {
   onChange: (next: BlockStyle) => void
   onClose: () => void
   showCustomCss?: boolean
+  dragHandleProps?: HTMLAttributes<HTMLDivElement>
   children?: ReactNode
 }
 
@@ -27,13 +29,20 @@ export function BlockStylePanel({
   onChange,
   onClose,
   showCustomCss = true,
+  dragHandleProps,
   children,
 }: BlockStylePanelProps) {
+  const { allowCustomScripts } = useAuth()
   return (
     <div className="block-style-panel" onPointerDown={(e) => e.stopPropagation()}>
-      <div className="block-style-panel-header">
+      <div className="block-style-panel-header" {...dragHandleProps}>
         <span>{title}</span>
-        <button type="button" onClick={onClose} aria-label="Close style panel">
+        <button
+          type="button"
+          onClick={onClose}
+          onPointerDown={(e) => e.stopPropagation()}
+          aria-label="Close style panel"
+        >
           ×
         </button>
       </div>
@@ -43,20 +52,19 @@ export function BlockStylePanel({
           <button
             key={preset.label}
             type="button"
-            onClick={() => onChange({ ...preset.style, customCss: style.customCss })}
+            onClick={() =>
+              onChange({
+                ...preset.style,
+                customCss: style.customCss,
+                animationCss: style.animationCss,
+                overlayHtml: style.overlayHtml,
+              })
+            }
           >
             {preset.label}
           </button>
         ))}
       </div>
-
-      {showCustomCss && (
-        <CustomCssButton
-          className="block-style-full-button"
-          value={style.customCss ?? ''}
-          onChange={(customCss) => set(style, onChange, 'customCss', customCss)}
-        />
-      )}
 
       <label className="block-style-row">
         <span className="block-style-label">Background</span>
@@ -138,7 +146,7 @@ export function BlockStylePanel({
         <div className="block-style-control">
           <input
             type="range"
-            min={20}
+            min={0}
             max={100}
             value={Math.round((style.opacity ?? 1) * 100)}
             onChange={(e) => set(style, onChange, 'opacity', Number(e.target.value) / 100)}
@@ -146,6 +154,15 @@ export function BlockStylePanel({
           <span className="block-style-value">{Math.round((style.opacity ?? 1) * 100)}%</span>
         </div>
       </label>
+
+      {showCustomCss && (
+        <CustomCodeButton
+          style={style}
+          onChange={onChange}
+          allowCustomScripts={allowCustomScripts}
+          className="block-style-full-button"
+        />
+      )}
 
       {children}
     </div>

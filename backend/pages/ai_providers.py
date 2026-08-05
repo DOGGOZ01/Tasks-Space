@@ -77,7 +77,7 @@ def _send_anthropic(api_key, model, system_prompt, conversation, tools):
             },
             json={
                 "model": model,
-                "max_tokens": 4096,
+                "max_tokens": 16000,
                 "system": system_prompt,
                 "messages": _to_anthropic_messages(conversation),
                 "tools": [
@@ -139,6 +139,7 @@ def _send_openai_compatible(url, api_key, model, system_prompt, conversation, to
             headers={"content-type": "application/json", "authorization": f"Bearer {api_key}"},
             json={
                 "model": model,
+                "max_tokens": 16000,
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     *_to_openai_messages(conversation),

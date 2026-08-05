@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import type { ChangeEvent } from 'react'
+import type { ChangeEvent, HTMLAttributes } from 'react'
 import { apiFetch, ApiError } from '../lib/api'
 import type { BoardBackground, BoardBackgroundImageFit, BoardBackgroundType } from './boardBackground'
 import { BACKGROUND_PRESET_COLORS } from './boardBackground'
@@ -14,6 +14,7 @@ interface BoardBackgroundPanelProps {
   background: BoardBackground
   onChange: (next: BoardBackground) => void
   onClose: () => void
+  dragHandleProps?: HTMLAttributes<HTMLDivElement>
 }
 
 const TYPE_LABELS: Record<Exclude<BoardBackgroundType, 'custom'>, string> = {
@@ -22,7 +23,12 @@ const TYPE_LABELS: Record<Exclude<BoardBackgroundType, 'custom'>, string> = {
   html: 'Animated',
 }
 
-export function BoardBackgroundPanel({ background, onChange, onClose }: BoardBackgroundPanelProps) {
+export function BoardBackgroundPanel({
+  background,
+  onChange,
+  onClose,
+  dragHandleProps,
+}: BoardBackgroundPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -55,9 +61,14 @@ export function BoardBackgroundPanel({ background, onChange, onClose }: BoardBac
 
   return (
     <div className="board-bg-panel" onPointerDown={(e) => e.stopPropagation()}>
-      <div className="block-style-panel-header">
+      <div className="block-style-panel-header" {...dragHandleProps}>
         <span>Board background</span>
-        <button type="button" onClick={onClose} aria-label="Close background panel">
+        <button
+          type="button"
+          onClick={onClose}
+          onPointerDown={(e) => e.stopPropagation()}
+          aria-label="Close background panel"
+        >
           ×
         </button>
       </div>

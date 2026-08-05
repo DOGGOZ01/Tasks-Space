@@ -1,7 +1,9 @@
 import { useEditor, useNode } from '@craftjs/core'
 import { BlockShell } from '../BlockShell'
 import type { BlockStyle } from '../blockStyle'
+import type { ElementLayout } from '../elementLayout'
 import { applyGeometry } from '../geometry'
+import { reorderZIndex } from '../zOrder'
 
 export function NoteBlock() {
   const {
@@ -15,6 +17,8 @@ export function NoteBlock() {
     style,
     headerStyle,
     titleOverride,
+    elementLayout,
+    zIndex,
     actions: { setProp },
   } = useNode((node) => ({
     x: node.data.props.x as number,
@@ -25,11 +29,14 @@ export function NoteBlock() {
     style: (node.data.props.style ?? {}) as BlockStyle,
     headerStyle: (node.data.props.headerStyle ?? {}) as BlockStyle,
     titleOverride: (node.data.props.titleOverride ?? '') as string,
+    elementLayout: (node.data.props.elementLayout ?? {}) as ElementLayout,
+    zIndex: (node.data.props.zIndex ?? 0) as number,
   }))
-  const { actions } = useEditor()
+  const { actions, query } = useEditor()
 
   return (
     <BlockShell
+      nodeId={id}
       craftRef={connect}
       title="Note"
       x={x}
@@ -42,6 +49,12 @@ export function NoteBlock() {
       onTitleChange={(next) => setProp((props: Record<string, any>) => { props.titleOverride = next })}
       headerStyle={headerStyle}
       onHeaderStyleChange={(next) => setProp((props: Record<string, any>) => { props.headerStyle = next })}
+      elementLayout={elementLayout}
+      onElementLayoutChange={(next) => setProp((props: Record<string, any>) => { props.elementLayout = next }, 500)}
+      zIndex={zIndex}
+      onBringToFront={() => reorderZIndex(query, actions, id, 'forward')}
+      onSendToBack={() => reorderZIndex(query, actions, id, 'backward')}
+      query={query}
       onGeometryChange={(geometry) => applyGeometry(setProp, geometry)}
       onRemove={() => actions.delete(id)}
     >
@@ -62,5 +75,16 @@ export function NoteBlock() {
 
 NoteBlock.craft = {
   displayName: 'NoteBlock',
-  props: { x: 40, y: 40, width: 260, height: 160, text: '', style: {}, headerStyle: {}, titleOverride: '' },
+  props: {
+    x: 40,
+    y: 40,
+    width: 260,
+    height: 160,
+    text: '',
+    style: {},
+    headerStyle: {},
+    titleOverride: '',
+    elementLayout: {},
+    zIndex: 0,
+  },
 }

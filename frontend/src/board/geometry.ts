@@ -35,11 +35,13 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
 }
 
+const GEOMETRY_HISTORY_THROTTLE_MS = 500
+
 export function applyGeometry(setProp: SetProp, geometry: Geometry) {
   setProp((props) => {
     props.x = geometry.x
     props.y = geometry.y
     props.width = geometry.width
     props.height = geometry.height
-  }, 0)
+  }, GEOMETRY_HISTORY_THROTTLE_MS)
 }

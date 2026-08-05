@@ -1,3 +1,4 @@
+import type { SerializedNodes } from '@craftjs/core'
 import { createContext, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { BoardBackground } from './boardBackground'
@@ -20,6 +21,21 @@ interface BoardUiValue {
   headerStyle: HeaderStyle
   setHeaderStyle: (style: HeaderStyle) => void
   revertToOriginalDesign: () => void
+  applyDesignNow: (layout: SerializedNodes, background: BoardBackground, headerStyle: HeaderStyle) => void
+  hoverToRevealBlocks: boolean
+  setHoverToRevealBlocks: (next: boolean) => void
+  controlsLayerNode: HTMLDivElement | null
+  setControlsLayerNode: (node: HTMLDivElement | null) => void
+}
+
+const HOVER_REVEAL_STORAGE_KEY = 'task-tracker:hover-reveal-blocks'
+
+function readStoredHoverToReveal(): boolean {
+  try {
+    return localStorage.getItem(HOVER_REVEAL_STORAGE_KEY) === '1'
+  } catch {
+    return false
+  }
 }
 
 const BoardUiContext = createContext<BoardUiValue | null>(null)
@@ -36,6 +52,7 @@ interface BoardUiProviderProps {
   headerStyle: HeaderStyle
   onHeaderStyleChange: (style: HeaderStyle) => void
   onRevertToOriginalDesign: () => void
+  onApplyDesignNow: (layout: SerializedNodes, background: BoardBackground, headerStyle: HeaderStyle) => void
 }
 
 export function BoardUiProvider({
@@ -50,8 +67,18 @@ export function BoardUiProvider({
   headerStyle,
   onHeaderStyleChange,
   onRevertToOriginalDesign,
+  onApplyDesignNow,
 }: BoardUiProviderProps) {
   const [scale, setScale] = useState(1)
+  const [hoverToRevealBlocks, setHoverToRevealBlocksState] = useState(readStoredHoverToReveal)
+  const [controlsLayerNode, setControlsLayerNode] = useState<HTMLDivElement | null>(null)
+
+  function setHoverToRevealBlocks(next: boolean) {
+    setHoverToRevealBlocksState(next)
+    try {
+      localStorage.setItem(HOVER_REVEAL_STORAGE_KEY, next ? '1' : '0')
+    } catch {}
+  }
 
   const value = useMemo<BoardUiValue>(
     () => ({
@@ -69,6 +96,11 @@ export function BoardUiProvider({
       headerStyle,
       setHeaderStyle: onHeaderStyleChange,
       revertToOriginalDesign: onRevertToOriginalDesign,
+      applyDesignNow: onApplyDesignNow,
+      hoverToRevealBlocks,
+      setHoverToRevealBlocks,
+      controlsLayerNode,
+      setControlsLayerNode,
     }),
     [
       editMode,
@@ -82,6 +114,9 @@ export function BoardUiProvider({
       headerStyle,
       onHeaderStyleChange,
       onRevertToOriginalDesign,
+      onApplyDesignNow,
+      hoverToRevealBlocks,
+      controlsLayerNode,
     ],
   )
 
