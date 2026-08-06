@@ -26,7 +26,7 @@ function isSafeCssUrlValue(value: string): boolean {
   let match: RegExpExecArray | null
   while ((match = CSS_URL_RE.exec(value))) {
     const target = match[1].trim().toLowerCase()
-    if (!target.startsWith('https://') && !target.startsWith('data:image/')) return false
+    if (!target.startsWith('/') && !target.startsWith('data:image/')) return false
   }
   return true
 }

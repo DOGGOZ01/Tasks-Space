@@ -3,6 +3,7 @@ import { CustomCodeButton } from './CustomCodeButton'
 import { useAuth } from '../context/AuthContext'
 import { STYLE_PRESETS } from './blockStyle'
 import type { BlockStyle } from './blockStyle'
+import { resolveThemeColor } from './themeColor'
 
 interface BlockStylePanelProps {
   title?: string
@@ -71,7 +72,7 @@ export function BlockStylePanel({
         <div className="block-style-control">
           <input
             type="color"
-            value={style.background ?? '#ffffff'}
+            value={style.background ?? resolveThemeColor('--bg')}
             onChange={(e) => set(style, onChange, 'background', e.target.value)}
           />
           <button type="button" onClick={() => set(style, onChange, 'background', undefined)}>
@@ -85,7 +86,7 @@ export function BlockStylePanel({
         <div className="block-style-control">
           <input
             type="color"
-            value={style.textColor ?? '#000000'}
+            value={style.textColor ?? resolveThemeColor('--text-h')}
             onChange={(e) => set(style, onChange, 'textColor', e.target.value)}
           />
           <button type="button" onClick={() => set(style, onChange, 'textColor', undefined)}>
@@ -99,7 +100,7 @@ export function BlockStylePanel({
         <div className="block-style-control">
           <input
             type="color"
-            value={style.borderColor ?? '#000000'}
+            value={style.borderColor ?? resolveThemeColor('--border')}
             onChange={(e) => set(style, onChange, 'borderColor', e.target.value)}
           />
           <button

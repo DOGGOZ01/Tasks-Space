@@ -4,6 +4,7 @@ import { apiFetch, ApiError } from '../lib/api'
 import type { BoardBackground, BoardBackgroundImageFit, BoardBackgroundType } from './boardBackground'
 import { BACKGROUND_PRESET_COLORS } from './boardBackground'
 import { CustomCssButton } from './CustomCssButton'
+import { resolveThemeColor } from './themeColor'
 
 interface UploadedImageResponse {
   id: number
@@ -115,7 +116,7 @@ export function BoardBackgroundPanel({
             <div className="block-style-control">
               <input
                 type="color"
-                value={background.color ?? '#f6f1e7'}
+                value={background.color ?? resolveThemeColor('--bg')}
                 onChange={(e) => onChange({ ...background, type: 'color', color: e.target.value })}
               />
             </div>

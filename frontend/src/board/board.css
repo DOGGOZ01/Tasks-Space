@@ -322,9 +322,6 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  /* difference-blend a white line against whatever's behind it (color/image/animated HTML
-     background, any of it) always reads as visible, since it's the per-pixel inverse of the
-     background rather than a fixed theme color that can vanish against a similar bg. */
   mix-blend-mode: difference;
 }
 
@@ -386,6 +383,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+  background: transparent;
   z-index: 999999;
 }
 
@@ -487,6 +485,13 @@
   letter-spacing: 0.04em;
   color: var(--text-h);
   opacity: 0.7;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.block-quick-menu-title:active {
+  cursor: grabbing;
 }
 
 .block-quick-menu-item {
@@ -781,12 +786,53 @@ select.block-quick-menu-item {
   border: 2px dashed var(--border);
   border-radius: 3px;
   width: 100%;
-  background: white;
+  background: transparent;
 }
 
 .custom-html-frame-bare {
   border: none;
   border-radius: 0;
+}
+
+.custom-html-modal-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.custom-html-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(920px, 100%);
+  height: min(720px, 100%);
+  padding: 12px;
+  border: 2px solid var(--text-h);
+  border-radius: 4px;
+  background: var(--bg);
+  box-shadow: 6px 6px 0 var(--shadow-ink);
+}
+
+.custom-html-modal-editor {
+  flex-grow: 1;
+  min-height: 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.5;
+  resize: none;
+  border: 2px solid var(--border);
+  border-radius: 3px;
+  padding: 10px;
+}
+
+.custom-html-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .board-background-frame {
@@ -1138,9 +1184,6 @@ select.block-quick-menu-item {
   cursor: pointer;
 }
 
-/* Hit area (22x22) is deliberately much bigger than the visible triangle (12x12, drawn via
-   ::after) and hangs slightly outside the box's own border -- a plain 12px target was too easy
-   to miss, which silently fell through to dragging/moving the whole box instead of resizing it. */
 .block-layout-editor-resize {
   position: absolute;
   right: -6px;

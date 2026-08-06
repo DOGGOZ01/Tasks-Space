@@ -8,7 +8,7 @@ function isSafeUrlValue(value: string): boolean {
   let match: RegExpExecArray | null
   while ((match = URL_RE.exec(value))) {
     const target = match[1].trim().toLowerCase()
-    if (!target.startsWith('https:') && !target.startsWith('data:image/')) {
+    if (!target.startsWith('/') && !target.startsWith('data:image/')) {
       return false
     }
   }

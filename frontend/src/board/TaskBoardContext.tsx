@@ -37,9 +37,7 @@ export function TaskBoardProvider({ children }: { children: ReactNode }) {
         setDailyTasks(data.daily_tasks ?? {})
         setWeeklyTasks(data.weekly_tasks ?? {})
       })
-      .catch(() => {
-        // Leave the empty defaults in place
-      })
+      .catch(() => {})
     return () => {
       cancelled = true
     }

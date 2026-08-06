@@ -1,6 +1,7 @@
 import { useEditor, useNode } from '@craftjs/core'
 import DOMPurify from 'dompurify'
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { API_BASE } from '../../lib/api'
 import { BlockShell } from '../BlockShell'
 import type { BlockStyle } from '../blockStyle'
@@ -8,6 +9,7 @@ import { useBoardUi } from '../BoardUiContext'
 import { useAuth } from '../../context/AuthContext'
 import { applyGeometry } from '../geometry'
 import { useTaskBoard } from '../TaskBoardContext'
+import { useDragOffset } from '../useDragOffset'
 import { reorderZIndex } from '../zOrder'
 import { startOfWeekKey, todayKey, type TasksByDate } from './taskListHelpers'
 
@@ -22,17 +24,10 @@ interface TaskBoardData {
   startOfWeekKey: string
 }
 
-// Escaping "<" prevents the JSON payload from being able to close the
-// </script> tag early (e.g. a task whose text contains "</script>").
 function serializeForScriptTag(data: unknown): string {
   return JSON.stringify(data).replace(/</g, '\\u003c')
 }
 
-// allowScripts mirrors the backend's ALLOW_CUSTOM_SCRIPTS setting (see
-// tasks/settings.py) -- real enforcement is server-side. Task data is only
-// injected when scripts are allowed: without `allow-scripts` on the iframe
-// sandbox, no script (ours or the user's) can execute at all, so there'd be
-// nothing able to read it anyway.
 function buildSrcDoc(html: string, allowScripts: boolean, taskData: TaskBoardData): string {
   const safe = DOMPurify.sanitize(html, {
     FORBID_TAGS: allowScripts ? BASE_FORBID_TAGS : [...BASE_FORBID_TAGS, 'script'],
@@ -45,7 +40,7 @@ function buildSrcDoc(html: string, allowScripts: boolean, taskData: TaskBoardDat
   const dataScript = allowScripts
     ? `<script>window.taskBoardData = ${serializeForScriptTag(taskData)};</script>`
     : ''
-  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}">${dataScript}<style>body{margin:8px;font-family:sans-serif;overflow-wrap:anywhere;}</style></head><body>${safe}</body></html>`
+  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}">${dataScript}<style>html,body{background:transparent;}body{margin:8px;font-family:sans-serif;overflow-wrap:anywhere;}</style></head><body>${safe}</body></html>`
 }
 
 export function CustomHtmlBlock() {
@@ -73,20 +68,33 @@ export function CustomHtmlBlock() {
   const { editMode } = useBoardUi()
   const { allowCustomScripts } = useAuth()
   const { dailyTasks, weeklyTasks } = useTaskBoard()
-  const [mode, setMode] = useState<'preview' | 'edit'>('preview')
+  const [modalOpen, setModalOpen] = useState(false)
   const [draft, setDraft] = useState(html)
+  const { offset, dragHandleProps, reset: resetOffset } = useDragOffset()
 
-  const effectiveMode = editMode ? mode : 'preview'
   const srcDoc = useMemo(
     () =>
-      buildSrcDoc(effectiveMode === 'edit' ? draft : html, allowCustomScripts, {
+      buildSrcDoc(html, allowCustomScripts, {
         dailyTasks,
         weeklyTasks,
         todayKey: todayKey(),
         startOfWeekKey: startOfWeekKey(),
       }),
-    [effectiveMode, draft, html, allowCustomScripts, dailyTasks, weeklyTasks],
+    [html, allowCustomScripts, dailyTasks, weeklyTasks],
   )
+
+  function openModal() {
+    setDraft(html)
+    resetOffset()
+    setModalOpen(true)
+  }
+
+  function saveModal() {
+    setProp((props: Record<string, any>) => {
+      props.html = draft
+    })
+    setModalOpen(false)
+  }
 
   return (
     <BlockShell
@@ -100,49 +108,74 @@ export function CustomHtmlBlock() {
       height={height}
       style={style}
       onStyleChange={(next) => setProp((props: Record<string, any>) => { props.style = next })}
+      hideCustomCodeButton
+      alwaysBare
       zIndex={zIndex}
       onBringToFront={() => reorderZIndex(query, actions, id, 'forward')}
       onSendToBack={() => reorderZIndex(query, actions, id, 'backward')}
       query={query}
       headerActions={
-        <button
-          type="button"
-          className="block-quick-menu-item"
-          onClick={() => {
-            if (mode === 'edit') {
-              setProp((props: Record<string, any>) => {
-                props.html = draft
-              })
-            } else {
-              setDraft(html)
-            }
-            setMode(mode === 'edit' ? 'preview' : 'edit')
-          }}
-        >
-          {mode === 'edit' ? 'Save & preview' : 'Edit HTML/CSS'}
+        <button type="button" className="block-quick-menu-item" onClick={openModal}>
+          Edit HTML/CSS{allowCustomScripts ? '/JS' : ''}
         </button>
       }
       onGeometryChange={(geometry) => applyGeometry(setProp, geometry)}
       onRemove={() => actions.delete(id)}
     >
       <div className="custom-html-block">
-        {effectiveMode === 'edit' ? (
-          <textarea
-            className="custom-html-editor"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            spellCheck={false}
-            placeholder="<div style=&quot;color: hotpink&quot;>Hello!</div>"
-          />
-        ) : (
-          <iframe
-            className={`custom-html-frame${editMode ? '' : ' custom-html-frame-bare'}`}
-            sandbox={allowCustomScripts ? 'allow-scripts' : ''}
-            srcDoc={srcDoc}
-            title="Custom HTML block preview"
-          />
-        )}
+        <iframe
+          className={`custom-html-frame${editMode ? '' : ' custom-html-frame-bare'}`}
+          sandbox={allowCustomScripts ? 'allow-scripts' : ''}
+          srcDoc={srcDoc}
+          title="Custom HTML block preview"
+        />
       </div>
+      {modalOpen &&
+        createPortal(
+          <>
+            <div className="block-style-backdrop" onClick={() => setModalOpen(false)} />
+            <div className="custom-html-modal-wrap">
+              <div
+                className="custom-html-modal"
+                onPointerDown={(e) => e.stopPropagation()}
+                style={{ transform: `translate3d(${offset.dx}px, ${offset.dy}px, 0)` }}
+              >
+                <div className="block-style-panel-header" {...dragHandleProps}>
+                  <span>Edit HTML/CSS{allowCustomScripts ? '/JS' : ''}</span>
+                  <button
+                    type="button"
+                    onClick={() => setModalOpen(false)}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    aria-label="Close code editor"
+                  >
+                    ×
+                  </button>
+                </div>
+                <textarea
+                  className="custom-html-modal-editor"
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  spellCheck={false}
+                  autoFocus
+                  placeholder="<div style=&quot;color: hotpink&quot;>Hello!</div>"
+                />
+                <div className="custom-html-modal-actions">
+                  <button type="button" className="block-style-full-button" onClick={() => setModalOpen(false)}>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="block-style-full-button confirm-popover-primary"
+                    onClick={saveModal}
+                  >
+                    Save & preview
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>,
+          document.body,
+        )}
     </BlockShell>
   )
 }

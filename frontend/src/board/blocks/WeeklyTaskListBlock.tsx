@@ -42,8 +42,6 @@ export function WeeklyTaskListBlock() {
     zIndex: (node.data.props.zIndex ?? 0) as number,
   }))
   const { actions, query } = useEditor()
-  // Task data lives on the account (TaskBoardContext), not on this node's
-  // own props -- so it survives deleting/re-adding this block.
   const { weeklyTasks, setWeeklyTasksForDate } = useTaskBoard()
   const [dateKey, setDateKey] = useState(startOfWeekKey)
   const [draft, setDraft] = useState('')

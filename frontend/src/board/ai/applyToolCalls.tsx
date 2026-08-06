@@ -19,6 +19,11 @@ const HEX_COLOR_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 const SAFE_IMAGE_URL_RE = /^https:\/\//i
 const BACKGROUND_TYPES = new Set(['color', 'image', 'custom', 'html'])
 const BACKGROUND_FITS = new Set(['cover', 'contain', 'repeat'])
+const IMAGE_FITS = new Set(['cover', 'contain', 'fill', 'none'])
+const IMAGE_FILTER_PRESETS = new Set(['none', 'cyberpunk', 'grayscale', 'sepia', 'vivid', 'soft'])
+const MAX_NOTE_TEXT_LENGTH = 10000
+const MAX_HTML_PROP_LENGTH = 20000
+const MAX_BACKGROUND_HTML_LENGTH = 20000
 
 const BLOCK_RENDERERS: Record<BlockTypeName, () => ReactElement> = {
   NoteBlock: () => <NoteBlock />,
@@ -71,7 +76,33 @@ function cleanProps(type: BlockTypeName, raw: unknown): Record<string, unknown> 
     if (!(key in source)) continue
     const value = source[key]
     if (key === 'imageUrl') {
-      if (typeof value === 'string' && (value === '' || SAFE_IMAGE_URL_RE.test(value))) out[key] = value
+      if (typeof value === 'string' && value.length <= 2000 && (value === '' || SAFE_IMAGE_URL_RE.test(value))) {
+        out[key] = value
+      }
+      continue
+    }
+    if (key === 'html') {
+      if (typeof value === 'string') out[key] = value.slice(0, MAX_HTML_PROP_LENGTH)
+      continue
+    }
+    if (key === 'text') {
+      if (typeof value === 'string') out[key] = value.slice(0, MAX_NOTE_TEXT_LENGTH)
+      continue
+    }
+    if (key === 'imageFit') {
+      if (typeof value === 'string' && IMAGE_FITS.has(value)) out[key] = value
+      continue
+    }
+    if (key === 'filter') {
+      if (typeof value === 'string' && IMAGE_FILTER_PRESETS.has(value)) out[key] = value
+      continue
+    }
+    if (key === 'imageZoom') {
+      if (typeof value === 'number') out[key] = clamp(value, 1, 4)
+      continue
+    }
+    if (key === 'imageFocusX' || key === 'imageFocusY') {
+      if (typeof value === 'number') out[key] = clamp(value, 0, 100)
       continue
     }
     out[key] = value
@@ -171,7 +202,7 @@ function applySetBackground(call: ToolCallRequest, ctx: ApplyContext): ApplyResu
       next.imageFit = args.imageFit as BoardBackground['imageFit']
     }
   }
-  if (type === 'html' && typeof args.html === 'string') next.html = args.html
+  if (type === 'html' && typeof args.html === 'string') next.html = args.html.slice(0, MAX_BACKGROUND_HTML_LENGTH)
   if (typeof args.customCss === 'string') next.customCss = args.customCss.slice(0, 4000)
 
   ctx.setBackground(next)

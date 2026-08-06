@@ -15,8 +15,6 @@ ALLOWED_TAGS = [
     "style",
 ]
 
-# Only appended to ALLOWED_TAGS when settings.ALLOW_CUSTOM_SCRIPTS is on --
-# see that setting for why this is off by default.
 SCRIPT_TAG = ["script"]
 
 ALLOWED_ATTRIBUTES = {
@@ -74,7 +72,7 @@ _CSS_URL_RE = re.compile(r"url\(\s*(['\"]?)(.*?)\1\s*\)", re.IGNORECASE)
 def _is_safe_css_url_value(value: str) -> bool:
     for match in _CSS_URL_RE.finditer(value):
         target = match.group(2).strip().lower()
-        if not (target.startswith("data:image/") or target.startswith("/") or target.startswith("https://")):
+        if not (target.startswith("data:image/") or target.startswith("/")):
             return False
     return True
 
@@ -85,6 +83,27 @@ def _is_safe_css_value(value: str) -> bool:
     if "url(" in value.lower() and not _is_safe_css_url_value(value):
         return False
     return True
+
+
+def _filter_unsafe_css_urls(css_text: str) -> str:
+    if not css_text:
+        return ""
+    try:
+        declarations = tinycss2.parse_declaration_list(css_text, skip_whitespace=True, skip_comments=True)
+    except Exception:
+        return ""
+
+    kept = []
+    for decl in declarations:
+        if decl.type != "declaration":
+            continue
+        value = tinycss2.serialize(decl.value).strip()
+        if not value or not _is_safe_css_value(value):
+            continue
+        important = " !important" if decl.important else ""
+        kept.append(f"{decl.lower_name}: {value}{important}")
+
+    return "; ".join(kept) + (";" if kept else "")
 
 
 def sanitize_style_tag_css(raw_css: str) -> str:
@@ -226,11 +245,57 @@ def _is_custom_html_node(node: dict) -> bool:
     return node.get("displayName") in CUSTOM_HTML_BLOCK_NAMES
 
 
+def _node_block_name(node: dict) -> str:
+    node_type = node.get("type")
+    if isinstance(node_type, dict) and isinstance(node_type.get("resolvedName"), str):
+        return node_type["resolvedName"]
+    display_name = node.get("displayName")
+    return display_name if isinstance(display_name, str) else ""
+
+
+NOTE_BLOCK_NAMES = {"NoteBlock"}
+IMAGE_BLOCK_NAMES = {"ImageBlock"}
+MAX_NOTE_TEXT_LENGTH = 10_000
+IMAGE_BLOCK_FITS = {"cover", "contain", "fill", "none"}
+IMAGE_FILTER_PRESETS = {"none", "cyberpunk", "grayscale", "sepia", "vivid", "soft"}
+
+
+def _sanitize_note_block_props(props: dict) -> None:
+    text = props.get("text")
+    if isinstance(text, str):
+        props["text"] = text[:MAX_NOTE_TEXT_LENGTH]
+
+
+def _sanitize_image_block_props(props: dict) -> None:
+    image_url = props.get("imageUrl")
+    if isinstance(image_url, str) and image_url:
+        if len(image_url) <= 2000 and SAFE_URL_RE.match(image_url):
+            props["imageUrl"] = image_url
+        else:
+            props["imageUrl"] = ""
+
+    if "imageFit" in props and props.get("imageFit") not in IMAGE_BLOCK_FITS:
+        props.pop("imageFit", None)
+
+    if "imageZoom" in props:
+        zoom = _clean_number(props.get("imageZoom"), 1, 4)
+        props["imageZoom"] = zoom if zoom is not None else 1
+
+    for focus_key in ("imageFocusX", "imageFocusY"):
+        if focus_key in props:
+            focus_value = _clean_number(props.get(focus_key), 0, 100)
+            props[focus_key] = focus_value if focus_value is not None else 50
+
+    if "filter" in props and props.get("filter") not in IMAGE_FILTER_PRESETS:
+        props.pop("filter", None)
+
+
 def sanitize_custom_block_css(raw_css: str) -> str:
     if not raw_css:
         return ""
     raw_css = raw_css[: settings.MAX_CUSTOM_CSS_LENGTH]
-    return _block_style_css_sanitizer.sanitize_css(raw_css)
+    cleaned = _block_style_css_sanitizer.sanitize_css(raw_css)
+    return _filter_unsafe_css_urls(cleaned)
 
 
 ANIMATION_CSS_PROPERTIES = set(BLOCK_STYLE_CSS_PROPERTIES) | {
@@ -383,7 +448,8 @@ def sanitize_background_css(raw_css: str) -> str:
     if not raw_css:
         return ""
     raw_css = raw_css[: settings.MAX_CUSTOM_CSS_LENGTH]
-    return _background_css_sanitizer.sanitize_css(raw_css)
+    cleaned = _background_css_sanitizer.sanitize_css(raw_css)
+    return _filter_unsafe_css_urls(cleaned)
 
 
 BOARD_BACKGROUND_TYPES = {"color", "image", "custom", "html"}
@@ -500,6 +566,12 @@ def sanitize_layout(layout: dict) -> dict:
 
         props = node.get("props")
         if isinstance(props, dict):
+            block_name = _node_block_name(node)
+            if block_name in NOTE_BLOCK_NAMES:
+                _sanitize_note_block_props(props)
+            if block_name in IMAGE_BLOCK_NAMES:
+                _sanitize_image_block_props(props)
+
             for prop_name in BLOCK_STYLE_PROP_NAMES:
                 if prop_name in props:
                     props[prop_name] = sanitize_block_style(props[prop_name])

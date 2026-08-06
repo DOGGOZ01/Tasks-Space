@@ -19,7 +19,6 @@ def process_uploaded_image(uploaded_file):
 
     try:
         image = Image.open(uploaded_file)
-        image.load()
     except Exception:
         raise ValidationError("File is not a valid image.")
 
@@ -31,6 +30,11 @@ def process_uploaded_image(uploaded_file):
     if width > settings.MAX_IMAGE_DIMENSION or height > settings.MAX_IMAGE_DIMENSION:
         raise ValidationError("Image dimensions are too large.")
 
+    try:
+        image.load()
+    except Exception:
+        raise ValidationError("File is not a valid image.")
+
     content_type, ext = ALLOWED_FORMATS[fmt]
 
     uploaded_file.seek(0)
@@ -39,13 +43,25 @@ def process_uploaded_image(uploaded_file):
 
     if fmt == "GIF":
         frames = []
+        durations = []
         try:
-            for frame_index in range(fresh.n_frames):
+            frame_count = min(fresh.n_frames, settings.MAX_GIF_FRAMES)
+            for frame_index in range(frame_count):
                 fresh.seek(frame_index)
                 frames.append(fresh.convert("RGBA"))
+                duration = fresh.info.get("duration", settings.MIN_GIF_FRAME_DURATION_MS)
+                durations.append(max(duration, settings.MIN_GIF_FRAME_DURATION_MS))
         except Exception:
             frames = [fresh.convert("RGBA")]
-        frames[0].save(buffer, format="GIF", save_all=True, append_images=frames[1:], loop=0)
+            durations = [settings.MIN_GIF_FRAME_DURATION_MS]
+        frames[0].save(
+            buffer,
+            format="GIF",
+            save_all=True,
+            append_images=frames[1:],
+            loop=0,
+            duration=durations,
+        )
     elif fmt == "JPEG":
         fresh.convert("RGB").save(buffer, format="JPEG", quality=90)
     else:

@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
@@ -25,7 +26,6 @@ from .serializers import (
     SavedDesignSerializer,
     TaskBoardSerializer,
     UploadedImageSerializer,
-    _clean_design_payload,
 )
 
 IMAGE_PRUNE_GRACE = timedelta(seconds=60)
@@ -54,12 +54,13 @@ class PageView(APIView):
         return Response(PageSerializer(self.get_object()).data)
 
     def patch(self, request):
-        page = self.get_object()
-        serializer = PageSerializer(page, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        if any(field in request.data for field in PAGE_IMAGE_FIELDS):
-            _prune_unused_page_images(page)
+        with transaction.atomic():
+            page, _ = Page.objects.select_for_update().get_or_create(owner=request.user)
+            serializer = PageSerializer(page, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            if any(field in request.data for field in PAGE_IMAGE_FIELDS):
+                _prune_unused_page_images(page)
         return Response(serializer.data)
 
 
@@ -85,15 +86,17 @@ class SavedDesignListView(APIView):
         return Response(SavedDesignSerializer(designs, many=True).data)
 
     def post(self, request):
-        existing = SavedDesign.objects.filter(owner=request.user).count()
-        if existing >= settings.MAX_SAVED_DESIGNS_PER_USER:
-            return Response(
-                {"detail": "You've reached the saved design limit. Delete one first."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         serializer = SavedDesignSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        design_obj = serializer.save(owner=request.user)
+
+        with transaction.atomic():
+            existing = SavedDesign.objects.select_for_update().filter(owner=request.user).count()
+            if existing >= settings.MAX_SAVED_DESIGNS_PER_USER:
+                return Response(
+                    {"detail": "You've reached the saved design limit. Delete one first."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            design_obj = serializer.save(owner=request.user)
 
         referenced = collect_design_image_urls(design_obj.design)
         page = Page.objects.filter(owner=request.user).first()
@@ -134,7 +137,7 @@ class SavedDesignUseView(APIView):
             page=page,
         )
         design = rewrite_design_image_urls(design_obj.design, url_map) if url_map else design_obj.design
-        return Response(_clean_design_payload(design))
+        return Response(design)
 
 
 class ImageUploadView(APIView):
@@ -171,23 +174,24 @@ class AiAssistantChatView(APIView):
     throttle_scope = "ai_chat"
 
     def post(self, request):
-        if not settings.AI_ASSISTANT_ENABLED or not settings.AI_ASSISTANT_API_KEY:
+        if not settings.AI_ASSISTANT_ENABLED:
             return Response(
                 {"detail": "The AI assistant is not enabled on this server."},
                 status=status.HTTP_403_FORBIDDEN,
             )
+        if not settings.AI_ASSISTANT_API_KEY:
+            return Response(
+                {"detail": "The AI assistant has no server-side API key configured."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
         if len(request.body) > settings.MAX_AI_REQUEST_BYTES:
-            return Response({"detail": "Request too large."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Request is too large."}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
         system_prompt = request.data.get("systemPrompt")
         conversation = request.data.get("conversation")
         tools = request.data.get("tools")
-        if (
-            not isinstance(system_prompt, str)
-            or not isinstance(conversation, list)
-            or not isinstance(tools, list)
-        ):
+        if not isinstance(system_prompt, str) or not isinstance(conversation, list) or not isinstance(tools, list):
             return Response({"detail": "Invalid request body."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:

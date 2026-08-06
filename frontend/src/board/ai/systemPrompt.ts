@@ -42,7 +42,14 @@ const THOROUGHNESS_NOTE =
   "earlier in this conversation. If your own prior turn claimed a header/button/prop was already " +
   'changed but the board state below still shows the old value, that earlier attempt did not actually ' +
   'take effect (possibly restored from this browser\'s saved chat history) -- redo it now with a fresh ' +
-  'tool call rather than assuming it is already handled.'
+  'tool call rather than assuming it is already handled.\n' +
+  '- Before calling add_block, check the "Current board state" below for an existing block of the same ' +
+  'type that the request is plainly about (e.g. "make my images sepia", "recolor the note") -- if one ' +
+  'exists, use update_block with its id from the board state instead of creating a new block next to it. ' +
+  'Only use add_block when the user is clearly asking for something new, or no matching block exists yet. ' +
+  'Never invent an id from earlier in the conversation without confirming it is still in the board state ' +
+  'below -- if a block you created in a previous turn is not there anymore, or you are unsure of its id, ' +
+  're-check the board state rather than guessing.'
 
 const FULL_REDESIGN_NOTE =
   'When the user asks for a full/complete redesign, restyle, "поменяй весь дизайн", "перекрась всё", ' +
@@ -71,14 +78,24 @@ const FULL_REDESIGN_NOTE =
 
 const ANIMATION_NOTE =
   'Animations: use `animationCss` (real CSS -- &, &:hover, &:active, &:focus, &:focus-within, ' +
-  '@keyframes) for hover states and looping motion; this always works regardless of settings. Only use ' +
-  '`overlayHtml` (a sandboxed HTML/CSS/JS layer drawn over the element, reacting to real hover/press/' +
-  'click via a `board:trigger` event) when the user specifically wants JS-driven interactivity or an ' +
-  'effect CSS alone cannot do (particles, canvas, custom logic on click) -- and only when scripts are ' +
-  'enabled per the note below. Do not add animation unless the user asked for motion/animation/' +
-  'interactivity, or it is a natural fit for what they asked (e.g. "make the add button feel nice to ' +
-  'press" implies a subtle press animation). Keep motion tasteful and restrained by default: short ' +
-  'durations (150-400ms for hover/press feedback, 1-2.5s for ambient loops), ease-out/ease-in-out ' +
+  '@keyframes) for hover states and looping motion. IMPORTANT caveat: the block\'s own point-and-click ' +
+  'style fields (background, textColor, borderColor/borderWidth, opacity -- i.e. anything you can also ' +
+  'set directly in that same partStyles.{body,header,input,addButton} object outside animationCss) are ' +
+  'applied as an inline style on the element, and an inline style always wins over a plain stylesheet ' +
+  'rule -- so a `&:hover { background: ... }` rule will silently do nothing if that block/part already ' +
+  'has a `background` set (its own or the theme default counts too once you assign any color). Add ' +
+  '`!important` to the specific declaration in that case, e.g. `&:hover { background: #2ecc71 ' +
+  '!important; }` -- this is supported and sanitized correctly, it is the correct fix, not a hack. ' +
+  'Properties that are never set inline (`transform`, `box-shadow`, `filter`, `opacity` transitions via ' +
+  'keyframes, etc.) do not have this problem and never need `!important`. If a hover/active/focus effect ' +
+  'you wrote does not seem to take effect, check this first before switching to a different property as ' +
+  'a workaround. Only use `overlayHtml` (a sandboxed HTML/CSS/JS layer drawn over the element, reacting ' +
+  'to real hover/press/click via a `board:trigger` event) when the user specifically wants JS-driven ' +
+  'interactivity or an effect CSS alone cannot do (particles, canvas, custom logic on click) -- and only ' +
+  'when scripts are enabled per the note below. Do not add animation unless the user asked for motion/' +
+  'animation/interactivity, or it is a natural fit for what they asked (e.g. "make the add button feel ' +
+  'nice to press" implies a subtle press animation). Keep motion tasteful and restrained by default: ' +
+  'short durations (150-400ms for hover/press feedback, 1-2.5s for ambient loops), ease-out/ease-in-out ' +
   'timing, small transforms (scale 1.02-1.08, a few px of translate/shadow spread) -- not spinning, ' +
   'bouncing, or rainbow-cycling effects unless the user asks for something loud/playful specifically.'
 

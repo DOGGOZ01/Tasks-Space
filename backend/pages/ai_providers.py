@@ -1,12 +1,11 @@
 import json
 
 import requests
+from django.conf import settings
 
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
-
-REQUEST_TIMEOUT_SECONDS = 60
 
 
 class ProviderRequestError(Exception):
@@ -77,7 +76,7 @@ def _send_anthropic(api_key, model, system_prompt, conversation, tools):
             },
             json={
                 "model": model,
-                "max_tokens": 16000,
+                "max_tokens": settings.AI_ASSISTANT_MAX_TOKENS,
                 "system": system_prompt,
                 "messages": _to_anthropic_messages(conversation),
                 "tools": [
@@ -85,7 +84,7 @@ def _send_anthropic(api_key, model, system_prompt, conversation, tools):
                     for t in tools
                 ],
             },
-            timeout=REQUEST_TIMEOUT_SECONDS,
+            timeout=settings.AI_ASSISTANT_TIMEOUT_SECONDS,
         )
     except requests.RequestException as exc:
         raise ProviderRequestError(f"Couldn't reach Anthropic's API: {exc}") from exc
@@ -139,7 +138,7 @@ def _send_openai_compatible(url, api_key, model, system_prompt, conversation, to
             headers={"content-type": "application/json", "authorization": f"Bearer {api_key}"},
             json={
                 "model": model,
-                "max_tokens": 16000,
+                "max_tokens": settings.AI_ASSISTANT_MAX_TOKENS,
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     *_to_openai_messages(conversation),
@@ -157,7 +156,7 @@ def _send_openai_compatible(url, api_key, model, system_prompt, conversation, to
                 ],
                 "tool_choice": "auto",
             },
-            timeout=REQUEST_TIMEOUT_SECONDS,
+            timeout=settings.AI_ASSISTANT_TIMEOUT_SECONDS,
         )
     except requests.RequestException as exc:
         raise ProviderRequestError(f"Couldn't reach the provider's API: {exc}") from exc

@@ -76,10 +76,20 @@ export function AiAssistantButton() {
   const [chatError, setChatError] = useState<string | null>(null)
   const stopRequestedRef = useRef(false)
   const chatScrollRef = useRef<HTMLDivElement | null>(null)
+  const backgroundRef = useRef(background)
+  const headerStyleRef = useRef(headerStyle)
 
   useEffect(() => {
     saveConversationMemory(conversation)
   }, [conversation])
+
+  useEffect(() => {
+    backgroundRef.current = background
+  }, [background])
+
+  useEffect(() => {
+    headerStyleRef.current = headerStyle
+  }, [headerStyle])
 
   useLayoutEffect(() => {
     if (screen !== 'chat' || !anchor) return
@@ -169,8 +179,6 @@ export function AiAssistantButton() {
   }
 
   function runApplyBatch(toolCalls: ToolCallRequest[]): ApplyResult[] {
-    let draftBackground = background
-    let draftHeaderStyle = headerStyle
     const ctx: ApplyContext = {
       actions,
       query,
@@ -178,17 +186,17 @@ export function AiAssistantButton() {
       canvasHeight,
       allowCustomScripts,
       get background() {
-        return draftBackground
+        return backgroundRef.current
       },
       get headerStyle() {
-        return draftHeaderStyle
+        return headerStyleRef.current
       },
       setBackground: (next) => {
-        draftBackground = next
+        backgroundRef.current = next
         setBackground(next)
       },
       setHeaderStyle: (next) => {
-        draftHeaderStyle = next
+        headerStyleRef.current = next
         setHeaderStyle(next)
       },
     }
@@ -217,7 +225,7 @@ export function AiAssistantButton() {
         if (step > 1 && stopRequestedRef.current) break
 
         const layout = JSON.parse(query.serialize()) as SerializedNodes
-        const boardState = summarizeBoardState(layout, device, background, headerStyle)
+        const boardState = summarizeBoardState(layout, device, backgroundRef.current, headerStyleRef.current)
         const systemPrompt = buildSystemPrompt({
           allowCustomScripts,
           agentMode,

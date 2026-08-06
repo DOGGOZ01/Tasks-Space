@@ -92,13 +92,21 @@ export function TaskListAddRow({
           style={resolveBlockStyle(inputStyle, false)}
           data-anim-scope={inputScope}
         />
-        <AnimationOverlay html={allowCustomScripts ? inputStyle.overlayHtml : undefined} targetRef={inputWrapRef} />
+        <AnimationOverlay
+          html={allowCustomScripts ? inputStyle.overlayHtml : undefined}
+          targetRef={inputWrapRef}
+          allowScripts={allowCustomScripts}
+        />
       </div>
       <div ref={buttonWrapRef} className="task-list-add-button-wrap">
         <button type="submit" style={resolveBlockStyle(buttonStyle, false)} data-anim-scope={buttonScope}>
           {buttonIcon || '+'}
         </button>
-        <AnimationOverlay html={allowCustomScripts ? buttonStyle.overlayHtml : undefined} targetRef={buttonWrapRef} />
+        <AnimationOverlay
+          html={allowCustomScripts ? buttonStyle.overlayHtml : undefined}
+          targetRef={buttonWrapRef}
+          allowScripts={allowCustomScripts}
+        />
       </div>
     </form>
   )

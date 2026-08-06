@@ -35,6 +35,9 @@ interface BlockShellProps extends Geometry {
   decorative?: boolean
   style?: BlockStyle
   onStyleChange?: (style: BlockStyle) => void
+  hideCustomCodeButton?: boolean
+  hideBodyStyleButton?: boolean
+  alwaysBare?: boolean
   titleOverride?: string
   onTitleChange?: (title: string) => void
   headerStyle?: BlockStyle
@@ -64,6 +67,9 @@ export function BlockShell({
   decorative = false,
   style = DEFAULT_BLOCK_STYLE,
   onStyleChange,
+  hideCustomCodeButton = false,
+  hideBodyStyleButton = false,
+  alwaysBare = false,
   titleOverride,
   onTitleChange,
   headerStyle = DEFAULT_BLOCK_STYLE,
@@ -84,7 +90,7 @@ export function BlockShell({
 }: BlockShellProps) {
   const { editMode, scale, canvasWidth, canvasHeight, hoverToRevealBlocks, controlsLayerNode } = useBoardUi()
   const { allowCustomScripts } = useAuth()
-  const bare = decorative && !editMode
+  const bare = decorative && (alwaysBare || !editMode)
   const displayTitle = titleOverride?.trim() ? titleOverride : title
   const rootRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
@@ -96,6 +102,7 @@ export function BlockShell({
   const [headerPanelAnchor, setHeaderPanelAnchor] = useState<{ top: number; left: number } | null>(null)
   const [layoutPanelAnchor, setLayoutPanelAnchor] = useState<{ top: number; left: number } | null>(null)
   const [confirmAnchor, setConfirmAnchor] = useState<{ top: number; left: number } | null>(null)
+  const menuDrag = useDragOffset()
   const stylePanelDrag = useDragOffset()
   const headerPanelDrag = useDragOffset()
   const layoutPanelDrag = useDragOffset()
@@ -171,6 +178,7 @@ export function BlockShell({
       setMenuAnchor(null)
       return
     }
+    menuDrag.reset()
     const rect = menuToggleRef.current?.getBoundingClientRect()
     if (!rect) {
       setMenuAnchor({ top: 80, left: 80 })
@@ -312,7 +320,11 @@ export function BlockShell({
       data-anim-scope={scopeKeyFor(nodeId, 'root')}
     >
       <ScopedAnimationStyle css={style.animationCss} scopeKey={scopeKeyFor(nodeId, 'root')} />
-      <AnimationOverlay html={allowCustomScripts ? style.overlayHtml : undefined} targetRef={rootRef} />
+      <AnimationOverlay
+        html={allowCustomScripts ? style.overlayHtml : undefined}
+        targetRef={rootRef}
+        allowScripts={allowCustomScripts}
+      />
       {!decorative && (
         <div
           ref={headerRef}
@@ -329,7 +341,11 @@ export function BlockShell({
           }}
         >
           <ScopedAnimationStyle css={headerStyle.animationCss} scopeKey={scopeKeyFor(nodeId, 'header')} />
-          <AnimationOverlay html={allowCustomScripts ? headerStyle.overlayHtml : undefined} targetRef={headerRef} />
+          <AnimationOverlay
+            html={allowCustomScripts ? headerStyle.overlayHtml : undefined}
+            targetRef={headerRef}
+            allowScripts={allowCustomScripts}
+          />
           <span className="block-shell-title">{displayTitle}</span>
         </div>
       )}
@@ -352,7 +368,17 @@ export function BlockShell({
       {editMode &&
         (!hoverToRevealBlocks && controlsLayerNode
           ? createPortal(
-              <div style={{ position: 'absolute', left: x, top: y, width, height, pointerEvents: 'none' }}>
+              <div
+                style={{
+                  position: 'absolute',
+                  left: x,
+                  top: y,
+                  width,
+                  height,
+                  pointerEvents: 'none',
+                  background: 'transparent',
+                }}
+              >
                 {overlayControlsInner}
                 <div className="block-shell-resize" onPointerDown={startResize} />
               </div>,
@@ -371,9 +397,16 @@ export function BlockShell({
             <div className="block-style-backdrop" onClick={() => setMenuAnchor(null)} />
             <div
               className="block-quick-menu"
-              style={{ top: menuAnchor.top, left: menuAnchor.left, width: MENU_WIDTH }}
+              style={{
+                top: menuAnchor.top,
+                left: menuAnchor.left,
+                width: MENU_WIDTH,
+                transform: `translate3d(${menuDrag.offset.dx}px, ${menuDrag.offset.dy}px, 0)`,
+              }}
             >
-              <div className="block-quick-menu-title">{displayTitle}</div>
+              <div className="block-quick-menu-title" {...menuDrag.dragHandleProps}>
+                {displayTitle}
+              </div>
               {(onTitleChange || onHeaderStyleChange) && (
                 <button type="button" className="block-quick-menu-item" onClick={openHeaderPanel}>
                   Header style
@@ -381,7 +414,7 @@ export function BlockShell({
               )}
               {headerActions}
               
-              {onStyleChange && (
+              {onStyleChange && !hideBodyStyleButton && (
                 <button type="button" className="block-quick-menu-item" onClick={openStylePanel}>
                   Body style
                 </button>
@@ -391,7 +424,7 @@ export function BlockShell({
                   Layout
                 </button>
               )}
-              {onStyleChange && (
+              {onStyleChange && !hideCustomCodeButton && (
                 <CustomCodeButton
                   style={style}
                   onChange={onStyleChange}

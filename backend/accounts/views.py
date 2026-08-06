@@ -81,6 +81,7 @@ class LoginView(APIView):
 class RefreshView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
+    throttle_scope = "auth_refresh"
 
     def post(self, request):
         raw_refresh = request.COOKIES.get(settings.AUTH_COOKIE_REFRESH)

@@ -19,7 +19,7 @@ export function todayKey(): string {
 
 export function startOfWeekKey(): string {
   const now = new Date()
-  const isoDayIndex = (now.getDay() + 6) % 7 // Monday = 0 ... Sunday = 6
+  const isoDayIndex = (now.getDay() + 6) % 7
   const monday = new Date(now)
   monday.setDate(now.getDate() - isoDayIndex)
   return formatDateKey(monday)

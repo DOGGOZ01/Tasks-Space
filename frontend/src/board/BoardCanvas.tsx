@@ -820,12 +820,6 @@ function MobileDesignMenu() {
   )
 }
 
-// Each line's position is independently rounded to the nearest *device* pixel from its true
-// snap-grid coordinate (i * GRID_SIZE * scale), not derived by repeating a rounded tile size --
-// repeating a rounded tile compounds its rounding error every repeat, so lines drift further and
-// further from where blocks actually snap the farther they are from the origin. Rounding each
-// line's own absolute position instead keeps every line within half a device pixel of its true
-// snapped coordinate, with no cumulative drift, while still landing on a crisp pixel boundary.
 function buildGridLineGradient(direction: 'to right' | 'to bottom', canvasSize: number, scale: number, dpr: number): string {
   const lineWidth = Math.max(1, Math.round(dpr)) / dpr
   const count = Math.floor(canvasSize / GRID_SIZE)
@@ -995,6 +989,16 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
   const [status, setStatus] = useState<SaveStatus>('idle')
   const readyRef = useRef(false)
   const fieldSaveTimeoutsRef = useRef<Record<string, number | null>>({})
+  const fieldSaveControllersRef = useRef<Record<string, AbortController | null>>({})
+
+  function abortInFlightFieldSaves() {
+    Object.values(fieldSaveControllersRef.current).forEach((controller) => controller?.abort())
+    fieldSaveControllersRef.current = {}
+  }
+
+  function isAbortError(err: unknown): boolean {
+    return err instanceof DOMException && err.name === 'AbortError'
+  }
 
   useEffect(() => {
     if (isMobileDevice) setEditDeviceState('mobile')
@@ -1033,13 +1037,20 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
     const existing = fieldSaveTimeoutsRef.current[field]
     if (existing) window.clearTimeout(existing)
     fieldSaveTimeoutsRef.current[field] = window.setTimeout(() => {
+      fieldSaveControllersRef.current[field]?.abort()
+      const controller = new AbortController()
+      fieldSaveControllersRef.current[field] = controller
       setStatus('saving')
       apiFetch('/api/page/', {
         method: 'PATCH',
         body: JSON.stringify({ [field]: value }),
+        signal: controller.signal,
       })
         .then(() => setStatus('saved'))
-        .catch(() => setStatus('error'))
+        .catch((err) => {
+          if (isAbortError(err)) return
+          setStatus('error')
+        })
     }, SAVE_DEBOUNCE_MS)
   }
 
@@ -1058,6 +1069,7 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
       if (timeoutId) window.clearTimeout(timeoutId)
     })
     fieldSaveTimeoutsRef.current = {}
+    abortInFlightFieldSaves()
 
     setLayouts({ desktop: {}, mobile: {} })
     setBackgroundState(DEFAULT_BOARD_BACKGROUND)
@@ -1074,7 +1086,10 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
       }),
     })
       .then(() => setStatus('saved'))
-      .catch(() => setStatus('error'))
+      .catch((err) => {
+        if (isAbortError(err)) return
+        setStatus('error')
+      })
   }
 
   function applyDesignNow(nextLayout: SerializedNodes, nextBackground: BoardBackground, nextHeaderStyle: HeaderStyle) {
@@ -1082,6 +1097,7 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
       if (timeoutId) window.clearTimeout(timeoutId)
     })
     fieldSaveTimeoutsRef.current = {}
+    abortInFlightFieldSaves()
 
     setLayouts((prev) => (prev ? { ...prev, [device]: nextLayout } : prev))
     setBackgroundState(nextBackground)
@@ -1097,7 +1113,10 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
       }),
     })
       .then(() => setStatus('saved'))
-      .catch(() => setStatus('error'))
+      .catch((err) => {
+        if (isAbortError(err)) return
+        setStatus('error')
+      })
   }
 
   function handleNodesChange(forDevice: DeviceMode, query: { serialize: () => string }) {

@@ -20,9 +20,6 @@ export const BLOCK_PROP_KEYS: Record<BlockTypeName, string[]> = {
   OverdueTaskListBlock: [],
 }
 
-// Blocks that render a visible title bar (BlockShell's "!decorative" header) --
-// ImageBlock/CustomHtmlBlock are decorative and never show one, so header/title
-// overrides on them would be silently invisible.
 export const HEADER_STYLE_BLOCK_TYPES = new Set<BlockTypeName>([
   'NoteBlock',
   'DailyTaskListBlock',
@@ -187,7 +184,8 @@ function buildPropsDescription(allowCustomScripts: boolean): string {
   return (
     'Block-type-specific fields. NoteBlock: {text}. ImageBlock: {imageUrl (https:// URL), ' +
     "imageFit ('cover'|'contain'|'fill'|'none'), imageZoom (1-4), imageFocusX/imageFocusY (0-100), " +
-    `filter (CSS filter string, e.g. 'grayscale(1)')}. CustomHtmlBlock: {html -- ${htmlBlockNote}}. ` +
+    "filter -- one of the preset NAMES 'none'|'cyberpunk'|'grayscale'|'sepia'|'vivid'|'soft' (not a raw CSS " +
+    `filter string -- anything else is silently ignored)}. CustomHtmlBlock: {html -- ${htmlBlockNote}}. ` +
     'Task list blocks take no props.'
   )
 }

@@ -95,6 +95,7 @@ USE_TZ = True
 
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -133,9 +134,10 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.ScopedRateThrottle",
     ),
     "DEFAULT_THROTTLE_RATES": {
-        "auth_login": "10/min",
-        "auth_register": "5/min",
-        "ai_chat": "20/min",
+        "auth_login": env("AUTH_LOGIN_THROTTLE_RATE", default="10/min"),
+        "auth_register": env("AUTH_REGISTER_THROTTLE_RATE", default="5/min"),
+        "auth_refresh": env("AUTH_REFRESH_THROTTLE_RATE", default="30/min"),
+        "ai_chat": env("AI_CHAT_THROTTLE_RATE", default="20/min"),
     },
 }
 
@@ -150,27 +152,21 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-MAX_IMAGE_UPLOAD_BYTES = 5 * 1024 * 1024
-MAX_IMAGE_DIMENSION = 4000
-MAX_CUSTOM_HTML_LENGTH = 20_000
-MAX_CUSTOM_CSS_LENGTH = 4_000
-MAX_LAYOUT_JSON_BYTES = 2_000_000
+MAX_IMAGE_UPLOAD_BYTES = env.int("MAX_IMAGE_UPLOAD_BYTES", default=5 * 1024 * 1024)
+MAX_IMAGE_DIMENSION = env.int("MAX_IMAGE_DIMENSION", default=4000)
+MAX_GIF_FRAMES = env.int("MAX_GIF_FRAMES", default=300)
+MIN_GIF_FRAME_DURATION_MS = env.int("MIN_GIF_FRAME_DURATION_MS", default=20)
+MAX_CUSTOM_HTML_LENGTH = env.int("MAX_CUSTOM_HTML_LENGTH", default=20_000)
+MAX_CUSTOM_CSS_LENGTH = env.int("MAX_CUSTOM_CSS_LENGTH", default=4_000)
+MAX_LAYOUT_JSON_BYTES = env.int("MAX_LAYOUT_JSON_BYTES", default=2_000_000)
 
-MAX_TASK_TEXT_LENGTH = 500
-MAX_TASKS_PER_DATE = 200
-MAX_TASKS_JSON_BYTES = 500_000
+MAX_TASK_TEXT_LENGTH = env.int("MAX_TASK_TEXT_LENGTH", default=500)
+MAX_TASKS_PER_DATE = env.int("MAX_TASKS_PER_DATE", default=200)
+MAX_TASKS_JSON_BYTES = env.int("MAX_TASKS_JSON_BYTES", default=500_000)
 
-MAX_SAVED_DESIGN_NAME_LENGTH = 80
-MAX_SAVED_DESIGNS_PER_USER = 30
+MAX_SAVED_DESIGN_NAME_LENGTH = env.int("MAX_SAVED_DESIGN_NAME_LENGTH", default=80)
+MAX_SAVED_DESIGNS_PER_USER = env.int("MAX_SAVED_DESIGNS_PER_USER", default=30)
 
-# WARNING -- SECURITY: with this on, <script> tags in a Custom HTML/CSS
-# block's markup are no longer stripped, and the block's preview iframe is
-# granted the "allow-scripts" sandbox permission, so that script actually
-# runs. Any board that renders (yours, or anyone else's if boards are ever
-# shared/viewed by other accounts) can now execute arbitrary JavaScript as
-# whoever is viewing it -- this is a deliberate, permanent stored-XSS hole.
-# Only enable this for a fully trusted, single-user local instance you
-# control end to end. Leave it False for anything you deploy or share.
 ALLOW_CUSTOM_SCRIPTS = env("ALLOW_CUSTOM_SCRIPTS")
 
 ALLOW_PUBLIC_REGISTRATION = env("ALLOW_PUBLIC_REGISTRATION")
@@ -179,5 +175,7 @@ AI_ASSISTANT_ENABLED = env("AI_ASSISTANT_ENABLED")
 AI_ASSISTANT_PROVIDER = env("AI_ASSISTANT_PROVIDER", default="anthropic")
 AI_ASSISTANT_MODEL = env("AI_ASSISTANT_MODEL", default="claude-sonnet-5")
 AI_ASSISTANT_API_KEY = env("AI_ASSISTANT_API_KEY", default="")
+AI_ASSISTANT_MAX_TOKENS = env.int("AI_ASSISTANT_MAX_TOKENS", default=16000)
+AI_ASSISTANT_TIMEOUT_SECONDS = env.int("AI_ASSISTANT_TIMEOUT_SECONDS", default=60)
 
-MAX_AI_REQUEST_BYTES = 200_000
+MAX_AI_REQUEST_BYTES = env.int("MAX_AI_REQUEST_BYTES", default=200_000)

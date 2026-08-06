@@ -8,6 +8,7 @@ const OVERLAY_IFRAME_CSP = `default-src 'none'; script-src 'unsafe-inline'; styl
 
 const BRIDGE_SCRIPT = `<script>
 window.addEventListener('message', function (e) {
+  if (e.source !== window.parent) return;
   if (!e.data || e.data.source !== 'board-overlay-trigger') return;
   window.dispatchEvent(new CustomEvent('board:trigger', { detail: { event: e.data.event, active: e.data.active } }));
 });
@@ -21,14 +22,18 @@ function hashString(value: string): string {
   return hash.toString(36)
 }
 
-function buildOverlaySrcDoc(html: string): string {
+function buildOverlaySrcDoc(html: string, allowScripts: boolean): string {
   const safe = DOMPurify.sanitize(html, {
-    FORBID_TAGS: OVERLAY_FORBID_TAGS,
-    ADD_TAGS: ['script'],
+    FORBID_TAGS: allowScripts ? OVERLAY_FORBID_TAGS : [...OVERLAY_FORBID_TAGS, 'script'],
+    ADD_TAGS: allowScripts ? ['script'] : [],
     FORCE_BODY: true,
     FORBID_ATTR: ['srcdoc'],
   })
-  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${OVERLAY_IFRAME_CSP}"><style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:transparent;}</style>${BRIDGE_SCRIPT}</head><body>${safe}</body></html>`
+  const csp = allowScripts
+    ? OVERLAY_IFRAME_CSP
+    : `default-src 'none'; style-src 'unsafe-inline'; img-src data: ${API_BASE};`
+  const bridgeScript = allowScripts ? BRIDGE_SCRIPT : ''
+  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}"><style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:transparent;}</style>${bridgeScript}</head><body>${safe}</body></html>`
 }
 
 export const OVERLAY_HTML_PLACEHOLDER = `<style>.fx{width:100%;height:100%;border-radius:inherit;box-shadow:0 0 0 0 rgba(255,90,31,.6);transition:box-shadow .4s ease;}</style>
@@ -45,11 +50,12 @@ window.addEventListener('board:trigger', function (e) {
 interface AnimationOverlayProps {
   html: string | undefined
   targetRef: RefObject<HTMLElement | null>
+  allowScripts: boolean
 }
 
-export function AnimationOverlay({ html, targetRef }: AnimationOverlayProps) {
+export function AnimationOverlay({ html, targetRef, allowScripts }: AnimationOverlayProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const srcDoc = useMemo(() => (html ? buildOverlaySrcDoc(html) : ''), [html])
+  const srcDoc = useMemo(() => (html ? buildOverlaySrcDoc(html, allowScripts) : ''), [html, allowScripts])
 
   useEffect(() => {
     const target = targetRef.current
@@ -86,7 +92,7 @@ export function AnimationOverlay({ html, targetRef }: AnimationOverlayProps) {
       key={hashString(srcDoc)}
       ref={iframeRef}
       className="block-animation-overlay"
-      sandbox="allow-scripts"
+      sandbox={allowScripts ? 'allow-scripts' : ''}
       srcDoc={srcDoc}
       title="Animation overlay"
     />
