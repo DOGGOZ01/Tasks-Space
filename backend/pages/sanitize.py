@@ -12,7 +12,7 @@ ALLOWED_TAGS = [
     "div", "span", "p", "br", "hr", "b", "i", "u", "s", "strong", "em", "small",
     "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "a", "img",
     "blockquote", "code", "pre", "table", "thead", "tbody", "tr", "td", "th",
-    "style",
+    "style", "canvas",
 ]
 
 SCRIPT_TAG = ["script"]
