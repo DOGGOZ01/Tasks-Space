@@ -989,6 +989,7 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
   const [status, setStatus] = useState<SaveStatus>('idle')
   const readyRef = useRef(false)
   const fieldSaveTimeoutsRef = useRef<Record<string, number | null>>({})
+  const fieldSavePendingValuesRef = useRef<Record<string, unknown>>({})
   const fieldSaveControllersRef = useRef<Record<string, AbortController | null>>({})
 
   function abortInFlightFieldSaves() {
@@ -1033,25 +1034,43 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
     }
   }, [])
 
+  function firePendingFieldSave(field: string, value: unknown) {
+    fieldSaveControllersRef.current[field]?.abort()
+    const controller = new AbortController()
+    fieldSaveControllersRef.current[field] = controller
+    setStatus('saving')
+    apiFetch('/api/page/', {
+      method: 'PATCH',
+      body: JSON.stringify({ [field]: value }),
+      signal: controller.signal,
+    })
+      .then(() => setStatus('saved'))
+      .catch((err) => {
+        if (isAbortError(err)) return
+        setStatus('error')
+      })
+  }
+
   function scheduleFieldSave(field: string, value: unknown) {
     const existing = fieldSaveTimeoutsRef.current[field]
     if (existing) window.clearTimeout(existing)
+    fieldSavePendingValuesRef.current[field] = value
     fieldSaveTimeoutsRef.current[field] = window.setTimeout(() => {
-      fieldSaveControllersRef.current[field]?.abort()
-      const controller = new AbortController()
-      fieldSaveControllersRef.current[field] = controller
-      setStatus('saving')
-      apiFetch('/api/page/', {
-        method: 'PATCH',
-        body: JSON.stringify({ [field]: value }),
-        signal: controller.signal,
-      })
-        .then(() => setStatus('saved'))
-        .catch((err) => {
-          if (isAbortError(err)) return
-          setStatus('error')
-        })
+      fieldSaveTimeoutsRef.current[field] = null
+      delete fieldSavePendingValuesRef.current[field]
+      firePendingFieldSave(field, value)
     }, SAVE_DEBOUNCE_MS)
+  }
+
+  function flushFieldSaves() {
+    Object.entries(fieldSaveTimeoutsRef.current).forEach(([field, timeoutId]) => {
+      if (!timeoutId) return
+      window.clearTimeout(timeoutId)
+      fieldSaveTimeoutsRef.current[field] = null
+      const value = fieldSavePendingValuesRef.current[field]
+      delete fieldSavePendingValuesRef.current[field]
+      firePendingFieldSave(field, value)
+    })
   }
 
   function setBackground(next: BoardBackground) {
@@ -1069,6 +1088,7 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
       if (timeoutId) window.clearTimeout(timeoutId)
     })
     fieldSaveTimeoutsRef.current = {}
+    fieldSavePendingValuesRef.current = {}
     abortInFlightFieldSaves()
 
     setLayouts({ desktop: {}, mobile: {} })
@@ -1097,6 +1117,7 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
       if (timeoutId) window.clearTimeout(timeoutId)
     })
     fieldSaveTimeoutsRef.current = {}
+    fieldSavePendingValuesRef.current = {}
     abortInFlightFieldSaves()
 
     setLayouts((prev) => (prev ? { ...prev, [device]: nextLayout } : prev))
@@ -1144,6 +1165,7 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
         onHeaderStyleChange={setHeaderStyle}
         onRevertToOriginalDesign={revertToOriginalDesign}
         onApplyDesignNow={applyDesignNow}
+        onFlushFieldSaves={flushFieldSaves}
       >
         <BoardEditor
           layout={layouts[device]}

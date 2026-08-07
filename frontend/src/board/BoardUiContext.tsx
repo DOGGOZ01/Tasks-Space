@@ -22,6 +22,7 @@ interface BoardUiValue {
   setHeaderStyle: (style: HeaderStyle) => void
   revertToOriginalDesign: () => void
   applyDesignNow: (layout: SerializedNodes, background: BoardBackground, headerStyle: HeaderStyle) => void
+  flushFieldSaves: () => void
   hoverToRevealBlocks: boolean
   setHoverToRevealBlocks: (next: boolean) => void
   controlsLayerNode: HTMLDivElement | null
@@ -53,6 +54,7 @@ interface BoardUiProviderProps {
   onHeaderStyleChange: (style: HeaderStyle) => void
   onRevertToOriginalDesign: () => void
   onApplyDesignNow: (layout: SerializedNodes, background: BoardBackground, headerStyle: HeaderStyle) => void
+  onFlushFieldSaves: () => void
 }
 
 export function BoardUiProvider({
@@ -68,6 +70,7 @@ export function BoardUiProvider({
   onHeaderStyleChange,
   onRevertToOriginalDesign,
   onApplyDesignNow,
+  onFlushFieldSaves,
 }: BoardUiProviderProps) {
   const [scale, setScale] = useState(1)
   const [hoverToRevealBlocks, setHoverToRevealBlocksState] = useState(readStoredHoverToReveal)
@@ -97,6 +100,7 @@ export function BoardUiProvider({
       setHeaderStyle: onHeaderStyleChange,
       revertToOriginalDesign: onRevertToOriginalDesign,
       applyDesignNow: onApplyDesignNow,
+      flushFieldSaves: onFlushFieldSaves,
       hoverToRevealBlocks,
       setHoverToRevealBlocks,
       controlsLayerNode,
@@ -115,6 +119,7 @@ export function BoardUiProvider({
       onHeaderStyleChange,
       onRevertToOriginalDesign,
       onApplyDesignNow,
+      onFlushFieldSaves,
       hoverToRevealBlocks,
       controlsLayerNode,
     ],

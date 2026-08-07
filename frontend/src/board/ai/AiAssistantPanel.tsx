@@ -48,7 +48,7 @@ function ForgetKeyConfirm({ onCancel, onConfirm }: { onCancel: () => void; onCon
 
 export function AiAssistantButton() {
   const { actions, query } = useEditor()
-  const { background, headerStyle, setBackground, setHeaderStyle, canvasWidth, canvasHeight, device } =
+  const { background, headerStyle, setBackground, setHeaderStyle, canvasWidth, canvasHeight, device, flushFieldSaves } =
     useBoardUi()
   const { aiAssistant, allowCustomScripts } = useAuth()
   const tools = buildTools(allowCustomScripts)
@@ -255,6 +255,7 @@ export function AiAssistantButton() {
         if (!agentMode) break
 
         const results = runApplyBatch(result.toolCalls)
+        flushFieldSaves()
         conv = [
           ...conv,
           {
@@ -297,6 +298,7 @@ export function AiAssistantButton() {
       if (!entry || entry.kind !== 'assistant' || entry.toolCalls.length === 0) return prev
 
       const results = runApplyBatch(entry.toolCalls)
+      flushFieldSaves()
       const next = [...prev]
       next.splice(entryIndex + 1, 0, {
         kind: 'tool_results',

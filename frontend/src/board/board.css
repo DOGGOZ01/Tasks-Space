@@ -515,8 +515,11 @@
   opacity: 0.5;
 }
 
-select.block-quick-menu-item {
-  appearance: auto;
+.block-quick-menu-divider {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--border);
+  opacity: 0.5;
 }
 
 .block-quick-menu-danger {

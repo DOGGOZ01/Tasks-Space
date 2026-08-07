@@ -114,11 +114,18 @@ export function CustomHtmlBlock() {
       onBringToFront={() => reorderZIndex(query, actions, id, 'forward')}
       onSendToBack={() => reorderZIndex(query, actions, id, 'backward')}
       query={query}
-      headerActions={
-        <button type="button" className="block-quick-menu-item" onClick={openModal}>
+      extraActions={(closeMenu) => (
+        <button
+          type="button"
+          className="block-quick-menu-item"
+          onClick={() => {
+            closeMenu()
+            openModal()
+          }}
+        >
           Edit HTML/CSS{allowCustomScripts ? '/JS' : ''}
         </button>
-      }
+      )}
       onGeometryChange={(geometry) => applyGeometry(setProp, geometry)}
       onRemove={() => actions.delete(id)}
     >

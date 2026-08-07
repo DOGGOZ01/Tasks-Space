@@ -37,12 +37,15 @@ export function BlockLayoutEditor({
 }: BlockLayoutEditorProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
   const ids = elements.map((el) => el.id)
-  const [draft, setDraft] = useState<ElementLayout>(() => (hasCustomLayoutFor(layout, ids) ? layout : seedLayout))
+  const alreadyCustom = hasCustomLayoutFor(layout, ids)
+  const [draft, setDraft] = useState<ElementLayout>(() => (alreadyCustom ? layout : seedLayout))
+  const [isCustomized, setIsCustomized] = useState(alreadyCustom)
   const aspect = blockWidth > 0 && blockHeight > 0 ? blockWidth / blockHeight : 1
   const canvasHeight = clampPercent(CANVAS_WIDTH / aspect, 120, 260)
 
   function commit(next: ElementLayout) {
     setDraft(next)
+    setIsCustomized(true)
     onChange(next)
   }
 
@@ -103,13 +106,15 @@ export function BlockLayoutEditor({
   }
 
   const overlappingIds = new Set<BlockElementId>()
-  for (let i = 0; i < elements.length; i++) {
-    for (let j = i + 1; j < elements.length; j++) {
-      const a = draft[elements[i].id]
-      const b = draft[elements[j].id]
-      if (a && b && rectsOverlap(a, b)) {
-        overlappingIds.add(elements[i].id)
-        overlappingIds.add(elements[j].id)
+  if (isCustomized) {
+    for (let i = 0; i < elements.length; i++) {
+      for (let j = i + 1; j < elements.length; j++) {
+        const a = draft[elements[i].id]
+        const b = draft[elements[j].id]
+        if (a && b && rectsOverlap(a, b)) {
+          overlappingIds.add(elements[i].id)
+          overlappingIds.add(elements[j].id)
+        }
       }
     }
   }

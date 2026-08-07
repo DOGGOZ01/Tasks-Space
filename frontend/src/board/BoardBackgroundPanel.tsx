@@ -88,14 +88,6 @@ export function BoardBackgroundPanel({
         ))}
       </div>
 
-      {background.type !== 'html' && (
-        <CustomCssButton
-          className="block-style-full-button"
-          value={background.customCss ?? ''}
-          onChange={(customCss) => onChange({ ...background, customCss })}
-        />
-      )}
-
       {background.type === 'color' && (
         <>
           <div className="board-bg-swatches">
@@ -162,6 +154,14 @@ export function BoardBackgroundPanel({
             </div>
           </label>
         </>
+      )}
+
+      {background.type !== 'html' && (
+        <CustomCssButton
+          className="block-style-full-button"
+          value={background.customCss ?? ''}
+          onChange={(customCss) => onChange({ ...background, customCss })}
+        />
       )}
 
       {background.type === 'html' && (

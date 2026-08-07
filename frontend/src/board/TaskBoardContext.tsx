@@ -18,14 +18,12 @@ interface TaskBoardValue {
 
 const TaskBoardContext = createContext<TaskBoardValue | null>(null)
 
-const SAVE_DEBOUNCE_MS = 800
-
 export function TaskBoardProvider({ children }: { children: ReactNode }) {
   const [dailyTasks, setDailyTasks] = useState<TasksByDate>({})
   const [weeklyTasks, setWeeklyTasks] = useState<TasksByDate>({})
   const dailyRef = useRef(dailyTasks)
   const weeklyRef = useRef(weeklyTasks)
-  const saveTimeoutRef = useRef<number | null>(null)
+  const saveControllerRef = useRef<AbortController | null>(null)
   dailyRef.current = dailyTasks
   weeklyRef.current = weeklyTasks
 
@@ -43,41 +41,38 @@ export function TaskBoardProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const scheduleSave = useCallback(() => {
-    if (saveTimeoutRef.current) window.clearTimeout(saveTimeoutRef.current)
-    saveTimeoutRef.current = window.setTimeout(() => {
-      apiFetch('/api/tasks/', {
-        method: 'PATCH',
-        body: JSON.stringify({
-          daily_tasks: dailyRef.current,
-          weekly_tasks: weeklyRef.current,
-        }),
-      }).catch(() => {})
-    }, SAVE_DEBOUNCE_MS)
+  const saveNow = useCallback(() => {
+    saveControllerRef.current?.abort()
+    const controller = new AbortController()
+    saveControllerRef.current = controller
+    apiFetch('/api/tasks/', {
+      method: 'PATCH',
+      body: JSON.stringify({
+        daily_tasks: dailyRef.current,
+        weekly_tasks: weeklyRef.current,
+      }),
+      signal: controller.signal,
+    }).catch(() => {})
   }, [])
 
   const setDailyTasksForDate = useCallback(
     (dateKey: string, tasks: Task[]) => {
-      setDailyTasks((prev) => {
-        const next = { ...prev, [dateKey]: tasks }
-        dailyRef.current = next
-        return next
-      })
-      scheduleSave()
+      const next = { ...dailyRef.current, [dateKey]: tasks }
+      dailyRef.current = next
+      setDailyTasks(next)
+      saveNow()
     },
-    [scheduleSave],
+    [saveNow],
   )
 
   const setWeeklyTasksForDate = useCallback(
     (dateKey: string, tasks: Task[]) => {
-      setWeeklyTasks((prev) => {
-        const next = { ...prev, [dateKey]: tasks }
-        weeklyRef.current = next
-        return next
-      })
-      scheduleSave()
+      const next = { ...weeklyRef.current, [dateKey]: tasks }
+      weeklyRef.current = next
+      setWeeklyTasks(next)
+      saveNow()
     },
-    [scheduleSave],
+    [saveNow],
   )
 
   return (

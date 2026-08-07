@@ -1,11 +1,10 @@
 import { useCallback, useRef, useState } from 'react'
-import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from 'react'
+import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode, RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimationOverlay } from './AnimationOverlay'
 import { scopeKeyFor } from './animationCss'
 import { BlockLayoutEditor } from './BlockLayoutEditor'
 import { BlockStylePanel } from './BlockStylePanel'
-import { CustomCodeButton } from './CustomCodeButton'
 import { ScopedAnimationStyle } from './ScopedAnimationStyle'
 import type { BlockStyle } from './blockStyle'
 import { DEFAULT_BLOCK_STYLE, resolveBlockStyle } from './blockStyle'
@@ -23,6 +22,7 @@ import {
 } from './elementLayout'
 import type { Geometry } from './geometry'
 import { MIN_BLOCK_HEIGHT, MIN_BLOCK_WIDTH, clamp, snapToGrid } from './geometry'
+import { anchorBelowRect, anchorBelowRectRightAligned } from './popoverAnchor'
 import { useDragOffset } from './useDragOffset'
 import { getZIndexRank } from './zOrder'
 
@@ -42,7 +42,7 @@ interface BlockShellProps extends Geometry {
   onTitleChange?: (title: string) => void
   headerStyle?: BlockStyle
   onHeaderStyleChange?: (style: BlockStyle) => void
-  headerActions?: ReactNode
+  extraActions?: (closeMenu: () => void, menuToggleRef: RefObject<HTMLButtonElement | null>) => ReactNode
   elementLayout?: ElementLayout
   onElementLayoutChange?: (layout: ElementLayout) => void
   addRowSlot?: ReactNode
@@ -74,7 +74,7 @@ export function BlockShell({
   onTitleChange,
   headerStyle = DEFAULT_BLOCK_STYLE,
   onHeaderStyleChange,
-  headerActions,
+  extraActions,
   elementLayout = DEFAULT_ELEMENT_LAYOUT,
   onElementLayoutChange,
   addRowSlot,
@@ -117,6 +117,11 @@ export function BlockShell({
   const headerHidden = !!elementLayout.header?.hidden
   const geometryRef = useRef<Geometry>({ x, y, width, height })
   geometryRef.current = { x, y, width, height }
+
+  const hasIdentityMenuGroup = !!(onTitleChange || onHeaderStyleChange) || !!extraActions
+  const hasStyleMenuGroup =
+    !!(onStyleChange && !hideBodyStyleButton) || !!(onElementLayoutChange && elementIds.length > 1)
+  const hasLayerMenuGroup = !!(onBringToFront || onSendToBack)
 
   const startDrag = useCallback(
     (event: ReactPointerEvent) => {
@@ -173,46 +178,29 @@ export function BlockShell({
     [editMode, scale, canvasWidth, canvasHeight, onGeometryChange],
   )
 
+  function closeMenu() {
+    setMenuAnchor(null)
+  }
+
   function toggleMenu() {
     if (menuAnchor) {
       setMenuAnchor(null)
       return
     }
     menuDrag.reset()
-    const rect = menuToggleRef.current?.getBoundingClientRect()
-    if (!rect) {
-      setMenuAnchor({ top: 80, left: 80 })
-      return
-    }
-    const left = Math.min(rect.left, window.innerWidth - MENU_WIDTH - 12)
-    const top = Math.min(rect.bottom + 6, window.innerHeight - 12)
-    setMenuAnchor({ top, left: Math.max(12, left) })
+    setMenuAnchor(anchorBelowRect(menuToggleRef.current?.getBoundingClientRect(), MENU_WIDTH))
   }
 
   function openStylePanel() {
     setMenuAnchor(null)
     stylePanelDrag.reset()
-    const rect = menuToggleRef.current?.getBoundingClientRect()
-    if (!rect) {
-      setPanelAnchor({ top: 80, left: 80 })
-      return
-    }
-    const left = Math.min(rect.left, window.innerWidth - PANEL_WIDTH - 12)
-    const top = Math.min(rect.bottom + 6, window.innerHeight - 12)
-    setPanelAnchor({ top, left: Math.max(12, left) })
+    setPanelAnchor(anchorBelowRect(menuToggleRef.current?.getBoundingClientRect(), PANEL_WIDTH))
   }
 
   function openHeaderPanel() {
     setMenuAnchor(null)
     headerPanelDrag.reset()
-    const rect = menuToggleRef.current?.getBoundingClientRect()
-    if (!rect) {
-      setHeaderPanelAnchor({ top: 80, left: 80 })
-      return
-    }
-    const left = Math.min(rect.left, window.innerWidth - PANEL_WIDTH - 12)
-    const top = Math.min(rect.bottom + 6, window.innerHeight - 12)
-    setHeaderPanelAnchor({ top, left: Math.max(12, left) })
+    setHeaderPanelAnchor(anchorBelowRect(menuToggleRef.current?.getBoundingClientRect(), PANEL_WIDTH))
   }
 
   function measureElementRect(rootRect: DOMRect, el: HTMLElement | null): ElementRect | null {
@@ -246,27 +234,13 @@ export function BlockShell({
     setMenuAnchor(null)
     layoutPanelDrag.reset()
     setLayoutSeed(measureCurrentLayout())
-    const rect = menuToggleRef.current?.getBoundingClientRect()
-    if (!rect) {
-      setLayoutPanelAnchor({ top: 80, left: 80 })
-      return
-    }
-    const left = Math.min(rect.left, window.innerWidth - PANEL_WIDTH - 12)
-    const top = Math.min(rect.bottom + 6, window.innerHeight - 12)
-    setLayoutPanelAnchor({ top, left: Math.max(12, left) })
+    setLayoutPanelAnchor(anchorBelowRect(menuToggleRef.current?.getBoundingClientRect(), PANEL_WIDTH))
   }
 
   const CONFIRM_WIDTH = 220
   function requestRemove() {
     setMenuAnchor(null)
-    const rect = menuToggleRef.current?.getBoundingClientRect()
-    if (!rect) {
-      setConfirmAnchor({ top: 80, left: 80 })
-      return
-    }
-    const left = Math.min(rect.right - CONFIRM_WIDTH, window.innerWidth - CONFIRM_WIDTH - 12)
-    const top = Math.min(rect.bottom + 6, window.innerHeight - 12)
-    setConfirmAnchor({ top, left: Math.max(12, left) })
+    setConfirmAnchor(anchorBelowRectRightAligned(menuToggleRef.current?.getBoundingClientRect(), CONFIRM_WIDTH))
   }
 
   const menuToggle = (
@@ -412,8 +386,8 @@ export function BlockShell({
                   Header style
                 </button>
               )}
-              {headerActions}
-              
+              {extraActions?.(closeMenu, menuToggleRef)}
+              {hasIdentityMenuGroup && hasStyleMenuGroup && <div className="block-quick-menu-divider" />}
               {onStyleChange && !hideBodyStyleButton && (
                 <button type="button" className="block-quick-menu-item" onClick={openStylePanel}>
                   Body style
@@ -424,12 +398,8 @@ export function BlockShell({
                   Layout
                 </button>
               )}
-              {onStyleChange && !hideCustomCodeButton && (
-                <CustomCodeButton
-                  style={style}
-                  onChange={onStyleChange}
-                  allowCustomScripts={allowCustomScripts}
-                />
+              {(hasIdentityMenuGroup || hasStyleMenuGroup) && hasLayerMenuGroup && (
+                <div className="block-quick-menu-divider" />
               )}
               {onBringToFront && onSendToBack && query && (
                 <div className="block-quick-menu-layer-info">
@@ -463,6 +433,9 @@ export function BlockShell({
                   Send backward
                 </button>
               )}
+              {(hasIdentityMenuGroup || hasStyleMenuGroup || hasLayerMenuGroup) && (
+                <div className="block-quick-menu-divider" />
+              )}
               <button
                 type="button"
                 className="block-quick-menu-item block-quick-menu-danger"
@@ -489,10 +462,11 @@ export function BlockShell({
               }}
             >
               <BlockStylePanel
+                title="Body"
                 style={style}
                 onChange={onStyleChange}
                 onClose={() => setPanelAnchor(null)}
-                showCustomCss={false}
+                showCustomCss={!hideCustomCodeButton}
                 dragHandleProps={stylePanelDrag.dragHandleProps}
               />
             </div>
