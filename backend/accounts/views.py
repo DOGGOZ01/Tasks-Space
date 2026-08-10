@@ -24,7 +24,9 @@ class RegistrationStatusView(APIView):
     def get(self, request):
         return Response(
             {
-                "registration_open": SiteConfig.get_solo().registration_open,
+                "registration_open": (
+                    settings.ALLOW_PUBLIC_REGISTRATION and SiteConfig.get_solo().registration_open
+                ),
                 "allow_custom_scripts": settings.ALLOW_CUSTOM_SCRIPTS,
             }
         )
@@ -36,7 +38,7 @@ class RegisterView(APIView):
     throttle_scope = "auth_register"
 
     def post(self, request):
-        if not SiteConfig.get_solo().registration_open:
+        if not settings.ALLOW_PUBLIC_REGISTRATION or not SiteConfig.get_solo().registration_open:
             return Response(
                 {"detail": "Registration is currently closed."},
                 status=status.HTTP_403_FORBIDDEN,

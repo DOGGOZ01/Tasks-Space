@@ -9,6 +9,7 @@ env = environ.Env(
     DEBUG=(bool, False),
     COOKIE_SECURE=(bool, False),
     ALLOW_CUSTOM_SCRIPTS=(bool, False),
+    ALLOW_PUBLIC_REGISTRATION=(bool, False),
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
@@ -166,3 +167,5 @@ MAX_TASKS_JSON_BYTES = 500_000
 # Only enable this for a fully trusted, single-user local instance you
 # control end to end. Leave it False for anything you deploy or share.
 ALLOW_CUSTOM_SCRIPTS = env("ALLOW_CUSTOM_SCRIPTS")
+
+ALLOW_PUBLIC_REGISTRATION = env("ALLOW_PUBLIC_REGISTRATION")

@@ -17,6 +17,7 @@ const BASE_IFRAME_CSP = `style-src 'unsafe-inline'; img-src data: ${API_BASE};`
 function buildSrcDoc(html: string, allowScripts: boolean): string {
   const safe = DOMPurify.sanitize(html, {
     FORBID_TAGS: allowScripts ? BASE_FORBID_TAGS : [...BASE_FORBID_TAGS, 'script'],
+    ADD_TAGS: allowScripts ? ['script'] : [],
     FORBID_ATTR: ['srcdoc'],
   })
   const csp = allowScripts

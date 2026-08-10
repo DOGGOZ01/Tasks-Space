@@ -1,6 +1,8 @@
 import re
+import secrets
 
 import bleach
+import tinycss2
 from bleach.css_sanitizer import CSSSanitizer
 from django.conf import settings
 
@@ -38,6 +40,7 @@ ALLOWED_CSS_PROPERTIES = [
 ]
 
 _css_sanitizer = CSSSanitizer(allowed_css_properties=ALLOWED_CSS_PROPERTIES)
+_ALLOWED_CSS_PROPERTIES_SET = set(ALLOWED_CSS_PROPERTIES)
 
 BLOCK_STYLE_CSS_PROPERTIES = [
     "color", "background", "background-color", "background-image", "background-position",
@@ -59,13 +62,95 @@ _background_css_sanitizer = CSSSanitizer(allowed_css_properties=BACKGROUND_CSS_P
 HEX_COLOR_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
 SAFE_URL_RE = re.compile(r"^(https://|/)", re.IGNORECASE)
 
+_STYLE_TAG_RE = re.compile(r"(<style\b[^>]*>)(.*?)(</style>)", re.IGNORECASE | re.DOTALL)
+_UNSAFE_CSS_VALUE_RE = re.compile(r"expression\(|-moz-binding|behavior\s*:|javascript:", re.IGNORECASE)
+_CSS_URL_RE = re.compile(r"url\(\s*(['\"]?)(.*?)\1\s*\)", re.IGNORECASE)
+
+
+def _is_safe_css_url_value(value: str) -> bool:
+    for match in _CSS_URL_RE.finditer(value):
+        target = match.group(2).strip().lower()
+        if not (target.startswith("data:image/") or target.startswith("/") or target.startswith("https://")):
+            return False
+    return True
+
+
+def _is_safe_css_value(value: str) -> bool:
+    if _UNSAFE_CSS_VALUE_RE.search(value):
+        return False
+    if "url(" in value.lower() and not _is_safe_css_url_value(value):
+        return False
+    return True
+
+
+def sanitize_style_tag_css(raw_css: str) -> str:
+    if not raw_css:
+        return ""
+
+    rules = tinycss2.parse_stylesheet(raw_css, skip_whitespace=True, skip_comments=True)
+    kept_rules = []
+    for rule in rules:
+        if rule.type != "qualified-rule":
+            continue
+        selector = tinycss2.serialize(rule.prelude).strip()
+        if not selector:
+            continue
+        try:
+            declarations = tinycss2.parse_declaration_list(
+                rule.content, skip_whitespace=True, skip_comments=True
+            )
+        except Exception:
+            continue
+
+        kept_declarations = []
+        for decl in declarations:
+            if decl.type != "declaration":
+                continue
+            prop = decl.lower_name
+            if prop not in _ALLOWED_CSS_PROPERTIES_SET:
+                continue
+            value = tinycss2.serialize(decl.value).strip()
+            if not value or not _is_safe_css_value(value):
+                continue
+            important = " !important" if decl.important else ""
+            kept_declarations.append(f"{prop}: {value}{important}")
+
+        if kept_declarations:
+            kept_rules.append(f"{selector} {{ {'; '.join(kept_declarations)}; }}")
+
+    return "\n".join(kept_rules)
+
+
+def _sanitize_style_tags(html: str) -> str:
+    def _replace(match: re.Match) -> str:
+        open_tag, content, close_tag = match.group(1), match.group(2), match.group(3)
+        return f"{open_tag}{sanitize_style_tag_css(content)}{close_tag}"
+
+    return _STYLE_TAG_RE.sub(_replace, html)
+
+
+_SCRIPT_BLOCK_RE = re.compile(r"<script\b[^>]*>(.*?)</script\s*>", re.IGNORECASE | re.DOTALL)
+_SCRIPT_CLOSE_RE = re.compile(r"</script", re.IGNORECASE)
+
 
 def sanitize_custom_html(raw_html: str) -> str:
     if not raw_html:
         return ""
     raw_html = raw_html[: settings.MAX_CUSTOM_HTML_LENGTH]
     tags = ALLOWED_TAGS + SCRIPT_TAG if settings.ALLOW_CUSTOM_SCRIPTS else ALLOWED_TAGS
-    return bleach.clean(
+
+    extracted_scripts: list[str] = []
+    token = secrets.token_hex(8) if settings.ALLOW_CUSTOM_SCRIPTS else None
+    if token:
+        def _extract(match: re.Match) -> str:
+            index = len(extracted_scripts)
+            body = _SCRIPT_CLOSE_RE.sub("", match.group(1))
+            extracted_scripts.append(body)
+            return f"<script>scriptplaceholder{token}_{index}</script>"
+
+        raw_html = _SCRIPT_BLOCK_RE.sub(_extract, raw_html)
+
+    cleaned = bleach.clean(
         raw_html,
         tags=tags,
         attributes=ALLOWED_ATTRIBUTES,
@@ -74,6 +159,13 @@ def sanitize_custom_html(raw_html: str) -> str:
         strip=True,
         strip_comments=True,
     )
+    cleaned = _sanitize_style_tags(cleaned)
+
+    if extracted_scripts:
+        placeholder_re = re.compile(rf"scriptplaceholder{token}_(\d+)")
+        cleaned = placeholder_re.sub(lambda m: extracted_scripts[int(m.group(1))], cleaned)
+
+    return cleaned
 
 
 def _is_custom_html_node(node: dict) -> bool:
@@ -148,7 +240,7 @@ def sanitize_background_css(raw_css: str) -> str:
     return _background_css_sanitizer.sanitize_css(raw_css)
 
 
-BOARD_BACKGROUND_TYPES = {"color", "image", "custom"}
+BOARD_BACKGROUND_TYPES = {"color", "image", "custom", "html"}
 BOARD_BACKGROUND_IMAGE_FITS = {"cover", "contain", "repeat"}
 
 
@@ -174,6 +266,13 @@ def sanitize_board_background(value) -> dict:
         image_fit = value.get("imageFit")
         if image_fit in BOARD_BACKGROUND_IMAGE_FITS:
             cleaned["imageFit"] = image_fit
+
+    elif bg_type == "html":
+        html = value.get("html")
+        if isinstance(html, str) and html:
+            sanitized_html = sanitize_custom_html(html)
+            if sanitized_html:
+                cleaned["html"] = sanitized_html
 
     custom_css = value.get("customCss")
     if isinstance(custom_css, str) and custom_css:

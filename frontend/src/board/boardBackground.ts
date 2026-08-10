@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import { sanitizeCssDeclarations } from './cssDeclarations'
 
-export type BoardBackgroundType = 'color' | 'image' | 'custom'
+export type BoardBackgroundType = 'color' | 'image' | 'custom' | 'html'
 export type BoardBackgroundImageFit = 'cover' | 'contain' | 'repeat'
 
 export interface BoardBackground {
@@ -10,6 +10,7 @@ export interface BoardBackground {
   imageUrl?: string
   imageFit?: BoardBackgroundImageFit
   customCss?: string
+  html?: string
 }
 
 export const DEFAULT_BOARD_BACKGROUND: BoardBackground = { type: 'color' }
@@ -55,6 +56,8 @@ export function resolveBoardBackground(background: BoardBackground): CSSProperti
       }
     case 'custom':
       return customCss
+    case 'html':
+      return {}
     default:
       return {}
   }

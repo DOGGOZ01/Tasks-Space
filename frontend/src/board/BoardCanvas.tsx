@@ -5,6 +5,7 @@ import type { ChangeEvent, ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { apiFetch } from '../lib/api'
 import { BlockStylePanel } from './BlockStylePanel'
+import { BoardBackgroundLayer } from './BoardBackgroundLayer'
 import { BoardBackgroundPanel } from './BoardBackgroundPanel'
 import type { BoardBackground } from './boardBackground'
 import { DEFAULT_BOARD_BACKGROUND, resolveBoardBackground } from './boardBackground'
@@ -483,6 +484,7 @@ function BoardStage({ children }: { children: ReactNode }) {
       ref={wrapperRef}
       style={resolveBoardBackground(background)}
     >
+      {background.type === 'html' && <BoardBackgroundLayer background={background} />}
       <div
         className="board-canvas-scaler"
         style={{

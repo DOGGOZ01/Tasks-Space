@@ -19,6 +19,7 @@ interface BoardBackgroundPanelProps {
 const TYPE_LABELS: Record<Exclude<BoardBackgroundType, 'custom'>, string> = {
   color: 'Color',
   image: 'Image',
+  html: 'Animated',
 }
 
 export function BoardBackgroundPanel({ background, onChange, onClose }: BoardBackgroundPanelProps) {
@@ -75,11 +76,13 @@ export function BoardBackgroundPanel({ background, onChange, onClose }: BoardBac
         ))}
       </div>
 
-      <CustomCssButton
-        className="block-style-full-button"
-        value={background.customCss ?? ''}
-        onChange={(customCss) => onChange({ ...background, customCss })}
-      />
+      {background.type !== 'html' && (
+        <CustomCssButton
+          className="block-style-full-button"
+          value={background.customCss ?? ''}
+          onChange={(customCss) => onChange({ ...background, customCss })}
+        />
+      )}
 
       {background.type === 'color' && (
         <>
@@ -146,6 +149,23 @@ export function BoardBackgroundPanel({ background, onChange, onClose }: BoardBac
               </select>
             </div>
           </label>
+        </>
+      )}
+
+      {background.type === 'html' && (
+        <>
+          <p className="board-bg-html-hint">
+            Full-bleed sandboxed HTML/CSS rendered behind every block (same sandbox as a Custom
+            HTML block). &lt;script&gt; tags only actually run if this instance has scripts
+            enabled server-side.
+          </p>
+          <CustomCssButton
+            className="block-style-full-button"
+            label="Edit HTML/JS..."
+            value={background.html ?? ''}
+            onChange={(html) => onChange({ ...background, type: 'html', html })}
+            placeholder='<div style="color:#0ff">Hello</div><script>/* runs if enabled */</script>'
+          />
         </>
       )}
 

@@ -1,3 +1,4 @@
+import copy
 import json
 
 from django.conf import settings
@@ -35,6 +36,14 @@ class PageSerializer(serializers.ModelSerializer):
 
     def validate_header_style(self, value):
         return sanitize_header_style(value)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["layout"] = sanitize_layout(copy.deepcopy(data.get("layout")) or {})
+        data["mobile_layout"] = sanitize_layout(copy.deepcopy(data.get("mobile_layout")) or {})
+        data["background"] = sanitize_board_background(copy.deepcopy(data.get("background")) or {})
+        data["header_style"] = sanitize_header_style(copy.deepcopy(data.get("header_style")) or {})
+        return data
 
 
 def _clean_tasks_by_date(value):
