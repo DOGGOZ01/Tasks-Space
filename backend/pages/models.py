@@ -77,3 +77,23 @@ class UploadedImage(models.Model):
 def _delete_uploaded_image_file(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)
+
+
+class RenderPreview(models.Model):
+    KIND_CHOICES = [
+        ("html_block", "Custom HTML block"),
+        ("background", "Board background"),
+        ("overlay", "Animation overlay"),
+    ]
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="render_previews"
+    )
+    token = models.CharField(max_length=64, unique=True, db_index=True)
+    kind = models.CharField(max_length=16, choices=KIND_CHOICES)
+    html = models.TextField(blank=True)
+    task_data = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"RenderPreview({self.pk}, owner={self.owner_id}, kind={self.kind})"

@@ -1,40 +1,6 @@
-import DOMPurify from 'dompurify'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import type { RefObject } from 'react'
-import { API_BASE } from '../lib/api'
-
-const OVERLAY_FORBID_TAGS = ['iframe', 'object', 'embed', 'link', 'meta', 'form']
-const OVERLAY_IFRAME_CSP = `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: ${API_BASE};`
-
-const BRIDGE_SCRIPT = `<script>
-window.addEventListener('message', function (e) {
-  if (e.source !== window.parent) return;
-  if (!e.data || e.data.source !== 'board-overlay-trigger') return;
-  window.dispatchEvent(new CustomEvent('board:trigger', { detail: { event: e.data.event, active: e.data.active } }));
-});
-</script>`
-
-function hashString(value: string): string {
-  let hash = 0
-  for (let i = 0; i < value.length; i++) {
-    hash = (hash * 31 + value.charCodeAt(i)) | 0
-  }
-  return hash.toString(36)
-}
-
-function buildOverlaySrcDoc(html: string, allowScripts: boolean): string {
-  const safe = DOMPurify.sanitize(html, {
-    FORBID_TAGS: allowScripts ? OVERLAY_FORBID_TAGS : [...OVERLAY_FORBID_TAGS, 'script'],
-    ADD_TAGS: allowScripts ? ['script'] : [],
-    FORCE_BODY: true,
-    FORBID_ATTR: ['srcdoc'],
-  })
-  const csp = allowScripts
-    ? OVERLAY_IFRAME_CSP
-    : `default-src 'none'; style-src 'unsafe-inline'; img-src data: ${API_BASE};`
-  const bridgeScript = allowScripts ? BRIDGE_SCRIPT : ''
-  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}"><style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:transparent;}</style>${bridgeScript}</head><body>${safe}</body></html>`
-}
+import { useRenderPreviewUrl } from './useRenderPreviewUrl'
 
 export const OVERLAY_HTML_PLACEHOLDER = `<style>.fx{width:100%;height:100%;border-radius:inherit;box-shadow:0 0 0 0 rgba(255,90,31,.6);transition:box-shadow .4s ease;}</style>
 <div class="fx" id="fx"></div>
@@ -55,7 +21,7 @@ interface AnimationOverlayProps {
 
 export function AnimationOverlay({ html, targetRef, allowScripts }: AnimationOverlayProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const srcDoc = useMemo(() => (html ? buildOverlaySrcDoc(html, allowScripts) : ''), [html, allowScripts])
+  const previewUrl = useRenderPreviewUrl(html ?? '', 'overlay', { enabled: !!html })
 
   useEffect(() => {
     const target = targetRef.current
@@ -85,15 +51,14 @@ export function AnimationOverlay({ html, targetRef, allowScripts }: AnimationOve
     }
   }, [html, targetRef])
 
-  if (!html) return null
+  if (!html || !previewUrl) return null
 
   return (
     <iframe
-      key={hashString(srcDoc)}
       ref={iframeRef}
       className="block-animation-overlay"
       sandbox={allowScripts ? 'allow-scripts' : ''}
-      srcDoc={srcDoc}
+      src={previewUrl}
       title="Animation overlay"
     />
   )

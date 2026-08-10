@@ -1,8 +1,6 @@
 import { useEditor, useNode } from '@craftjs/core'
-import DOMPurify from 'dompurify'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { API_BASE } from '../../lib/api'
 import { BlockShell } from '../BlockShell'
 import type { BlockStyle } from '../blockStyle'
 import { useBoardUi } from '../BoardUiContext'
@@ -10,38 +8,9 @@ import { useAuth } from '../../context/AuthContext'
 import { applyGeometry } from '../geometry'
 import { useTaskBoard } from '../TaskBoardContext'
 import { useDragOffset } from '../useDragOffset'
+import { useRenderPreviewUrl } from '../useRenderPreviewUrl'
 import { reorderZIndex } from '../zOrder'
-import { startOfWeekKey, todayKey, type TasksByDate } from './taskListHelpers'
-
-const BASE_FORBID_TAGS = ['iframe', 'object', 'embed', 'link', 'meta', 'form']
-
-const BASE_IFRAME_CSP = `style-src 'unsafe-inline'; img-src data: ${API_BASE};`
-
-interface TaskBoardData {
-  dailyTasks: TasksByDate
-  weeklyTasks: TasksByDate
-  todayKey: string
-  startOfWeekKey: string
-}
-
-function serializeForScriptTag(data: unknown): string {
-  return JSON.stringify(data).replace(/</g, '\\u003c')
-}
-
-function buildSrcDoc(html: string, allowScripts: boolean, taskData: TaskBoardData): string {
-  const safe = DOMPurify.sanitize(html, {
-    FORBID_TAGS: allowScripts ? BASE_FORBID_TAGS : [...BASE_FORBID_TAGS, 'script'],
-    ADD_TAGS: allowScripts ? ['script'] : [],
-    FORBID_ATTR: ['srcdoc'],
-  })
-  const csp = allowScripts
-    ? `default-src 'none'; script-src 'unsafe-inline'; ${BASE_IFRAME_CSP}`
-    : `default-src 'none'; ${BASE_IFRAME_CSP}`
-  const dataScript = allowScripts
-    ? `<script>window.taskBoardData = ${serializeForScriptTag(taskData)};</script>`
-    : ''
-  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}">${dataScript}<style>html,body{background:transparent;}body{margin:8px;font-family:sans-serif;overflow-wrap:anywhere;}</style></head><body>${safe}</body></html>`
-}
+import { startOfWeekKey, todayKey } from './taskListHelpers'
 
 export function CustomHtmlBlock() {
   const {
@@ -72,16 +41,9 @@ export function CustomHtmlBlock() {
   const [draft, setDraft] = useState(html)
   const { offset, dragHandleProps, reset: resetOffset } = useDragOffset()
 
-  const srcDoc = useMemo(
-    () =>
-      buildSrcDoc(html, allowCustomScripts, {
-        dailyTasks,
-        weeklyTasks,
-        todayKey: todayKey(),
-        startOfWeekKey: startOfWeekKey(),
-      }),
-    [html, allowCustomScripts, dailyTasks, weeklyTasks],
-  )
+  const previewUrl = useRenderPreviewUrl(html, 'html_block', {
+    taskData: { dailyTasks, weeklyTasks, todayKey: todayKey(), startOfWeekKey: startOfWeekKey() },
+  })
 
   function openModal() {
     setDraft(html)
@@ -130,12 +92,14 @@ export function CustomHtmlBlock() {
       onRemove={() => actions.delete(id)}
     >
       <div className="custom-html-block">
-        <iframe
-          className={`custom-html-frame${editMode ? '' : ' custom-html-frame-bare'}`}
-          sandbox={allowCustomScripts ? 'allow-scripts' : ''}
-          srcDoc={srcDoc}
-          title="Custom HTML block preview"
-        />
+        {previewUrl && (
+          <iframe
+            className={`custom-html-frame${editMode ? '' : ' custom-html-frame-bare'}`}
+            sandbox={allowCustomScripts ? 'allow-scripts' : ''}
+            src={previewUrl}
+            title="Custom HTML block preview"
+          />
+        )}
       </div>
       {modalOpen &&
         createPortal(

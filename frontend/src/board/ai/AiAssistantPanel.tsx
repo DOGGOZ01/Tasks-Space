@@ -28,6 +28,16 @@ import { ProviderRequestError } from './types'
 const PANEL_WIDTH = 340
 const MAX_AGENT_STEPS = 24
 
+const AGENT_MODE_STORAGE_KEY = 'task-tracker:ai-agent-mode'
+
+function readStoredAgentMode(): boolean {
+  try {
+    return localStorage.getItem(AGENT_MODE_STORAGE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
 type Screen = 'loading' | 'setup' | 'unlock' | 'chat'
 
 function ForgetKeyConfirm({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
@@ -72,12 +82,19 @@ export function AiAssistantButton() {
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [running, setRunning] = useState(false)
-  const [agentMode, setAgentMode] = useState(false)
+  const [agentMode, setAgentModeState] = useState(readStoredAgentMode)
   const [chatError, setChatError] = useState<string | null>(null)
   const stopRequestedRef = useRef(false)
   const chatScrollRef = useRef<HTMLDivElement | null>(null)
   const backgroundRef = useRef(background)
   const headerStyleRef = useRef(headerStyle)
+
+  function setAgentMode(next: boolean) {
+    setAgentModeState(next)
+    try {
+      localStorage.setItem(AGENT_MODE_STORAGE_KEY, next ? '1' : '0')
+    } catch {}
+  }
 
   useEffect(() => {
     saveConversationMemory(conversation)

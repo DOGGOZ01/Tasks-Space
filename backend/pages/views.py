@@ -1,10 +1,13 @@
+import secrets
 from datetime import timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.views.decorators.clickjacking import xframe_options_exempt
 from rest_framework import status
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.parsers import MultiPartParser
@@ -20,7 +23,9 @@ from .image_gc import (
     rewrite_design_image_urls,
 )
 from .image_utils import process_uploaded_image
-from .models import Page, SavedDesign, TaskBoard, UploadedImage
+from .models import Page, RenderPreview, SavedDesign, TaskBoard, UploadedImage
+from .render_preview import build_document, build_preview_csp
+from .sanitize import sanitize_custom_html
 from .serializers import (
     PageSerializer,
     SavedDesignSerializer,
@@ -30,6 +35,16 @@ from .serializers import (
 
 IMAGE_PRUNE_GRACE = timedelta(seconds=60)
 PAGE_IMAGE_FIELDS = ("layout", "mobile_layout", "background")
+
+
+def _content_length_exceeds(request, limit):
+    content_length = request.META.get("CONTENT_LENGTH")
+    if content_length is None:
+        return False
+    try:
+        return int(content_length) > limit
+    except ValueError:
+        return False
 
 
 def _prune_unused_page_images(page):
@@ -185,7 +200,7 @@ class AiAssistantChatView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
-        if len(request.body) > settings.MAX_AI_REQUEST_BYTES:
+        if _content_length_exceeds(request, settings.MAX_AI_REQUEST_BYTES):
             return Response({"detail": "Request is too large."}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
         system_prompt = request.data.get("systemPrompt")
@@ -207,3 +222,49 @@ class AiAssistantChatView(APIView):
             return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
 
         return Response({"assistantText": assistant_text, "toolCalls": tool_calls})
+
+
+class RenderPreviewView(APIView):
+    throttle_scope = "render_preview"
+
+    def post(self, request):
+        if _content_length_exceeds(request, settings.MAX_RENDER_PREVIEW_REQUEST_BYTES):
+            return Response({"detail": "Request is too large."}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+
+        raw_html = request.data.get("html")
+        kind = request.data.get("kind")
+        if not isinstance(raw_html, str) or kind not in dict(RenderPreview.KIND_CHOICES):
+            return Response({"detail": "Invalid request body."}, status=status.HTTP_400_BAD_REQUEST)
+
+        task_data = None
+        if kind == "html_block":
+            raw_task_data = request.data.get("taskData")
+            if isinstance(raw_task_data, dict):
+                task_data = raw_task_data
+
+        sanitized = sanitize_custom_html(raw_html)
+
+        cutoff = timezone.now() - timedelta(seconds=settings.RENDER_PREVIEW_TTL_SECONDS)
+        RenderPreview.objects.filter(owner=request.user, created_at__lt=cutoff).delete()
+
+        token = secrets.token_urlsafe(32)
+        RenderPreview.objects.create(
+            owner=request.user, token=token, kind=kind, html=sanitized, task_data=task_data or {}
+        )
+        return Response({"token": token})
+
+    @xframe_options_exempt
+    def get(self, request):
+        token = request.query_params.get("token") or ""
+        cutoff = timezone.now() - timedelta(seconds=settings.RENDER_PREVIEW_TTL_SECONDS)
+        preview = RenderPreview.objects.filter(token=token, owner=request.user, created_at__gte=cutoff).first()
+        if not preview:
+            return HttpResponse("Preview not found or expired.", status=404, content_type="text/plain")
+
+        allow_scripts = settings.ALLOW_CUSTOM_SCRIPTS
+        sanitized = sanitize_custom_html(preview.html)
+        document = build_document(preview.kind, sanitized, allow_scripts, preview.task_data or None)
+
+        response = HttpResponse(document, content_type="text/html; charset=utf-8")
+        response["Content-Security-Policy"] = build_preview_csp(allow_scripts)
+        return response

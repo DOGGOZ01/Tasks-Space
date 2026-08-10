@@ -138,6 +138,7 @@ REST_FRAMEWORK = {
         "auth_register": env("AUTH_REGISTER_THROTTLE_RATE", default="5/min"),
         "auth_refresh": env("AUTH_REFRESH_THROTTLE_RATE", default="30/min"),
         "ai_chat": env("AI_CHAT_THROTTLE_RATE", default="20/min"),
+        "render_preview": env("RENDER_PREVIEW_THROTTLE_RATE", default="180/min"),
     },
 }
 
@@ -179,3 +180,6 @@ AI_ASSISTANT_MAX_TOKENS = env.int("AI_ASSISTANT_MAX_TOKENS", default=16000)
 AI_ASSISTANT_TIMEOUT_SECONDS = env.int("AI_ASSISTANT_TIMEOUT_SECONDS", default=60)
 
 MAX_AI_REQUEST_BYTES = env.int("MAX_AI_REQUEST_BYTES", default=200_000)
+
+RENDER_PREVIEW_TTL_SECONDS = env.int("RENDER_PREVIEW_TTL_SECONDS", default=600)
+MAX_RENDER_PREVIEW_REQUEST_BYTES = env.int("MAX_RENDER_PREVIEW_REQUEST_BYTES", default=200_000)

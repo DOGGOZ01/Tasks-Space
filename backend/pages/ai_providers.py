@@ -7,6 +7,8 @@ ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
 
+REQUEST_HEADERS = {"User-Agent": "TaskTrackerAiAssistant/1.0"}
+
 
 class ProviderRequestError(Exception):
     pass
@@ -70,6 +72,7 @@ def _send_anthropic(api_key, model, system_prompt, conversation, tools):
         response = requests.post(
             ANTHROPIC_URL,
             headers={
+                **REQUEST_HEADERS,
                 "content-type": "application/json",
                 "x-api-key": api_key,
                 "anthropic-version": "2023-06-01",
@@ -92,7 +95,11 @@ def _send_anthropic(api_key, model, system_prompt, conversation, tools):
     if not response.ok:
         raise ProviderRequestError(_read_error_message(response))
 
-    data = response.json()
+    try:
+        data = response.json()
+    except ValueError as exc:
+        raise ProviderRequestError("Anthropic returned an unexpected (non-JSON) response.") from exc
+
     content = data.get("content") or []
     assistant_text = "\n".join(block.get("text", "") for block in content if block.get("type") == "text")
     tool_calls = [
@@ -135,7 +142,7 @@ def _send_openai_compatible(url, api_key, model, system_prompt, conversation, to
     try:
         response = requests.post(
             url,
-            headers={"content-type": "application/json", "authorization": f"Bearer {api_key}"},
+            headers={**REQUEST_HEADERS, "content-type": "application/json", "authorization": f"Bearer {api_key}"},
             json={
                 "model": model,
                 "max_tokens": settings.AI_ASSISTANT_MAX_TOKENS,
@@ -164,7 +171,11 @@ def _send_openai_compatible(url, api_key, model, system_prompt, conversation, to
     if not response.ok:
         raise ProviderRequestError(_read_error_message(response))
 
-    data = response.json()
+    try:
+        data = response.json()
+    except ValueError as exc:
+        raise ProviderRequestError("The provider returned an unexpected (non-JSON) response.") from exc
+
     choices = data.get("choices") or [{}]
     message = choices[0].get("message") or {}
     tool_calls = []

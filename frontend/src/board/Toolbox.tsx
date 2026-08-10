@@ -4,7 +4,7 @@ import type { ReactElement } from 'react'
 import { CustomHtmlBlock } from './blocks/CustomHtmlBlock'
 import { useBoardUi } from './BoardUiContext'
 import { DailyTaskListBlock } from './blocks/DailyTaskListBlock'
-import { clamp } from './geometry'
+import { clamp, snapToGrid } from './geometry'
 import { ImageBlock } from './blocks/ImageBlock'
 import { NoteBlock } from './blocks/NoteBlock'
 import { OverdueTaskListBlock } from './blocks/OverdueTaskListBlock'
@@ -36,8 +36,8 @@ export function Toolbox() {
     const props = rootNode.data.props
     const width = (props.width as number) ?? 0
     const height = (props.height as number) ?? 0
-    props.x = clamp(((props.x as number) ?? 0) + offset, 0, Math.max(0, canvasWidth - width))
-    props.y = clamp(((props.y as number) ?? 0) + offset, 0, Math.max(0, canvasHeight - height))
+    props.x = clamp(snapToGrid(((props.x as number) ?? 0) + offset), 0, Math.max(0, canvasWidth - width))
+    props.y = clamp(snapToGrid(((props.y as number) ?? 0) + offset), 0, Math.max(0, canvasHeight - height))
 
     actions.addNodeTree(tree, ROOT_NODE)
   }

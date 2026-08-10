@@ -4,6 +4,7 @@ import shutil
 import tempfile
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -12,7 +13,7 @@ from django.utils import timezone
 from PIL import Image
 from rest_framework.test import APITestCase
 
-from .models import Page, SavedDesign, UploadedImage
+from .models import Page, RenderPreview, SavedDesign, UploadedImage
 
 TINY_PNG = bytes.fromhex(
     "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489"
@@ -463,3 +464,73 @@ class BoardSanitizationSecurityTests(APITestCase):
 
         page.refresh_from_db()
         self.assertIn("<script", page.background.get("html", ""))
+
+
+class RenderPreviewTests(APITestCase):
+    def setUp(self):
+        self.alex = User.objects.create_user(username="alex", password="pw")
+        self.sam = User.objects.create_user(username="sam", password="pw")
+        self.client.force_authenticate(self.alex)
+
+    def test_requires_auth(self):
+        self.client.force_authenticate(None)
+        post = self.client.post("/api/render-preview/", {"html": "<b>hi</b>", "kind": "html_block"}, format="json")
+        self.assertEqual(post.status_code, 401)
+        self.assertEqual(self.client.get("/api/render-preview/?token=x").status_code, 401)
+
+    def test_invalid_kind_rejected(self):
+        response = self.client.post("/api/render-preview/", {"html": "<b>hi</b>", "kind": "not-a-kind"}, format="json")
+        self.assertEqual(response.status_code, 400)
+
+    def test_post_then_get_round_trip(self):
+        post = self.client.post("/api/render-preview/", {"html": "<b>hello</b>", "kind": "background"}, format="json")
+        self.assertEqual(post.status_code, 200, post.data)
+        token = post.data["token"]
+
+        get = self.client.get(f"/api/render-preview/?token={token}")
+        self.assertEqual(get.status_code, 200)
+        self.assertEqual(get["Content-Type"], "text/html; charset=utf-8")
+        self.assertIn("<b>hello</b>", get.content.decode())
+        self.assertIn("frame-ancestors", get["Content-Security-Policy"])
+
+    @override_settings(ALLOW_CUSTOM_SCRIPTS=False)
+    def test_script_stripped_by_default(self):
+        post = self.client.post(
+            "/api/render-preview/", {"html": "<script>alert(1)</script>", "kind": "html_block"}, format="json"
+        )
+        token = post.data["token"]
+        get = self.client.get(f"/api/render-preview/?token={token}")
+        self.assertNotIn("<script", get.content.decode())
+        self.assertNotIn("script-src", get["Content-Security-Policy"])
+
+    def test_other_user_cannot_read_someone_elses_token(self):
+        post = self.client.post("/api/render-preview/", {"html": "alex's secret", "kind": "background"}, format="json")
+        token = post.data["token"]
+
+        self.client.force_authenticate(self.sam)
+        get = self.client.get(f"/api/render-preview/?token={token}")
+        self.assertEqual(get.status_code, 404)
+
+    def test_expired_token_is_gone(self):
+        post = self.client.post("/api/render-preview/", {"html": "hi", "kind": "background"}, format="json")
+        token = post.data["token"]
+        RenderPreview.objects.filter(token=token).update(
+            created_at=timezone.now() - timedelta(seconds=settings.RENDER_PREVIEW_TTL_SECONDS + 1)
+        )
+        get = self.client.get(f"/api/render-preview/?token={token}")
+        self.assertEqual(get.status_code, 404)
+
+    @override_settings(ALLOW_CUSTOM_SCRIPTS=True)
+    def test_task_data_injected_for_html_block_kind_when_scripts_allowed(self):
+        post = self.client.post(
+            "/api/render-preview/",
+            {
+                "html": "<div>x</div>",
+                "kind": "html_block",
+                "taskData": {"dailyTasks": {}, "weeklyTasks": {}, "todayKey": "2026-08-10", "startOfWeekKey": "2026-08-10"},
+            },
+            format="json",
+        )
+        token = post.data["token"]
+        get = self.client.get(f"/api/render-preview/?token={token}")
+        self.assertIn("window.taskBoardData", get.content.decode())
