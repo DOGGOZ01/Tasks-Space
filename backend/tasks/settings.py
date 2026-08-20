@@ -181,5 +181,17 @@ AI_ASSISTANT_TIMEOUT_SECONDS = env.int("AI_ASSISTANT_TIMEOUT_SECONDS", default=6
 
 MAX_AI_REQUEST_BYTES = env.int("MAX_AI_REQUEST_BYTES", default=200_000)
 
+DAY_LOCK_MODE = env("DAY_LOCK_MODE", default="local").strip().lower()
+if DAY_LOCK_MODE not in ("local", "global"):
+    DAY_LOCK_MODE = "local"
+
+DAY_LOCK_TIMEZONE = env("DAY_LOCK_TIMEZONE", default="UTC")
+try:
+    from zoneinfo import ZoneInfo
+
+    ZoneInfo(DAY_LOCK_TIMEZONE)
+except Exception:
+    DAY_LOCK_TIMEZONE = "UTC"
+
 RENDER_PREVIEW_TTL_SECONDS = env.int("RENDER_PREVIEW_TTL_SECONDS", default=600)
 MAX_RENDER_PREVIEW_REQUEST_BYTES = env.int("MAX_RENDER_PREVIEW_REQUEST_BYTES", default=200_000)

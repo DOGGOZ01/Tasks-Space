@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { apiFetch } from '../lib/api'
+import type { DayLockConfig } from '../board/dayLock'
+import { DEFAULT_DAY_LOCK } from '../board/dayLock'
 
 export interface User {
   id: number
@@ -20,6 +22,7 @@ interface AuthContextValue {
   registrationOpen: boolean
   allowCustomScripts: boolean
   aiAssistant: AiAssistantHostConfig
+  dayLock: DayLockConfig
   login: (username: string, password: string) => Promise<void>
   register: (username: string, password: string, email?: string) => Promise<void>
   logout: () => Promise<void>
@@ -35,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [registrationOpen, setRegistrationOpen] = useState(true)
   const [allowCustomScripts, setAllowCustomScripts] = useState(false)
   const [aiAssistant, setAiAssistant] = useState<AiAssistantHostConfig>(DEFAULT_AI_ASSISTANT)
+  const [dayLock, setDayLock] = useState<DayLockConfig>(DEFAULT_DAY_LOCK)
 
   useEffect(() => {
     let cancelled = false
@@ -47,6 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ai_assistant_enabled: boolean
           ai_assistant_provider: string | null
           ai_assistant_model: string | null
+          day_lock_mode: DayLockConfig['mode']
+          day_lock_timezone: string
         }>('/api/auth/registration-status/')
         if (!cancelled) {
           setRegistrationOpen(status.registration_open)
@@ -55,6 +61,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             enabled: status.ai_assistant_enabled,
             provider: status.ai_assistant_provider,
             model: status.ai_assistant_model,
+          })
+          setDayLock({
+            mode: status.day_lock_mode === 'global' ? 'global' : 'local',
+            timezone: status.day_lock_timezone || 'UTC',
           })
         }
       } catch {
@@ -102,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, registrationOpen, allowCustomScripts, aiAssistant, login, register, logout }}
+      value={{ user, loading, registrationOpen, allowCustomScripts, aiAssistant, dayLock, login, register, logout }}
     >
       {children}
     </AuthContext.Provider>

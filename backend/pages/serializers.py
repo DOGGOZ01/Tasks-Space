@@ -25,7 +25,7 @@ def _clean_layout(value, field_label):
 class PageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Page
-        fields = ("layout", "mobile_layout", "background", "header_style", "updated_at")
+        fields = ("layout", "mobile_layout", "background", "header_style", "date_format", "updated_at")
         read_only_fields = ("updated_at",)
 
     def validate_layout(self, value):

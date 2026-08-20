@@ -2,6 +2,7 @@ import type { SerializedNodes } from '@craftjs/core'
 import { createContext, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { BoardBackground } from './boardBackground'
+import type { DateFormatPref } from './dateFormat'
 import type { DeviceMode } from './geometry'
 import { boardHeightFor, boardWidthFor } from './geometry'
 import type { HeaderStyle } from './headerStyle'
@@ -20,6 +21,8 @@ interface BoardUiValue {
   setBackground: (background: BoardBackground) => void
   headerStyle: HeaderStyle
   setHeaderStyle: (style: HeaderStyle) => void
+  dateFormat: DateFormatPref
+  setDateFormat: (format: DateFormatPref) => void
   revertToOriginalDesign: () => void
   applyDesignNow: (layout: SerializedNodes, background: BoardBackground, headerStyle: HeaderStyle) => void
   flushFieldSaves: () => void
@@ -52,6 +55,8 @@ interface BoardUiProviderProps {
   onBackgroundChange: (background: BoardBackground) => void
   headerStyle: HeaderStyle
   onHeaderStyleChange: (style: HeaderStyle) => void
+  dateFormat: DateFormatPref
+  onDateFormatChange: (format: DateFormatPref) => void
   onRevertToOriginalDesign: () => void
   onApplyDesignNow: (layout: SerializedNodes, background: BoardBackground, headerStyle: HeaderStyle) => void
   onFlushFieldSaves: () => void
@@ -68,6 +73,8 @@ export function BoardUiProvider({
   onBackgroundChange,
   headerStyle,
   onHeaderStyleChange,
+  dateFormat,
+  onDateFormatChange,
   onRevertToOriginalDesign,
   onApplyDesignNow,
   onFlushFieldSaves,
@@ -98,6 +105,8 @@ export function BoardUiProvider({
       setBackground: onBackgroundChange,
       headerStyle,
       setHeaderStyle: onHeaderStyleChange,
+      dateFormat,
+      setDateFormat: onDateFormatChange,
       revertToOriginalDesign: onRevertToOriginalDesign,
       applyDesignNow: onApplyDesignNow,
       flushFieldSaves: onFlushFieldSaves,
@@ -117,6 +126,8 @@ export function BoardUiProvider({
       onBackgroundChange,
       headerStyle,
       onHeaderStyleChange,
+      dateFormat,
+      onDateFormatChange,
       onRevertToOriginalDesign,
       onApplyDesignNow,
       onFlushFieldSaves,

@@ -1,7 +1,11 @@
 import { useEditor, useNode } from '@craftjs/core'
 import { useState } from 'react'
+import { useAuth } from '../../context/AuthContext'
 import { BlockShell } from '../BlockShell'
 import type { BlockStyle } from '../blockStyle'
+import { useBoardUi } from '../BoardUiContext'
+import { formatDisplayDate } from '../dateFormat'
+import { isDailyDateLocked, useAllowedTodayKey } from '../dayLock'
 import type { ElementLayout } from '../elementLayout'
 import { applyGeometry } from '../geometry'
 import { useTaskBoard } from '../TaskBoardContext'
@@ -43,10 +47,14 @@ export function DailyTaskListBlock() {
   }))
   const { actions, query } = useEditor()
   const { dailyTasks, setDailyTasksForDate } = useTaskBoard()
+  const { dayLock } = useAuth()
+  const { dateFormat } = useBoardUi()
   const [dateKey, setDateKey] = useState(todayKey)
   const [draft, setDraft] = useState('')
   const inputStylePanel = useTaskInputStylePanel()
 
+  const allowedToday = useAllowedTodayKey(dayLock)
+  const locked = isDailyDateLocked(dateKey, allowedToday)
   const tasks = dailyTasks[dateKey] ?? []
 
   function updateTasks(next: Task[]) {
@@ -85,25 +93,29 @@ export function DailyTaskListBlock() {
         onSendToBack={() => reorderZIndex(query, actions, id, 'backward')}
         query={query}
         addRowSlot={
-          <TaskListAddRow
-            nodeId={id}
-            draft={draft}
-            onDraftChange={setDraft}
-            onAdd={() => {
-              if (!draft.trim()) return
-              updateTasks([...tasks, { id: Date.now(), text: draft.trim(), done: false }])
-              setDraft('')
-            }}
-            inputStyle={inputStyle}
-            buttonStyle={addButtonStyle}
-            buttonIcon={addButtonIcon}
-          />
+          locked ? (
+            <div className="task-list-locked-note">This day is locked — no new tasks</div>
+          ) : (
+            <TaskListAddRow
+              nodeId={id}
+              draft={draft}
+              onDraftChange={setDraft}
+              onAdd={() => {
+                if (!draft.trim()) return
+                updateTasks([...tasks, { id: Date.now(), text: draft.trim(), done: false }])
+                setDraft('')
+              }}
+              inputStyle={inputStyle}
+              buttonStyle={addButtonStyle}
+              buttonIcon={addButtonIcon}
+            />
+          )
         }
         onGeometryChange={(geometry) => applyGeometry(setProp, geometry)}
         onRemove={() => actions.delete(id)}
       >
         <TaskListBody
-          label={dateKey}
+          label={formatDisplayDate(dateKey, dateFormat)}
           tasks={tasks}
           onToggle={(taskId) =>
             updateTasks(tasks.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t)))

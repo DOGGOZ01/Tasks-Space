@@ -12,6 +12,7 @@ interface TaskBoardResponse {
 interface TaskBoardValue {
   dailyTasks: TasksByDate
   weeklyTasks: TasksByDate
+  tasksLoaded: boolean
   setDailyTasksForDate: (dateKey: string, tasks: Task[]) => void
   setWeeklyTasksForDate: (dateKey: string, tasks: Task[]) => void
 }
@@ -21,6 +22,7 @@ const TaskBoardContext = createContext<TaskBoardValue | null>(null)
 export function TaskBoardProvider({ children }: { children: ReactNode }) {
   const [dailyTasks, setDailyTasks] = useState<TasksByDate>({})
   const [weeklyTasks, setWeeklyTasks] = useState<TasksByDate>({})
+  const [tasksLoaded, setTasksLoaded] = useState(false)
   const dailyRef = useRef(dailyTasks)
   const weeklyRef = useRef(weeklyTasks)
   const saveControllerRef = useRef<AbortController | null>(null)
@@ -36,6 +38,9 @@ export function TaskBoardProvider({ children }: { children: ReactNode }) {
         setWeeklyTasks(data.weekly_tasks ?? {})
       })
       .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setTasksLoaded(true)
+      })
     return () => {
       cancelled = true
     }
@@ -77,7 +82,7 @@ export function TaskBoardProvider({ children }: { children: ReactNode }) {
 
   return (
     <TaskBoardContext.Provider
-      value={{ dailyTasks, weeklyTasks, setDailyTasksForDate, setWeeklyTasksForDate }}
+      value={{ dailyTasks, weeklyTasks, tasksLoaded, setDailyTasksForDate, setWeeklyTasksForDate }}
     >
       {children}
     </TaskBoardContext.Provider>

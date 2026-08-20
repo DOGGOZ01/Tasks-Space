@@ -13,6 +13,13 @@ def user_upload_path(instance, filename):
 
 
 class Page(models.Model):
+    DATE_FORMAT_US = "MDY"
+    DATE_FORMAT_EU = "DMY"
+    DATE_FORMAT_CHOICES = [
+        (DATE_FORMAT_US, "Month/Day/Year"),
+        (DATE_FORMAT_EU, "Day/Month/Year"),
+    ]
+
     owner = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="page"
     )
@@ -20,6 +27,9 @@ class Page(models.Model):
     mobile_layout = models.JSONField(default=dict, blank=True)
     background = models.JSONField(default=dict, blank=True)
     header_style = models.JSONField(default=dict, blank=True)
+    date_format = models.CharField(
+        max_length=3, choices=DATE_FORMAT_CHOICES, default=DATE_FORMAT_US
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

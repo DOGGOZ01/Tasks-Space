@@ -1,6 +1,8 @@
 import { useEditor, useNode } from '@craftjs/core'
 import { BlockShell } from '../BlockShell'
 import type { BlockStyle } from '../blockStyle'
+import { useBoardUi } from '../BoardUiContext'
+import { formatDisplayDate, type DateFormatPref } from '../dateFormat'
 import type { ElementLayout } from '../elementLayout'
 import { applyGeometry } from '../geometry'
 import { useTaskBoard } from '../TaskBoardContext'
@@ -16,7 +18,11 @@ interface OverdueItem {
   source: OverdueSource
 }
 
-function collectOverdueItems(dailyTasks: TasksByDate, weeklyTasks: TasksByDate): OverdueItem[] {
+function collectOverdueItems(
+  dailyTasks: TasksByDate,
+  weeklyTasks: TasksByDate,
+  dateFormat: DateFormatPref,
+): OverdueItem[] {
   const today = todayKey()
   const currentWeek = startOfWeekKey()
   const items: OverdueItem[] = []
@@ -24,14 +30,16 @@ function collectOverdueItems(dailyTasks: TasksByDate, weeklyTasks: TasksByDate):
   for (const [dateKey, tasks] of Object.entries(dailyTasks)) {
     if (dateKey >= today) continue
     for (const task of tasks) {
-      if (!task.done) items.push({ task, dateKey, label: dateKey, source: 'daily' })
+      if (!task.done) items.push({ task, dateKey, label: formatDisplayDate(dateKey, dateFormat), source: 'daily' })
     }
   }
 
   for (const [dateKey, tasks] of Object.entries(weeklyTasks)) {
     if (dateKey >= currentWeek) continue
     for (const task of tasks) {
-      if (!task.done) items.push({ task, dateKey, label: `Week of ${dateKey}`, source: 'weekly' })
+      if (!task.done) {
+        items.push({ task, dateKey, label: `Week of ${formatDisplayDate(dateKey, dateFormat)}`, source: 'weekly' })
+      }
     }
   }
 
@@ -66,8 +74,9 @@ export function OverdueTaskListBlock() {
   }))
   const { actions, query } = useEditor()
   const { dailyTasks, weeklyTasks, setDailyTasksForDate, setWeeklyTasksForDate } = useTaskBoard()
+  const { dateFormat } = useBoardUi()
 
-  const items = collectOverdueItems(dailyTasks, weeklyTasks)
+  const items = collectOverdueItems(dailyTasks, weeklyTasks, dateFormat)
 
   function withSourceBucket(item: OverdueItem, mutate: (tasks: Task[]) => Task[]) {
     const bucket = item.source === 'daily' ? dailyTasks : weeklyTasks

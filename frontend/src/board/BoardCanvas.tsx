@@ -20,6 +20,8 @@ import type { BoardDesignExport } from './boardExport'
 import { BoardUiProvider, useBoardUi } from './BoardUiContext'
 import { resolveBlockStyle } from './blockStyle'
 import { Container } from './Container'
+import { DEFAULT_DATE_FORMAT } from './dateFormat'
+import type { DateFormatPref } from './dateFormat'
 import type { DeviceMode } from './geometry'
 import { GRID_SIZE } from './geometry'
 import { DEFAULT_HEADER_STYLE, HEADER_STYLE_TARGETS } from './headerStyle'
@@ -27,7 +29,7 @@ import type { HeaderStyle, HeaderStyleTarget } from './headerStyle'
 import { resolver } from './resolver'
 import { applySavedDesign, createSavedDesign, deleteSavedDesign, listSavedDesigns } from './savedDesigns'
 import type { SavedDesignSummary } from './savedDesigns'
-import { TaskBoardProvider } from './TaskBoardContext'
+import { TaskBoardProvider, useTaskBoard } from './TaskBoardContext'
 import { Toolbox } from './Toolbox'
 import { useDragOffset } from './useDragOffset'
 import { useIsMobileDevice } from './useIsMobileDevice'
@@ -37,6 +39,7 @@ interface PageResponse {
   mobile_layout: SerializedNodes
   background: BoardBackground
   header_style: HeaderStyle
+  date_format: DateFormatPref
   updated_at: string
 }
 
@@ -231,6 +234,72 @@ function HeaderStyleToggle() {
                 onClose={close}
                 dragHandleProps={dragHandleProps}
               />
+            </div>
+          </>,
+          document.body,
+        )}
+    </>
+  )
+}
+
+function SettingsButton() {
+  const { dateFormat, setDateFormat } = useBoardUi()
+  const { anchor, offset, toggleRef, toggle, dragHandleProps, close } = useAnchoredPanel(PANEL_WIDTH)
+
+  return (
+    <>
+      <button
+        ref={toggleRef}
+        type="button"
+        className="board-bg-toggle"
+        onClick={toggle}
+        aria-pressed={anchor != null}
+        title="Board settings"
+      >
+        Settings
+      </button>
+      {anchor &&
+        createPortal(
+          <>
+            <div className="block-style-backdrop" onClick={close} />
+            <div
+              className="block-style-panel-wrap header-style-panel-wrap"
+              style={{ top: anchor.top, left: anchor.left, transform: `translate3d(${offset.dx}px, ${offset.dy}px, 0)` }}
+            >
+              <div className="block-style-panel" onPointerDown={(e) => e.stopPropagation()}>
+                <div className="block-style-panel-header" {...dragHandleProps}>
+                  <span>Settings</span>
+                  <button
+                    type="button"
+                    onClick={close}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    aria-label="Close settings panel"
+                  >
+                    ×
+                  </button>
+                </div>
+                <label className="block-style-row">
+                  <span className="block-style-label">Date format</span>
+                </label>
+                <div className="board-bg-type-tabs" role="tablist">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={dateFormat === 'MDY'}
+                    onClick={() => setDateFormat('MDY')}
+                  >
+                    US (MM/DD/YYYY)
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={dateFormat === 'DMY'}
+                    onClick={() => setDateFormat('DMY')}
+                  >
+                    EU (DD/MM/YYYY)
+                  </button>
+                </div>
+              </div>
             </div>
           </>,
           document.body,
@@ -938,6 +1007,7 @@ function BoardChrome({
           {editMode && isRealMobile && <MobileDesignMenu />}
           {editMode && !isRealMobile && <BackgroundToggle />}
           {editMode && !isRealMobile && <HeaderStyleToggle />}
+          {editMode && <SettingsButton />}
           {editMode && <HoverRevealToggle />}
           <EditModeToggle />
           <LogoutButton onLogout={onLogout} />
@@ -977,16 +1047,92 @@ function BoardEditor({
   )
 }
 
+const INITIAL_IMAGE_LOAD_TIMEOUT_MS = 5000
+
+function useBoardImagesLoaded(active: boolean): boolean {
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    if (!active || loaded) return
+    let cancelled = false
+
+    function finish() {
+      if (!cancelled) setLoaded(true)
+    }
+
+    const timeoutId = window.setTimeout(finish, INITIAL_IMAGE_LOAD_TIMEOUT_MS)
+
+    function check() {
+      const imgs = Array.from(document.querySelectorAll<HTMLImageElement>('.board-canvas-inner img'))
+      const pending = imgs.filter((img) => !img.complete)
+      if (pending.length === 0) {
+        finish()
+        return
+      }
+      let remaining = pending.length
+      const settle = () => {
+        remaining -= 1
+        if (remaining === 0) finish()
+      }
+      pending.forEach((img) => {
+        img.addEventListener('load', settle, { once: true })
+        img.addEventListener('error', settle, { once: true })
+      })
+    }
+
+    const raf = requestAnimationFrame(check)
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(raf)
+      window.clearTimeout(timeoutId)
+    }
+  }, [active, loaded])
+
+  return loaded
+}
+
+function BoardInitialLoadingOverlay({ visible }: { visible: boolean }) {
+  const [mounted, setMounted] = useState(visible)
+
+  useEffect(() => {
+    if (visible) {
+      setMounted(true)
+      return
+    }
+    const timeoutId = window.setTimeout(() => setMounted(false), 300)
+    return () => window.clearTimeout(timeoutId)
+  }, [visible])
+
+  if (!mounted) return null
+
+  return (
+    <div className={`board-initial-loading${visible ? '' : ' board-initial-loading-hidden'}`}>
+      <div className="board-initial-loading-spinner" />
+      <p>Loading your board...</p>
+    </div>
+  )
+}
+
+function InitialLoadGate({ craftReady }: { craftReady: boolean }) {
+  const { tasksLoaded } = useTaskBoard()
+  const readyForImages = craftReady && tasksLoaded
+  const imagesLoaded = useBoardImagesLoaded(readyForImages)
+
+  return <BoardInitialLoadingOverlay visible={!(readyForImages && imagesLoaded)} />
+}
+
 export function BoardCanvas({ username, onLogout }: { username?: string; onLogout: () => void }) {
   const isMobileDevice = useIsMobileDevice()
   const [layouts, setLayouts] = useState<LayoutsByDevice | null>(null)
   const [background, setBackgroundState] = useState<BoardBackground>(DEFAULT_BOARD_BACKGROUND)
   const [headerStyle, setHeaderStyleState] = useState<HeaderStyle>(DEFAULT_HEADER_STYLE)
+  const [dateFormat, setDateFormatState] = useState<DateFormatPref>(DEFAULT_DATE_FORMAT)
   const [editMode, setEditMode] = useState(false)
   const [editDevice, setEditDeviceState] = useState<DeviceMode>(() =>
     isMobileDevice ? 'mobile' : 'desktop',
   )
   const [status, setStatus] = useState<SaveStatus>('idle')
+  const [craftReady, setCraftReady] = useState(false)
   const readyRef = useRef(false)
   const fieldSaveTimeoutsRef = useRef<Record<string, number | null>>({})
   const fieldSavePendingValuesRef = useRef<Record<string, unknown>>({})
@@ -1023,6 +1169,9 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
           }
           if (page.header_style && Object.keys(page.header_style).length > 0) {
             setHeaderStyleState(page.header_style)
+          }
+          if (page.date_format === 'MDY' || page.date_format === 'DMY') {
+            setDateFormatState(page.date_format)
           }
         }
       })
@@ -1081,6 +1230,11 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
   function setHeaderStyle(next: HeaderStyle) {
     setHeaderStyleState(next)
     scheduleFieldSave('header_style', next)
+  }
+
+  function setDateFormat(next: DateFormatPref) {
+    setDateFormatState(next)
+    scheduleFieldSave('date_format', next)
   }
 
   function revertToOriginalDesign() {
@@ -1163,6 +1317,8 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
         onBackgroundChange={setBackground}
         headerStyle={headerStyle}
         onHeaderStyleChange={setHeaderStyle}
+        dateFormat={dateFormat}
+        onDateFormatChange={setDateFormat}
         onRevertToOriginalDesign={revertToOriginalDesign}
         onApplyDesignNow={applyDesignNow}
         onFlushFieldSaves={flushFieldSaves}
@@ -1172,11 +1328,13 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
           onNodesChange={(query) => handleNodesChange(device, query)}
           onLoaded={() => {
             readyRef.current = true
+            setCraftReady(true)
           }}
           username={username}
           onLogout={onLogout}
         />
       </BoardUiProvider>
+      <InitialLoadGate craftReady={craftReady} />
       <div className="board-status">
         {status === 'saving' && 'Saving...'}
         {status === 'saved' && 'Saved'}

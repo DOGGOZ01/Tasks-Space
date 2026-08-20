@@ -32,6 +32,8 @@ class RegistrationStatusView(APIView):
                 "ai_assistant_enabled": ai_assistant_enabled,
                 "ai_assistant_provider": settings.AI_ASSISTANT_PROVIDER if ai_assistant_enabled else None,
                 "ai_assistant_model": settings.AI_ASSISTANT_MODEL if ai_assistant_enabled else None,
+                "day_lock_mode": settings.DAY_LOCK_MODE,
+                "day_lock_timezone": settings.DAY_LOCK_TIMEZONE,
             }
         )
 
