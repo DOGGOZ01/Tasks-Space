@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Task Tracker Installer{% endblock %}</title>
+<link rel="stylesheet" href="/static/style.css?v={{ static_version('style.css') }}">
+</head>
+<body>
+<header class="topbar">
+<span class="topbar-title">Task Tracker Installer</span>
+</header>
+<main class="page">
+{% block content %}{% endblock %}
+</main>
+<script src="/static/app.js?v={{ static_version('app.js') }}"></script>
+</body>
+</html>

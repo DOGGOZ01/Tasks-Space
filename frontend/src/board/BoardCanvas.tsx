@@ -5,6 +5,7 @@ import type { ChangeEvent, ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { apiFetch } from '../lib/api'
 import { AiAssistantButton } from './ai/AiAssistantPanel'
+import { getRememberAcrossReload, setRememberAcrossReload } from './ai/keyStore'
 import { BlockStylePanel } from './BlockStylePanel'
 import { BoardBackgroundLayer } from './BoardBackgroundLayer'
 import { BoardBackgroundPanel } from './BoardBackgroundPanel'
@@ -245,6 +246,12 @@ function HeaderStyleToggle() {
 function SettingsButton() {
   const { dateFormat, setDateFormat } = useBoardUi()
   const { anchor, offset, toggleRef, toggle, dragHandleProps, close } = useAnchoredPanel(PANEL_WIDTH)
+  const [rememberAiKey, setRememberAiKeyState] = useState(() => getRememberAcrossReload())
+
+  function handleRememberAiKeyChange(next: boolean) {
+    setRememberAcrossReload(next)
+    setRememberAiKeyState(next)
+  }
 
   return (
     <>
@@ -299,6 +306,20 @@ function SettingsButton() {
                     EU (DD/MM/YYYY)
                   </button>
                 </div>
+                <label className="block-style-row settings-checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={rememberAiKey}
+                    onChange={(e) => handleRememberAiKeyChange(e.target.checked)}
+                  />
+                  <span className="block-style-label">Keep AI assistant unlocked across page reloads</span>
+                </label>
+                {rememberAiKey && (
+                  <p className="settings-warning">
+                    Less secure: your AI assistant passphrase will stay unlocked across page reloads
+                    until you close this tab, instead of asking again every time you reload.
+                  </p>
+                )}
               </div>
             </div>
           </>,

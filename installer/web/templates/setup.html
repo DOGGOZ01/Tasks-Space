@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% block title %}First-run setup - Task Tracker Installer{% endblock %}
+{% block content %}
+<h1>First-run setup</h1>
+<p class="lede">This wizard writes <code>backend/.env</code>. You can change any of these later from the settings page.</p>
+
+<div class="wizard-progress">
+<div class="wizard-step-name" id="wizard-step-name"></div>
+<div class="wizard-dots" id="wizard-dots"></div>
+</div>
+
+<form method="post" action="/setup" id="setup-form">
+
+<section class="card wizard-step">
+<h2>Deployment</h2>
+
+<div class="field recap-key">
+<label for="DEPLOY_MODE">Deploy mode</label>
+<select name="DEPLOY_MODE" id="DEPLOY_MODE">
+<option value="localhost" selected>Localhost</option>
+<option value="hosted">Hosted (domain + HTTPS)</option>
+</select>
+<p class="help">Localhost runs plain HTTP on this machine. Hosted requests a real domain and lets nginx obtain a Let's Encrypt certificate.</p>
+</div>
+
+<div class="field hosted-only recap-key" hidden>
+<label for="DOMAIN">Domain</label>
+<input type="text" name="DOMAIN" id="DOMAIN" placeholder="example.com">
+</div>
+
+<div class="field hosted-only" hidden>
+<label for="ACME_EMAIL">ACME email</label>
+<input type="email" name="ACME_EMAIL" id="ACME_EMAIL" placeholder="admin@example.com">
+<p class="help">Used by Let's Encrypt for renewal and expiry notices.</p>
+</div>
+
+<div class="field recap-key">
+<label for="HTTP_PORT">HTTP port</label>
+<input type="number" name="HTTP_PORT" id="HTTP_PORT" value="80">
+<p class="help">Port nginx listens on for this site.</p>
+</div>
+
+<div class="field">
+<label for="INSTALLER_WEB_PORT">Installer web port</label>
+<input type="number" name="INSTALLER_WEB_PORT" id="INSTALLER_WEB_PORT" value="7000">
+<p class="help">Port this setup wizard itself listens on. Only reachable from this machine (bound to 127.0.0.1) -- if you're setting this up over SSH on a remote server, use an SSH tunnel or the terminal wizard instead.</p>
+</div>
+
+<div class="actions"><button type="button" class="primary wizard-next">Next</button></div>
+</section>
+
+<section class="card wizard-step" hidden>
+<h2>Administrator account</h2>
+
+<div class="field recap-key">
+<label for="DJANGO_SUPERUSER_USERNAME">Username</label>
+<input type="text" name="DJANGO_SUPERUSER_USERNAME" id="DJANGO_SUPERUSER_USERNAME" required autocomplete="username">
+</div>
+
+<div class="field">
+<label for="DJANGO_SUPERUSER_PASSWORD">Password</label>
+<input type="password" name="DJANGO_SUPERUSER_PASSWORD" id="DJANGO_SUPERUSER_PASSWORD" required autocomplete="new-password">
+</div>
+
+<div class="field">
+<label for="confirm_password">Confirm password</label>
+<input type="password" id="confirm_password" required autocomplete="new-password">
+<p class="help" id="password-mismatch" hidden>Passwords do not match.</p>
+</div>
+
+<div class="field">
+<label for="DJANGO_SUPERUSER_EMAIL">Email (optional)</label>
+<input type="email" name="DJANGO_SUPERUSER_EMAIL" id="DJANGO_SUPERUSER_EMAIL" autocomplete="email">
+</div>
+
+<div class="actions">
+<button type="button" class="wizard-back">Back</button>
+<button type="button" class="primary wizard-next">Next</button>
+</div>
+</section>
+
+<section class="card wizard-step" hidden>
+<h2>Security</h2>
+
+<div class="field field-inline recap-key">
+<input type="checkbox" name="ALLOW_CUSTOM_SCRIPTS" id="ALLOW_CUSTOM_SCRIPTS" value="True">
+<label for="ALLOW_CUSTOM_SCRIPTS">Allow custom scripts in Custom HTML/CSS blocks</label>
+</div>
+<p class="help warning">Only enable this for a fully trusted, single-user instance. It lets board content run arbitrary &lt;script&gt; tags.</p>
+
+<div class="field field-inline recap-key">
+<input type="checkbox" name="ALLOW_PUBLIC_REGISTRATION" id="ALLOW_PUBLIC_REGISTRATION" value="True">
+<label for="ALLOW_PUBLIC_REGISTRATION">Allow public registration</label>
+</div>
+
+<div class="actions">
+<button type="button" class="wizard-back">Back</button>
+<button type="button" class="primary wizard-next">Next</button>
+</div>
+</section>
+
+<section class="card wizard-step" hidden>
+<h2>Day lock</h2>
+
+<div class="field recap-key">
+<label for="DAY_LOCK_MODE">Day lock mode</label>
+<select name="DAY_LOCK_MODE" id="DAY_LOCK_MODE">
+<option value="local" selected>Local - locks when the day/week ends in the timezone below</option>
+<option value="global">Global - locks once the day/week has ended everywhere</option>
+</select>
+</div>
+
+<div class="field recap-key">
+<label for="DAY_LOCK_TIMEZONE">Day lock timezone</label>
+<input type="text" name="DAY_LOCK_TIMEZONE" id="DAY_LOCK_TIMEZONE" value="UTC" placeholder="Europe/Paris">
+<p class="help">IANA timezone name, e.g. <code>Europe/Paris</code>, <code>America/New_York</code>.</p>
+</div>
+
+<div class="actions">
+<button type="button" class="wizard-back">Back</button>
+<button type="button" class="primary wizard-next">Next</button>
+</div>
+</section>
+
+<section class="card wizard-step" hidden>
+<h2>Auth throttling</h2>
+<p class="lede">Requests per IP, django-rest-framework rate syntax, e.g. <code>10/min</code>, <code>100/day</code>.</p>
+
+{% for field in sections[0].fields %}
+<div class="field">
+<label for="{{ field.name }}">{{ field.label }}</label>
+<input type="text" name="{{ field.name }}" id="{{ field.name }}" value="{{ field.value }}">
+</div>
+{% if field.help %}<p class="help">{{ field.help }}</p>{% endif %}
+{% endfor %}
+
+<div class="actions">
+<button type="button" class="wizard-back">Back</button>
+<button type="button" class="primary wizard-next">Next</button>
+</div>
+</section>
+
+<section class="card wizard-step" hidden>
+<h2>AI assistant</h2>
+
+<div class="field field-inline recap-key">
+<input type="checkbox" name="AI_ASSISTANT_ENABLED" id="AI_ASSISTANT_ENABLED" value="True">
+<label for="AI_ASSISTANT_ENABLED">Enable global AI assistant</label>
+</div>
+
+<div class="ai-only" hidden>
+
+<div class="field recap-key">
+<label for="AI_ASSISTANT_PROVIDER">Provider</label>
+<select name="AI_ASSISTANT_PROVIDER" id="AI_ASSISTANT_PROVIDER">
+<option value="anthropic" selected>Anthropic</option>
+<option value="openai">OpenAI</option>
+<option value="deepseek">DeepSeek</option>
+</select>
+</div>
+
+<div class="field">
+<label for="AI_ASSISTANT_MODEL">Model</label>
+<input type="text" name="AI_ASSISTANT_MODEL" id="AI_ASSISTANT_MODEL" value="claude-sonnet-5">
+</div>
+
+<div class="field">
+<label for="AI_ASSISTANT_API_KEY">API key</label>
+<input type="password" name="AI_ASSISTANT_API_KEY" id="AI_ASSISTANT_API_KEY" autocomplete="off">
+</div>
+
+<div class="field">
+<label for="AI_ASSISTANT_MAX_TOKENS">Max tokens per response</label>
+<input type="number" name="AI_ASSISTANT_MAX_TOKENS" id="AI_ASSISTANT_MAX_TOKENS" value="16000">
+</div>
+
+<div class="field">
+<label for="AI_ASSISTANT_TIMEOUT_SECONDS">Request timeout (seconds)</label>
+<input type="number" name="AI_ASSISTANT_TIMEOUT_SECONDS" id="AI_ASSISTANT_TIMEOUT_SECONDS" value="60">
+</div>
+
+<div class="field">
+<label for="AI_CHAT_THROTTLE_RATE">Chat throttle rate</label>
+<input type="text" name="AI_CHAT_THROTTLE_RATE" id="AI_CHAT_THROTTLE_RATE" value="20/min">
+</div>
+
+<div class="field">
+<label for="MAX_AI_REQUEST_BYTES">Max request size (bytes)</label>
+<input type="number" name="MAX_AI_REQUEST_BYTES" id="MAX_AI_REQUEST_BYTES" value="200000">
+</div>
+
+</div>
+
+<div class="actions">
+<button type="button" class="wizard-back">Back</button>
+<button type="button" class="primary wizard-next">Next</button>
+</div>
+</section>
+
+<section class="card wizard-step" hidden>
+<h2>Render preview</h2>
+<p class="lede">Sandboxed HTML/CSS/JS render preview (Custom HTML block, board background, animation overlay).</p>
+
+{% for field in sections[1].fields %}
+<div class="field">
+<label for="{{ field.name }}">{{ field.label }}</label>
+<input type="number" name="{{ field.name }}" id="{{ field.name }}" value="{{ field.value }}">
+</div>
+{% if field.help %}<p class="help">{{ field.help }}</p>{% endif %}
+{% endfor %}
+
+<div class="actions">
+<button type="button" class="wizard-back">Back</button>
+<button type="button" class="primary wizard-next">Next</button>
+</div>
+</section>
+
+<section class="card wizard-step" hidden>
+<h2>Image / GIF uploads</h2>
+
+{% for field in sections[2].fields %}
+<div class="field">
+<label for="{{ field.name }}">{{ field.label }}</label>
+<input type="number" name="{{ field.name }}" id="{{ field.name }}" value="{{ field.value }}">
+</div>
+{% if field.help %}<p class="help">{{ field.help }}</p>{% endif %}
+{% endfor %}
+
+<div class="actions">
+<button type="button" class="wizard-back">Back</button>
+<button type="button" class="primary wizard-next">Next</button>
+</div>
+</section>
+
+<section class="card wizard-step" hidden>
+<h2>Board content limits</h2>
+
+{% for field in sections[3].fields %}
+<div class="field">
+<label for="{{ field.name }}">{{ field.label }}</label>
+<input type="number" name="{{ field.name }}" id="{{ field.name }}" value="{{ field.value }}">
+</div>
+{% if field.help %}<p class="help">{{ field.help }}</p>{% endif %}
+{% endfor %}
+
+<div class="actions">
+<button type="button" class="wizard-back">Back</button>
+<button type="button" class="primary wizard-next">Next</button>
+</div>
+</section>
+
+<section class="card wizard-step" hidden>
+<h2>Review &amp; install</h2>
+<p class="lede">Double check everything below, then click Install. Writing starts only when you click it.</p>
+<div id="recap-content" class="recap"></div>
+<div class="actions">
+<button type="button" class="wizard-back">Back</button>
+<button type="submit" class="primary">Install</button>
+</div>
+</section>
+
+</form>
+{% endblock %}

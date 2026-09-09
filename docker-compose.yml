@@ -1,0 +1,79 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    networks: [app]
+    volumes:
+      - ./backend/.env:/app/.env
+      - sqlite_data:/app/data
+      - media_files:/app/media
+      - static_files:/app/staticfiles
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/auth/registration-status/')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./frontend
+    networks: [app]
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: ./nginx
+    networks: [app]
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "443:443"
+    volumes:
+      - ./backend/.env:/data/backend.env:ro
+      - media_files:/var/www/media:ro
+      - static_files:/var/www/static:ro
+      - letsencrypt_certs:/etc/letsencrypt
+      - certbot_webroot:/var/www/certbot
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    restart: unless-stopped
+
+  installer:
+    build:
+      context: ./installer
+    profiles: ["installer"]
+    networks: [installer_net]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./backend/.env:/data/backend.env
+      - ./.env:/data/root.env
+    stdin_open: true
+    tty: true
+
+  installer-web:
+    build:
+      context: ./installer
+    profiles: ["installer-web"]
+    networks: [installer_net]
+    command: ["python", "-m", "installer.web"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./backend/.env:/data/backend.env
+      - ./.env:/data/root.env
+    ports:
+      - "127.0.0.1:${INSTALLER_WEB_PORT:-7000}:7000"
+
+networks:
+  app:
+  installer_net:
+
+volumes:
+  sqlite_data:
+  media_files:
+  static_files:
+  letsencrypt_certs:
+  certbot_webroot:

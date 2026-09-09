@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Settings - Task Tracker Installer{% endblock %}
+{% block content %}
+<h1>Settings</h1>
+
+{% if message is defined and message %}
+<div class="flash">{{ message }}</div>
+{% endif %}
+
+<form method="post" action="/settings">
+
+{% for section in sections %}
+<section class="card">
+<h2>{{ section.title }}</h2>
+
+{% for field in section.fields %}
+<div class="field {{ 'field-inline' if field.kind == 'bool' and not field.readonly else '' }}">
+
+{% if field.readonly %}
+<label>{{ field.label }}</label>
+<div class="secret-row">
+<input type="text" value="{{ 'Yes' if (field.kind == 'bool' and field.value) else ('No' if field.kind == 'bool' else field.value) }}" readonly>
+</div>
+
+{% elif field.kind == 'bool' %}
+<input type="checkbox" name="{{ field.name }}" id="{{ field.name }}" value="True" {% if field.value %}checked{% endif %}>
+<label for="{{ field.name }}">{{ field.label }}</label>
+
+{% elif field.kind == 'int' %}
+<label for="{{ field.name }}">{{ field.label }}</label>
+<input type="number" name="{{ field.name }}" id="{{ field.name }}" value="{{ field.value }}">
+
+{% elif field.kind == 'secret' %}
+<label for="{{ field.name }}">{{ field.label }}</label>
+<div class="secret-row">
+<input type="text" id="{{ field.name }}" value="{{ field.value }}" readonly>
+<button type="button" class="regenerate" data-field="{{ field.name }}" data-label="{{ field.label }}">Regenerate</button>
+</div>
+
+{% elif field.kind == 'secret_input' %}
+<label for="{{ field.name }}">{{ field.label }}</label>
+<div class="secret-row">
+<input type="password" name="{{ field.name }}" id="{{ field.name }}" placeholder="{{ 'Set -- leave blank to keep current' if field.value else 'Not set' }}" autocomplete="off">
+</div>
+
+{% elif field.kind == 'choice' %}
+<label for="{{ field.name }}">{{ field.label }}</label>
+<select name="{{ field.name }}" id="{{ field.name }}">
+{% for option in field.options %}
+<option value="{{ option }}" {% if option == field.value %}selected{% endif %}>{{ option }}</option>
+{% endfor %}
+</select>
+
+{% else %}
+<label for="{{ field.name }}">{{ field.label }}</label>
+<input type="text" name="{{ field.name }}" id="{{ field.name }}" value="{{ field.value }}">
+{% endif %}
+
+</div>
+{% if field.help %}<p class="help">{{ field.help }}</p>{% endif %}
+{% endfor %}
+
+</section>
+{% endfor %}
+
+<div class="actions">
+<button type="submit" class="primary">Save changes</button>
+</div>
+
+</form>
+
+<form method="post" id="regenerate-form" class="regenerate-form"></form>
+
+{% endblock %}

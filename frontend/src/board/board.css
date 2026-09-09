@@ -1166,6 +1166,22 @@
   line-height: 1.4;
 }
 
+.settings-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-warning {
+  margin: 6px 0 0;
+  padding: 6px 8px;
+  border: 2px solid var(--danger);
+  border-radius: 3px;
+  color: var(--danger);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
 .block-layout-editor-canvas {
   position: relative;
   border: 2px dashed var(--border);

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Starting - Task Tracker Installer{% endblock %}
+{% block content %}
+<h1>Setting up your board</h1>
+<p class="lede">backend/.env has been written and the admin account created. The rest of the stack is starting in the background -- this can take a minute the first time, since images still need to build.</p>
+
+<section class="card">
+<div class="spinner" aria-hidden="true"></div>
+<p id="wait-status">Waiting for the site to come up...</p>
+</section>
+
+<p class="help">This installer closes itself now, on purpose -- it isn't meant to stay reachable. You'll be redirected automatically once the site responds; if you close this tab, just check back later at <code>{{ target_url }}</code>.</p>
+
+<script>
+(function () {
+  var targetUrl = {{ target_url|tojson }};
+  var statusEl = document.getElementById('wait-status');
+  function poll() {
+    fetch(targetUrl, { mode: 'no-cors', cache: 'no-store' })
+      .then(function () {
+        statusEl.textContent = 'Site is up -- redirecting...';
+        window.location.href = targetUrl;
+      })
+      .catch(function () {
+        statusEl.textContent = 'Waiting for the site to come up...';
+        setTimeout(poll, 2000);
+      });
+  }
+
+  setTimeout(poll, 2000);
+})();
+</script>
+{% endblock %}

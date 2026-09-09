@@ -89,18 +89,47 @@ Don't read `request.body` in a view after DRF authentication has already run —
 
 Both scan whatever URL you give them (the main page) — not sub-paths like `/api/render-preview/`, whose CSP is intentionally different and isn't part of the score.
 
-## TEMPORARY: planned Docker + installer architecture (discussed, not built yet)
+## Docker deployment
 
-Notes-to-self so this isn't forgotten before it's actually implemented. Remove this section once it's real (or replace it with real setup docs).
+Four containers behind an edge `nginx`: `nginx` (TLS termination + reverse proxy, also folds in certbot), `frontend` (its own nginx serving the built Vite bundle), `backend` (Django/gunicorn), and `installer-web` (a setup/settings wizard, same shared core as the CLI installer) — the last one only ever runs on demand, never as a standing service (see below).
 
-Goal: replace the current manual pm2 + host-nginx + certbot deploy with `docker compose up`, driven by a small Python installer app.
+**First run**, from the repo root:
 
-- **Installer**: Python, itself containerized, opens automatically on first `docker compose up` (detects "not configured yet"). Works both as a terminal wizard and a web UI (FastAPI serving an API + a built React bundle) — one shared Python "core" (config schema, `.env` read/write, DNS checks, `docker compose` invocation) underneath both. Also stays around post-install as a settings tool (re-open it to change `.env` values later without hand-editing, triggers the relevant container restart).
-- Needs the Docker socket mounted in (`docker-outside-of-docker`, same pattern as Portainer) since it has to launch sibling containers from inside its own container.
-- **Localhost path**: skip all domain/SSL questions, just write a local `.env` (`COOKIE_SECURE=False` etc).
-- **Hosted path**: ask for a domain, show a static "point an A record at this server's IP" mini-guide (no registrar automation — deliberately out of scope), then proceed to real `.env` + cert issuance.
-- **Only 2 core service containers**, not more: `backend` (Django/gunicorn) and `nginx`. nginx stays as its own container specifically for TLS termination (gunicorn's own built-in SSL is explicitly "not recommended for production" per gunicorn's own docs — nginx handles slow-client/HTTP2 far better). `certbot` does **not** get its own container — it's just a pip package folded into the nginx image, renewing on a background timer loop alongside the cert-reload loop nginx already needs (nginx doesn't notice a renewed cert file on disk without a reload).
-- Migration would bind-mount the *existing* `backend/db.sqlite3`/`backend/media/` (not fresh volumes) and seed the *existing* Let's Encrypt cert into the repo once, to avoid any downtime or ACME rate-limit risk.
-- The existing no-Docker dev flow (venv + `manage.py runserver` + `npm run dev`, documented above) stays exactly as-is — the installer does not try to also supervise raw host dev processes, that's a different problem (process supervision vs. container orchestration).
+```bash
+./install.sh
+```
 
-Full reasoning/history of this decision lives in Claude's project memory (`project_docker_installer_plan.md`) if it needs to be revisited.
+On Windows, use the native PowerShell equivalent instead (same behavior, no Git Bash/WSL required):
+
+```powershell
+.\install.ps1
+```
+
+This is the one command to run — it copies `backend/.env.example`/`.env.example` into real files if they're missing (required: Docker auto-creates an empty *directory* at a bind-mount source path that doesn't exist yet, which breaks every container expecting `backend/.env` to be a file), then, only if the app isn't configured yet, asks **once** whether you want the terminal wizard or the web wizard — nothing else starts until you answer:
+
+- **Terminal** (default) — runs `docker compose --profile installer run --rm installer` (the interactive CLI wizard) to completion, walking through the same sections as the web wizard and ending with a review + confirmation before writing anything, then brings up the rest of the stack the same way. `installer-web` never starts in this path at all.
+- **Web** — starts *only* `installer-web` (not the rest of the stack yet), prints its URL and opens it in your default browser automatically (`http://localhost:7000` by default). **Only reachable from this machine** (the container's port is published bound to `127.0.0.1`) — if you're setting this up over SSH on a remote server, either use an SSH tunnel or pick Terminal instead. The page is a proper multi-step wizard (Deployment → Admin account → Security → Day lock → Auth throttling → AI assistant → Render preview → Image/GIF uploads → Board content limits → a final review screen listing every value), so nothing is written until you click Install on that last screen. It then shows a loading screen while `install.sh`/`install.ps1` brings the rest of the stack up in the background (first boot can take a minute, since images still need to build), and redirects you to the site automatically once it responds. The installer closes itself a couple seconds after you submit — it isn't left running.
+
+Either way, once configured, `install.sh` (or a plain `docker compose up -d`) just brings the stack up directly and skips the question — and once `backend` is healthy it prints the addresses the site should be reachable at: `localhost`, the machine's LAN IP (so you can reach it from another device on your network), and its public IP (relevant once you forward the port and/or use hosted mode with a real domain).
+
+**To change settings later, `installer-web` is not something you leave running** — start it deliberately from a terminal on the server whenever you need it:
+
+```bash
+docker compose --profile installer-web up -d installer-web
+```
+
+Open `http://127.0.0.1:${INSTALLER_WEB_PORT:-7000}` — loopback-only by design, never routed through the public-facing `nginx` service, and never reachable from the internet even in hosted mode. Change what you need and submit; the page confirms what was applied (restarting the affected container automatically, or telling you if a changed port needs a manual `docker compose up -d <service>` — a plain restart can't remap a published port) and the installer closes itself right after, same as first run. If you close the tab or never submit, it just keeps running until you stop it yourself (`docker compose stop installer-web`). The terminal wizard has the equivalent capability via `docker compose --profile installer run --rm installer python -m installer.cli edit`.
+
+**`installer-web`/`installer` mount the Docker socket** (to restart `backend`/`nginx` on a settings change) — this is real host-root-equivalent access. Both are behind Compose profiles specifically so neither runs unless you actually asked for it, and `installer-web` shuts itself down as soon as it's done its one job rather than staying reachable between visits — only run either on a machine and network you trust.
+
+### Real domain + HTTPS
+
+Choosing "hosted" in either wizard and giving it a domain (plus an email for Let's Encrypt) is enough — nginx requests and installs the certificate itself via `certbot`, no manual steps. Point the domain's DNS A/AAAA record at this server's public IP first (the wizard shows you that IP and checks whether the domain already resolves to it, warning you if not before you proceed). On container start, `nginx/entrypoint.sh` serves plain HTTP behind the ACME HTTP-01 webroot challenge, requests the cert, then switches itself over to the HTTPS server block (HSTS, and the full header set below) once it succeeds; a background loop renews existing certs every 12h and retries issuance every 10m for as long as it's still missing (e.g. if DNS hadn't propagated yet at first boot) — no restart needed once DNS catches up.
+
+### Security headers
+
+`nginx/snippets/app-locations.conf` sends the same header set on every response (CSP, HSTS on the HTTPS block, `X-Content-Type-Options`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy`, `Permissions-Policy`), matching the values validated on the pre-Docker manual VPS deploy — with `img-src`/`font-src` additionally allowing `data:`/`blob:`, needed for this app's own image/GIF board features (not present on the old manual deploy, kept from Docker's earlier hardening pass). `/api/render-preview/` deliberately does **not** get the site-wide CSP/`X-Frame-Options` — that endpoint sets its own via Django (`@xframe_options_exempt` + a permissive-by-design CSP for user-authored board content), and nginx's `add_header` never strips headers already present on a proxied response, only ever adds its own.
+
+The existing no-Docker dev flow (venv + `manage.py runserver` + `npm run dev`, documented above) is untouched — the installer only manages the Docker path.
+
+Not built: automated migration of an existing manual VPS deploy (bind-mounting a pre-existing `db.sqlite3`/`media/`, reusing an already-issued Let's Encrypt cert). This Docker setup is for a fresh install; migrating the current live deployment would be a separate, later pass.

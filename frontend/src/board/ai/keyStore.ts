@@ -48,7 +48,23 @@ async function writePayload(payload: EncryptedPayload | null): Promise<void> {
 }
 
 const SESSION_STORAGE_KEY = 'task-tracker:ai-session-credentials'
-let sessionCredentials: StoredCredentials | null = readSessionStorageCredentials()
+const REMEMBER_ACROSS_RELOAD_KEY = 'task-tracker:ai-remember-across-reload'
+
+export function getRememberAcrossReload(): boolean {
+  try {
+    return localStorage.getItem(REMEMBER_ACROSS_RELOAD_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+export function setRememberAcrossReload(value: boolean): void {
+  try {
+    if (value) localStorage.setItem(REMEMBER_ACROSS_RELOAD_KEY, 'true')
+    else localStorage.removeItem(REMEMBER_ACROSS_RELOAD_KEY)
+  } catch {}
+  if (!value) writeSessionStorageCredentials(null)
+}
 
 function readSessionStorageCredentials(): StoredCredentials | null {
   try {
@@ -66,6 +82,10 @@ function writeSessionStorageCredentials(credentials: StoredCredentials | null): 
   } catch {}
 }
 
+let sessionCredentials: StoredCredentials | null = getRememberAcrossReload()
+  ? readSessionStorageCredentials()
+  : null
+
 export function getSessionCredentials(): StoredCredentials | null {
   return sessionCredentials
 }
@@ -81,7 +101,7 @@ export async function saveCredentials(
   const payload = await encryptJson(credentials, passphrase)
   await writePayload(payload)
   sessionCredentials = credentials
-  writeSessionStorageCredentials(credentials)
+  if (getRememberAcrossReload()) writeSessionStorageCredentials(credentials)
 }
 
 export async function unlockCredentials(passphrase: string): Promise<StoredCredentials> {
@@ -89,7 +109,7 @@ export async function unlockCredentials(passphrase: string): Promise<StoredCrede
   if (!payload) throw new Error('No saved API key.')
   const credentials = await decryptJson<StoredCredentials>(payload, passphrase)
   sessionCredentials = credentials
-  writeSessionStorageCredentials(credentials)
+  if (getRememberAcrossReload()) writeSessionStorageCredentials(credentials)
   return credentials
 }
 
