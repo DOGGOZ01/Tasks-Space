@@ -58,8 +58,32 @@ function Wait-BackendHealthy {
     return $false
 }
 
+function Show-DomainSetup {
+    param($Domain, $Port)
+    Write-Host ""
+    Write-Host "Domain '$Domain' is configured in .env -- point your own nginx at it and get a cert:"
+    Write-Host ""
+    Write-Host "  server {"
+    Write-Host "      listen 80;"
+    Write-Host "      server_name $Domain;"
+    Write-Host "      location / {"
+    Write-Host "          proxy_pass http://127.0.0.1:$Port;"
+    Write-Host '          proxy_set_header Host $host;'
+    Write-Host '          proxy_set_header X-Real-IP $remote_addr;'
+    Write-Host "      }"
+    Write-Host "  }"
+    Write-Host ""
+    Write-Host "  certbot --nginx -d $Domain"
+    Write-Host ""
+}
+
 function Show-AccessInfo {
     $httpPort = Get-EnvValue -Key "HTTP_PORT" -File ".env" -Default "80"
+    $domain = Get-EnvValue -Key "DOMAIN" -File ".env" -Default ""
+
+    if ($domain) {
+        Show-DomainSetup -Domain $domain -Port $httpPort
+    }
 
     $localIp = $null
     try {
@@ -77,7 +101,7 @@ function Show-AccessInfo {
     Write-Host "This server should be reachable at:"
     Write-Host "  This machine:    http://localhost:$httpPort"
     if ($localIp) { Write-Host "  Local network:   http://${localIp}:$httpPort" }
-    if ($publicIp) { Write-Host "  Public internet: http://${publicIp}:$httpPort  (only if your router/firewall forwards this port, and only meaningful in hosted mode with a domain -- see README)" }
+    if ($publicIp) { Write-Host "  Public internet: http://${publicIp}:$httpPort  (only if your router/firewall forwards this port -- for a real domain with HTTPS, see README's `"Real domain + HTTPS`" section)" }
     Write-Host ""
 }
 

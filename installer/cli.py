@@ -1,7 +1,7 @@
 import typer
 import questionary
 
-from installer.core import apply, dns_check, envfile, schema, validate
+from installer.core import apply, envfile, schema, validate
 
 app = typer.Typer(add_completion=False)
 
@@ -16,24 +16,17 @@ def _required(message):
     return lambda text: True if text.strip() else message
 
 
-def _prompt_deploy_mode():
-    return questionary.select(
-        "Deploy mode",
-        choices=["localhost", "hosted"],
-        default="localhost",
+def _prompt_domain():
+    mode = questionary.select(
+        "How will this be hosted?",
+        choices=["Local / IP only", "A real domain (needs your own nginx -- see README)"],
+        default="Local / IP only",
     ).ask()
-
-
-def _prompt_hosted_fields():
-    domain = questionary.text(
-        "Domain (e.g. tasks.example.com)",
-        validate=_required("Domain is required for hosted mode"),
+    if mode is None or mode.startswith("Local"):
+        return ""
+    return questionary.text(
+        "Domain name (e.g. example.com)", validate=_required("Domain is required")
     ).ask()
-    acme_email = questionary.text(
-        "ACME email (for Let's Encrypt)",
-        validate=_required("ACME email is required for hosted mode"),
-    ).ask()
-    return domain, acme_email
 
 
 def _prompt_admin():
@@ -52,9 +45,7 @@ def _prompt_ports():
     values["HTTP_PORT"] = _prompt_value(
         schema.FIELDS_BY_NAME["HTTP_PORT"], schema.FIELDS_BY_NAME["HTTP_PORT"].default
     )
-    values["INSTALLER_WEB_PORT"] = _prompt_value(
-        schema.FIELDS_BY_NAME["INSTALLER_WEB_PORT"], schema.FIELDS_BY_NAME["INSTALLER_WEB_PORT"].default
-    )
+    values["INSTALLER_WEB_PORT"] = schema.FIELDS_BY_NAME["INSTALLER_WEB_PORT"].default
     return values
 
 
@@ -76,7 +67,7 @@ def _prompt_security_and_daylock():
     ).ask()
     values["DAY_LOCK_TIMEZONE"] = questionary.text(
         "Day lock timezone (IANA name, e.g. Europe/Paris, America/New_York)",
-        default="UTC",
+        default=schema.FIELDS_BY_NAME["DAY_LOCK_TIMEZONE"].default,
     ).ask()
 
     return values
@@ -131,10 +122,7 @@ def _prompt_generic_sections():
 
 def _print_recap(field_values, admin_username):
     typer.echo("\nReview:")
-    typer.echo(f"  Deploy mode: {field_values.get('DEPLOY_MODE')}")
-    if field_values.get("DEPLOY_MODE") == "hosted":
-        typer.echo(f"  Domain: {field_values.get('DOMAIN')}")
-        typer.echo(f"  ACME email: {field_values.get('ACME_EMAIL')}")
+    typer.echo(f"  Domain: {field_values.get('DOMAIN') or '(none -- local/IP-only)'}")
     typer.echo(f"  HTTP port: {field_values.get('HTTP_PORT')}")
     typer.echo(f"  Installer web port: {field_values.get('INSTALLER_WEB_PORT')}")
     typer.echo(f"  Admin username: {admin_username}")
@@ -150,20 +138,7 @@ def _print_recap(field_values, admin_username):
 def install():
     field_values = {}
 
-    deploy_mode = _prompt_deploy_mode()
-    field_values["DEPLOY_MODE"] = deploy_mode
-
-    if deploy_mode == "hosted":
-        domain, acme_email = _prompt_hosted_fields()
-        field_values["DOMAIN"] = domain
-        field_values["ACME_EMAIL"] = acme_email
-
-        matched, dns_message = dns_check.check_dns(domain)
-        typer.echo(dns_message)
-        if matched is False:
-            proceed = questionary.confirm("Continue anyway?", default=True).ask()
-            if not proceed:
-                raise typer.Exit(code=1)
+    field_values["DOMAIN"] = (_prompt_domain() or "").strip()
 
     field_values.update(_prompt_ports())
 
@@ -188,7 +163,6 @@ def install():
 
     typer.echo("")
     typer.echo("Setup complete. backend/.env has been written.")
-    typer.echo(f"Deploy mode: {values.get('DEPLOY_MODE')}")
     typer.echo("Run: docker compose up -d")
 
 
@@ -244,7 +218,7 @@ def edit():
 
     if field.name in schema.DERIVED_FIELDS:
         typer.echo(
-            f"{field.name} is auto-derived from DEPLOY_MODE/DOMAIN/HTTP_PORT and can't be "
+            f"{field.name} is auto-derived from DOMAIN/HTTP_PORT and can't be "
             "edited directly -- change one of those fields instead."
         )
         return
@@ -280,10 +254,7 @@ def edit():
 
     typer.echo(f"{field.name} updated.")
     if recreate_services:
-        typer.echo(
-            "Run `docker compose up -d " + " ".join(recreate_services)
-            + "` manually to apply this -- a restart alone can't remap a published port."
-        )
+        typer.echo("Re-run `./install.sh` (or `install.ps1`) to apply this.")
     if services:
         restart_now = questionary.confirm(
             f"Restart affected service(s) ({', '.join(services)}) now?", default=True

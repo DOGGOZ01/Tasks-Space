@@ -52,8 +52,33 @@ wait_for_backend_healthy() {
     return 1
 }
 
+print_domain_setup() {
+    domain="$1"
+    port="$2"
+    echo ""
+    echo "Domain '$domain' is configured in .env -- point your own nginx at it and get a cert:"
+    echo ""
+    echo "  server {"
+    echo "      listen 80;"
+    echo "      server_name $domain;"
+    echo "      location / {"
+    echo "          proxy_pass http://127.0.0.1:$port;"
+    echo "          proxy_set_header Host \$host;"
+    echo "          proxy_set_header X-Real-IP \$remote_addr;"
+    echo "      }"
+    echo "  }"
+    echo ""
+    echo "  sudo certbot --nginx -d $domain"
+    echo ""
+}
+
 print_access_info() {
     http_port=$(env_value HTTP_PORT .env 80)
+    domain=$(env_value DOMAIN .env "")
+
+    if [ -n "$domain" ]; then
+        print_domain_setup "$domain" "$http_port"
+    fi
 
     local_ip=""
     if command -v hostname >/dev/null 2>&1; then
@@ -73,7 +98,7 @@ print_access_info() {
     echo "  This machine:    http://localhost:${http_port}"
     [ -n "$local_ip" ] && echo "  Local network:   http://${local_ip}:${http_port}"
     if [ -n "$public_ip" ]; then
-        echo "  Public internet: http://${public_ip}:${http_port}  (only if your router/firewall forwards this port, and only meaningful in hosted mode with a domain -- see README)"
+        echo "  Public internet: http://${public_ip}:${http_port}  (only if your router/firewall forwards this port -- for a real domain with HTTPS, see README's \"Real domain + HTTPS\" section)"
     fi
     echo ""
 }

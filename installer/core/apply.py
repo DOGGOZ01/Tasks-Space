@@ -39,14 +39,11 @@ def run_setup(field_values, admin):
     values = current_values()
     values.update(field_values)
 
-    deploy_mode = values.get("DEPLOY_MODE", "localhost")
     http_port = values.get("HTTP_PORT", "80")
     domain = values.get("DOMAIN", "")
-    acme_email = values.get("ACME_EMAIL", "")
-    if deploy_mode == "hosted":
+    if domain:
         validate.validate_domain(domain)
-        validate.validate_email(acme_email)
-    values.update(derive.derive_fields(deploy_mode, domain, http_port))
+    values.update(derive.derive_fields(domain, http_port))
 
     secretgen.ensure_secrets(values)
     _validate_int_fields(values)
@@ -68,19 +65,14 @@ def write_settings_update(updates):
     if not changed_keys:
         return current, [], [], []
 
-    next_deploy_mode = updates.get("DEPLOY_MODE", current.get("DEPLOY_MODE", "localhost"))
-    if next_deploy_mode == "hosted":
-        if "DOMAIN" in updates:
-            validate.validate_domain(updates["DOMAIN"])
-        if "ACME_EMAIL" in updates:
-            validate.validate_email(updates["ACME_EMAIL"])
+    if updates.get("DOMAIN"):
+        validate.validate_domain(updates["DOMAIN"])
     _validate_int_fields(updates)
 
     current.update(updates)
 
     if any(key in schema.DERIVE_TRIGGER_FIELDS for key in changed_keys):
         derived = derive.derive_fields(
-            current.get("DEPLOY_MODE", "localhost"),
             current.get("DOMAIN", ""),
             current.get("HTTP_PORT", "80"),
         )

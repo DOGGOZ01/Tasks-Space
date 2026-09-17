@@ -55,7 +55,7 @@ def _schedule_self_shutdown():
 
 
 def _target_url(request, values):
-    if values.get("DEPLOY_MODE") == "hosted" and values.get("DOMAIN"):
+    if values.get("DOMAIN"):
         return f"https://{values['DOMAIN']}/"
     host = request.url.hostname or "localhost"
     port = values.get("HTTP_PORT") or "80"
@@ -130,26 +130,18 @@ def index(request: Request):
 async def setup(request: Request):
     form = await request.form()
 
-    deploy_mode = form.get("DEPLOY_MODE", "localhost")
     domain = (form.get("DOMAIN") or "").strip()
-    acme_email = (form.get("ACME_EMAIL") or "").strip()
     admin_username = (form.get("DJANGO_SUPERUSER_USERNAME") or "").strip()
     admin_password = form.get("DJANGO_SUPERUSER_PASSWORD") or ""
     admin_email = (form.get("DJANGO_SUPERUSER_EMAIL") or "").strip()
 
-    error = None
-    if deploy_mode == "hosted" and (not domain or not acme_email):
-        error = "Domain and ACME email are required for hosted deploy mode."
-    elif not admin_username or not admin_password:
-        error = "Admin username and password are required."
+    if not admin_username or not admin_password:
+        return templates.TemplateResponse(
+            "setup_error.html",
+            {"request": request, "error": "Admin username and password are required."},
+        )
 
-    if error:
-        return templates.TemplateResponse("setup_error.html", {"request": request, "error": error})
-
-    field_values = {"DEPLOY_MODE": deploy_mode}
-    if deploy_mode == "hosted":
-        field_values["DOMAIN"] = domain
-        field_values["ACME_EMAIL"] = acme_email
+    field_values = {"DOMAIN": domain}
 
     for name in WIZARD_BOOL_FIELDS:
         field_values[name] = "True" if name in form else "False"
@@ -219,11 +211,7 @@ async def update_settings(request: Request):
         )
 
     if recreate_services:
-        message = (
-            "Settings saved. Once the installer has closed, run `docker compose up -d "
-            + " ".join(recreate_services)
-            + "` manually to apply the changed port(s) -- a restart alone can't remap a published port."
-        )
+        message = "Settings saved. Re-run ./install.sh (or install.ps1) to apply this."
     elif not restarted:
         message = "Settings saved, but no running container was found to restart."
     else:

@@ -1,22 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-  var deployMode = document.getElementById('DEPLOY_MODE')
-  var hostedFields = document.querySelectorAll('.hosted-only')
-
-  function syncHostedFields() {
-    if (!deployMode) return
-    var isHosted = deployMode.value === 'hosted'
-    hostedFields.forEach(function (el) {
-      el.hidden = !isHosted
-      var input = el.querySelector('input')
-      if (input) input.required = isHosted
-    })
-  }
-
-  if (deployMode) {
-    deployMode.addEventListener('change', syncHostedFields)
-    syncHostedFields()
-  }
-
   var aiEnabled = document.getElementById('AI_ASSISTANT_ENABLED')
   var aiFields = document.querySelectorAll('.ai-only')
 
@@ -45,8 +27,29 @@ document.addEventListener('DOMContentLoaded', function () {
     return ok
   }
 
+  var hostingMode = document.getElementById('HOSTING_MODE')
+  var domainFields = document.querySelectorAll('.domain-only')
+  var domainInput = document.getElementById('DOMAIN')
+
+  function syncHostingMode() {
+    if (!hostingMode) return
+    var isDomain = hostingMode.value === 'domain'
+    domainFields.forEach(function (el) {
+      el.hidden = !isDomain
+    })
+    if (domainInput) {
+      domainInput.required = isDomain
+      if (!isDomain) domainInput.value = ''
+    }
+  }
+
+  if (hostingMode) {
+    hostingMode.addEventListener('change', syncHostingMode)
+    syncHostingMode()
+  }
+
   var dayLockTz = document.getElementById('DAY_LOCK_TIMEZONE')
-  if (setupForm && dayLockTz && dayLockTz.value === 'UTC') {
+  if (setupForm && dayLockTz) {
     try {
       var detected = Intl.DateTimeFormat().resolvedOptions().timeZone
       if (detected) dayLockTz.value = detected

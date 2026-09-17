@@ -12,15 +12,15 @@ class Field:
     never_prompt: bool = False
 
 
-ROOT_ENV_FIELDS = ("HTTP_PORT", "INSTALLER_WEB_PORT")
+ROOT_ENV_FIELDS = ("HTTP_PORT", "INSTALLER_WEB_PORT", "DOMAIN", "NGINX_HOST_BIND")
 
-NGINX_RESTART_FIELDS = ("DEPLOY_MODE", "DOMAIN", "ACME_EMAIL", "HTTP_PORT")
+NGINX_RESTART_FIELDS = ("HTTP_PORT", "NGINX_HOST_BIND")
 
-RECREATE_FIELDS = ("HTTP_PORT", "INSTALLER_WEB_PORT")
+RECREATE_FIELDS = ("HTTP_PORT", "INSTALLER_WEB_PORT", "NGINX_HOST_BIND")
 
-DERIVED_FIELDS = ("ALLOWED_HOSTS", "CORS_ALLOWED_ORIGINS", "FRONTEND_ORIGIN", "COOKIE_SECURE")
+DERIVED_FIELDS = ("ALLOWED_HOSTS", "CORS_ALLOWED_ORIGINS", "FRONTEND_ORIGIN", "COOKIE_SECURE", "NGINX_HOST_BIND")
 
-DERIVE_TRIGGER_FIELDS = ("DEPLOY_MODE", "DOMAIN", "HTTP_PORT")
+DERIVE_TRIGGER_FIELDS = ("DOMAIN", "HTTP_PORT")
 
 ADMIN_ENV_FIELDS = ("DJANGO_SUPERUSER_USERNAME", "DJANGO_SUPERUSER_PASSWORD", "DJANGO_SUPERUSER_EMAIL")
 
@@ -29,17 +29,18 @@ FIELDS = [
     Field("SECRET_KEY", "Core", "secret", never_prompt=True),
     Field("JWT_SIGNING_KEY", "Core", "secret", never_prompt=True),
     Field("ALLOWED_HOSTS", "Core", "str", default="localhost,127.0.0.1",
-          help="Auto-derived from deploy mode/domain -- change Deploy mode or Domain to update this."),
+          help="Auto-derived from Domain -- change Domain to update this."),
     Field("CORS_ALLOWED_ORIGINS", "Core", "str", default="http://localhost:5173,http://127.0.0.1:5173",
-          help="Auto-derived from deploy mode/domain -- change Deploy mode or Domain to update this."),
+          help="Auto-derived from Domain/HTTP port -- change those to update this."),
     Field("FRONTEND_ORIGIN", "Core", "str", default="http://localhost:5173",
-          help="Auto-derived from deploy mode/domain -- change Deploy mode or Domain to update this."),
+          help="Auto-derived from Domain/HTTP port -- change those to update this."),
     Field("COOKIE_SECURE", "Core", "bool", default="False",
-          help="Auto-derived from deploy mode -- change Deploy mode to update this."),
+          help="Auto-derived from Domain -- change Domain to update this."),
+    Field("NGINX_HOST_BIND", "Core", "str", default="",
+          help="Auto-derived from Domain -- change Domain to update this."),
 
-    Field("DEPLOY_MODE", "Deployment", "choice", default="localhost", options=("localhost", "hosted")),
-    Field("DOMAIN", "Deployment", "str", default="", help="Required when deploy mode is hosted."),
-    Field("ACME_EMAIL", "Deployment", "str", default="", help="Required when deploy mode is hosted."),
+    Field("DOMAIN", "Deployment", "str", default="",
+          help="Leave blank for local/IP-only access. See README's \"Real domain + HTTPS\" section."),
     Field("HTTP_PORT", "Deployment", "int", default="80"),
     Field("INSTALLER_WEB_PORT", "Deployment", "int", default="7000"),
 
@@ -51,7 +52,7 @@ FIELDS = [
     Field("DAY_LOCK_MODE", "Day lock", "choice", default="local", options=("local", "global"),
           help="local locks as soon as the day/week is over in DAY_LOCK_TIMEZONE; "
                "global locks only once the day/week is over everywhere on Earth."),
-    Field("DAY_LOCK_TIMEZONE", "Day lock", "str", default="UTC",
+    Field("DAY_LOCK_TIMEZONE", "Day lock", "str", default="Europe/Paris",
           help="IANA timezone name, e.g. Europe/Paris, America/New_York."),
 
     Field("AUTH_LOGIN_THROTTLE_RATE", "Auth throttling", "str", default="10/min"),
@@ -91,7 +92,7 @@ FIELDS_BY_NAME = {field.name: field for field in FIELDS}
 
 SECTIONS = list(dict.fromkeys(field.section for field in FIELDS))
 
-SETUP_SPECIAL_FIELDS = ("DEPLOY_MODE", "DOMAIN", "ACME_EMAIL")
+SETUP_SPECIAL_FIELDS = ("DOMAIN",)
 
 SETUP_WIZARD_FIELDS = tuple(
     field.name

@@ -15,29 +15,23 @@
 <h2>Deployment</h2>
 
 <div class="field recap-key">
-<label for="DEPLOY_MODE">Deploy mode</label>
-<select name="DEPLOY_MODE" id="DEPLOY_MODE">
-<option value="localhost" selected>Localhost</option>
-<option value="hosted">Hosted (domain + HTTPS)</option>
+<label for="HOSTING_MODE">Where will this be hosted?</label>
+<select name="HOSTING_MODE" id="HOSTING_MODE">
+<option value="local" selected>Local network / IP only (no domain, plain HTTP)</option>
+<option value="domain">A real domain (behind your own nginx)</option>
 </select>
-<p class="help">Localhost runs plain HTTP on this machine. Hosted requests a real domain and lets nginx obtain a Let's Encrypt certificate.</p>
 </div>
 
-<div class="field hosted-only recap-key" hidden>
-<label for="DOMAIN">Domain</label>
+<div class="field recap-key domain-only" hidden>
+<label for="DOMAIN">Domain name</label>
 <input type="text" name="DOMAIN" id="DOMAIN" placeholder="example.com">
-</div>
-
-<div class="field hosted-only" hidden>
-<label for="ACME_EMAIL">ACME email</label>
-<input type="email" name="ACME_EMAIL" id="ACME_EMAIL" placeholder="admin@example.com">
-<p class="help">Used by Let's Encrypt for renewal and expiry notices.</p>
+<p class="help">See README's "Real domain + HTTPS" section.</p>
 </div>
 
 <div class="field recap-key">
 <label for="HTTP_PORT">HTTP port</label>
 <input type="number" name="HTTP_PORT" id="HTTP_PORT" value="80">
-<p class="help">Port nginx listens on for this site.</p>
+<p class="help">Ignored if a domain is set above.</p>
 </div>
 
 <div class="field">
@@ -112,7 +106,7 @@
 
 <div class="field recap-key">
 <label for="DAY_LOCK_TIMEZONE">Day lock timezone</label>
-<input type="text" name="DAY_LOCK_TIMEZONE" id="DAY_LOCK_TIMEZONE" value="UTC" placeholder="Europe/Paris">
+<input type="text" name="DAY_LOCK_TIMEZONE" id="DAY_LOCK_TIMEZONE" value="Europe/Paris" placeholder="Europe/Paris">
 <p class="help">IANA timezone name, e.g. <code>Europe/Paris</code>, <code>America/New_York</code>.</p>
 </div>
 
