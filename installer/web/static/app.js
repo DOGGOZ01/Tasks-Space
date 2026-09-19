@@ -30,6 +30,14 @@ document.addEventListener('DOMContentLoaded', function () {
   var hostingMode = document.getElementById('HOSTING_MODE')
   var domainFields = document.querySelectorAll('.domain-only')
   var domainInput = document.getElementById('DOMAIN')
+  var portInput = document.getElementById('HTTP_PORT')
+  var portAutoSet = false
+
+  if (portInput) {
+    portInput.addEventListener('input', function () {
+      portAutoSet = false
+    })
+  }
 
   function syncHostingMode() {
     if (!hostingMode) return
@@ -40,6 +48,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if (domainInput) {
       domainInput.required = isDomain
       if (!isDomain) domainInput.value = ''
+    }
+    if (portInput) {
+      if (isDomain && (portInput.value === '80' || portInput.value === '443')) {
+        portInput.value = '8080'
+        portAutoSet = true
+      } else if (!isDomain && portAutoSet && portInput.value === '8080') {
+        portInput.value = '80'
+        portAutoSet = false
+      }
     }
   }
 

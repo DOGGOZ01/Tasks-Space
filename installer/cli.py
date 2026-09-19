@@ -40,11 +40,28 @@ def _prompt_admin():
     return username, password, email
 
 
-def _prompt_ports():
+def _domain_port_error(text):
+    if not text.strip().isdigit():
+        return "Must be an integer"
+    try:
+        validate.validate_domain_port("domain", text)
+    except validate.ValidationError as exc:
+        return str(exc)
+    return True
+
+
+def _prompt_ports(domain):
     values = {}
-    values["HTTP_PORT"] = _prompt_value(
-        schema.FIELDS_BY_NAME["HTTP_PORT"], schema.FIELDS_BY_NAME["HTTP_PORT"].default
-    )
+    if domain:
+        values["HTTP_PORT"] = questionary.text(
+            "HTTP_PORT (free local port for your host nginx, not 80/443)",
+            default="8080",
+            validate=_domain_port_error,
+        ).ask()
+    else:
+        values["HTTP_PORT"] = _prompt_value(
+            schema.FIELDS_BY_NAME["HTTP_PORT"], schema.FIELDS_BY_NAME["HTTP_PORT"].default
+        )
     values["INSTALLER_WEB_PORT"] = schema.FIELDS_BY_NAME["INSTALLER_WEB_PORT"].default
     return values
 
@@ -140,7 +157,7 @@ def install():
 
     field_values["DOMAIN"] = (_prompt_domain() or "").strip()
 
-    field_values.update(_prompt_ports())
+    field_values.update(_prompt_ports(field_values["DOMAIN"]))
 
     username, password, email = _prompt_admin()
     field_values.update(_prompt_security_and_daylock())

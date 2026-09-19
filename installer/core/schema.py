@@ -41,7 +41,8 @@ FIELDS = [
 
     Field("DOMAIN", "Deployment", "str", default="",
           help="Leave blank for local/IP-only access. See README's \"Real domain + HTTPS\" section."),
-    Field("HTTP_PORT", "Deployment", "int", default="80"),
+    Field("HTTP_PORT", "Deployment", "int", default="80",
+          help="With a domain set, use a free local port other than 80/443 (e.g. 8080)."),
     Field("INSTALLER_WEB_PORT", "Deployment", "int", default="7000"),
 
     Field("ALLOW_CUSTOM_SCRIPTS", "Security", "bool", default="False",

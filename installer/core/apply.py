@@ -43,6 +43,7 @@ def run_setup(field_values, admin):
     domain = values.get("DOMAIN", "")
     if domain:
         validate.validate_domain(domain)
+    validate.validate_domain_port(domain, http_port)
     values.update(derive.derive_fields(domain, http_port))
 
     secretgen.ensure_secrets(values)
@@ -72,6 +73,7 @@ def write_settings_update(updates):
     current.update(updates)
 
     if any(key in schema.DERIVE_TRIGGER_FIELDS for key in changed_keys):
+        validate.validate_domain_port(current.get("DOMAIN", ""), current.get("HTTP_PORT", "80"))
         derived = derive.derive_fields(
             current.get("DOMAIN", ""),
             current.get("HTTP_PORT", "80"),

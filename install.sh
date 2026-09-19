@@ -65,6 +65,7 @@ print_domain_setup() {
     echo "          proxy_pass http://127.0.0.1:$port;"
     echo "          proxy_set_header Host \$host;"
     echo "          proxy_set_header X-Real-IP \$remote_addr;"
+    echo "          proxy_set_header X-Forwarded-Proto \$scheme;"
     echo "      }"
     echo "  }"
     echo ""

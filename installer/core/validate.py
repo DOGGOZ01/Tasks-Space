@@ -13,6 +13,16 @@ def validate_domain(domain):
     return domain
 
 
+RESERVED_PROXY_PORTS = ("80", "443")
+
+
+def validate_domain_port(domain, port):
+    if domain and str(port).strip() in RESERVED_PROXY_PORTS:
+        raise ValidationError(
+            f"HTTP_PORT can't be {str(port).strip()} when a domain is set -- your host nginx uses it. Use e.g. 8080."
+        )
+
+
 def validate_int_field(field_name, raw_value):
     if raw_value is None or not str(raw_value).strip().lstrip("-").isdigit():
         raise ValidationError(f"'{field_name}' must be a whole number, got '{raw_value}'.")

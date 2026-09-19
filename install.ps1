@@ -70,6 +70,7 @@ function Show-DomainSetup {
     Write-Host "          proxy_pass http://127.0.0.1:$Port;"
     Write-Host '          proxy_set_header Host $host;'
     Write-Host '          proxy_set_header X-Real-IP $remote_addr;'
+    Write-Host '          proxy_set_header X-Forwarded-Proto $scheme;'
     Write-Host "      }"
     Write-Host "  }"
     Write-Host ""
