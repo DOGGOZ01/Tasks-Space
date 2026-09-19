@@ -276,13 +276,6 @@ export function ImageBlock() {
                 adjustmentsPanel.open(menuToggleRef.current?.getBoundingClientRect())
               }}
             />
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/gif,image/webp"
-              onChange={handleFileChange}
-              hidden
-            />
           </>
         )}
         onGeometryChange={(geometry) => applyGeometry(setProp, geometry)}
@@ -311,6 +304,13 @@ export function ImageBlock() {
           {error && <p className="image-block-error">{error}</p>}
         </div>
       </BlockShell>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/gif,image/webp"
+        onChange={handleFileChange}
+        hidden
+      />
       {adjustmentsPanel.anchor && (
         <ImageAdjustmentsPanel
           anchor={adjustmentsPanel.anchor}

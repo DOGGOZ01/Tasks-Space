@@ -2,6 +2,7 @@ import copy
 import os
 import uuid
 
+from django.conf import settings
 from django.core.files.base import ContentFile
 
 
@@ -76,7 +77,7 @@ def clone_uploaded_image(source, *, owner, page=None, saved_design=None):
     return clone
 
 
-def duplicate_referenced_images(request, *, source_images, referenced_urls, owner, page=None, saved_design=None):
+def duplicate_referenced_images(*, source_images, referenced_urls, owner, page=None, saved_design=None):
     if not referenced_urls:
         return {}
 
@@ -86,7 +87,7 @@ def duplicate_referenced_images(request, *, source_images, referenced_urls, owne
         if not matches:
             continue
         clone = clone_uploaded_image(image, owner=owner, page=page, saved_design=saved_design)
-        new_url = request.build_absolute_uri(clone.image.url)
+        new_url = settings.FRONTEND_ORIGIN + clone.image.url
         for url in matches:
             url_map[url] = new_url
     return url_map

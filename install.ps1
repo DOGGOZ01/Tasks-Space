@@ -10,8 +10,8 @@ if (-not (Test-Path ".env")) {
     Copy-Item ".env.example" ".env"
 }
 
-Write-Host "Building images (skips anything already up to date)..."
-docker compose build backend frontend nginx installer installer-web
+Write-Host "Building the installer (skips anything already up to date)..."
+docker compose build installer installer-web
 
 function Test-Configured {
     if (-not (Test-Path "backend\.env")) { return $false }
@@ -46,7 +46,8 @@ function Wait-BackendHealthy {
     for ($i = 0; $i -lt 150; $i++) {
         $container = docker ps --filter "label=com.docker.compose.service=backend" --format "{{.Names}}" | Select-Object -First 1
         if ($container) {
-            $status = docker inspect --format "{{.State.Health.Status}}" $container 2>$null
+            $status = $null
+            try { $status = docker inspect --format "{{.State.Health.Status}}" $container 2>$null } catch {}
             if ($status -eq "healthy") {
                 Write-Host "backend is healthy."
                 return $true
@@ -143,7 +144,7 @@ docker compose up -d
 Wait-BackendHealthy | Out-Null
 
 if ($choice -eq "2") {
-    docker compose stop installer-web *>$null
+    try { docker compose stop installer-web *>$null } catch {}
 }
 
 Show-AccessInfo

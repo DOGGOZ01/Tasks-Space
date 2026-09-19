@@ -117,7 +117,6 @@ class SavedDesignListView(APIView):
         page = Page.objects.filter(owner=request.user).first()
         source_images = UploadedImage.objects.filter(page=page) if page else UploadedImage.objects.none()
         url_map = duplicate_referenced_images(
-            request,
             source_images=source_images,
             referenced_urls=referenced,
             owner=request.user,
@@ -145,7 +144,6 @@ class SavedDesignUseView(APIView):
         referenced = collect_design_image_urls(design_obj.design)
         source_images = UploadedImage.objects.filter(saved_design=design_obj)
         url_map = duplicate_referenced_images(
-            request,
             source_images=source_images,
             referenced_urls=referenced,
             owner=request.user,

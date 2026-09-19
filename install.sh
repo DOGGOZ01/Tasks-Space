@@ -12,8 +12,8 @@ if [ ! -f .env ]; then
     cp .env.example .env
 fi
 
-echo "Building images (skips anything already up to date)..."
-docker compose build backend frontend nginx installer installer-web
+echo "Building the installer (skips anything already up to date)..."
+docker compose build installer installer-web
 
 is_configured() {
     [ -f backend/.env ] || return 1
