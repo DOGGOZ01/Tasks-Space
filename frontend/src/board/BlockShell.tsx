@@ -24,6 +24,7 @@ import type { Geometry } from './geometry'
 import { MIN_BLOCK_HEIGHT, MIN_BLOCK_WIDTH, clamp, snapToGrid } from './geometry'
 import { anchorBelowRect, anchorBelowRectRightAligned } from './popoverAnchor'
 import { useDragOffset } from './useDragOffset'
+import { useViewportFit } from './useViewportFit'
 import { getZIndexRank } from './zOrder'
 
 const PANEL_WIDTH = 300
@@ -107,6 +108,11 @@ export function BlockShell({
   const headerPanelDrag = useDragOffset()
   const layoutPanelDrag = useDragOffset()
   const menuToggleRef = useRef<HTMLButtonElement>(null)
+  const menuFit = useViewportFit<HTMLDivElement>(editMode ? menuAnchor : null)
+  const stylePanelFit = useViewportFit<HTMLDivElement>(editMode ? panelAnchor : null)
+  const headerPanelFit = useViewportFit<HTMLDivElement>(editMode ? headerPanelAnchor : null)
+  const layoutPanelFit = useViewportFit<HTMLDivElement>(editMode ? layoutPanelAnchor : null)
+  const confirmFit = useViewportFit<HTMLDivElement>(editMode ? confirmAnchor : null)
 
   const elementIds: BlockElementId[] = [
     ...(!decorative ? (['header'] as const) : []),
@@ -370,9 +376,10 @@ export function BlockShell({
           <>
             <div className="block-style-backdrop" onClick={() => setMenuAnchor(null)} />
             <div
+              ref={menuFit.ref}
               className="block-quick-menu"
               style={{
-                top: menuAnchor.top,
+                top: menuFit.top,
                 left: menuAnchor.left,
                 width: MENU_WIDTH,
                 transform: `translate3d(${menuDrag.offset.dx}px, ${menuDrag.offset.dy}px, 0)`,
@@ -454,9 +461,10 @@ export function BlockShell({
           <>
             <div className="block-style-backdrop" onClick={() => setPanelAnchor(null)} />
             <div
+              ref={stylePanelFit.ref}
               className="block-style-panel-wrap"
               style={{
-                top: panelAnchor.top,
+                top: stylePanelFit.top,
                 left: panelAnchor.left,
                 transform: `translate3d(${stylePanelDrag.offset.dx}px, ${stylePanelDrag.offset.dy}px, 0)`,
               }}
@@ -480,9 +488,10 @@ export function BlockShell({
           <>
             <div className="block-style-backdrop" onClick={() => setHeaderPanelAnchor(null)} />
             <div
+              ref={headerPanelFit.ref}
               className="block-style-panel-wrap"
               style={{
-                top: headerPanelAnchor.top,
+                top: headerPanelFit.top,
                 left: headerPanelAnchor.left,
                 transform: `translate3d(${headerPanelDrag.offset.dx}px, ${headerPanelDrag.offset.dy}px, 0)`,
               }}
@@ -519,9 +528,10 @@ export function BlockShell({
           <>
             <div className="block-style-backdrop" onClick={() => setLayoutPanelAnchor(null)} />
             <div
+              ref={layoutPanelFit.ref}
               className="block-style-panel-wrap"
               style={{
-                top: layoutPanelAnchor.top,
+                top: layoutPanelFit.top,
                 left: layoutPanelAnchor.left,
                 transform: `translate3d(${layoutPanelDrag.offset.dx}px, ${layoutPanelDrag.offset.dy}px, 0)`,
               }}
@@ -550,8 +560,9 @@ export function BlockShell({
           <>
             <div className="block-style-backdrop" onClick={() => setConfirmAnchor(null)} />
             <div
+              ref={confirmFit.ref}
               className="confirm-popover"
-              style={{ top: confirmAnchor.top, left: confirmAnchor.left, width: CONFIRM_WIDTH }}
+              style={{ top: confirmFit.top, left: confirmAnchor.left, width: CONFIRM_WIDTH }}
             >
               <p>Delete the "{title}" block?</p>
               <p className="confirm-popover-hint">This can't be undone.</p>

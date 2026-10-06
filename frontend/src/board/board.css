@@ -510,6 +510,8 @@
   border-radius: 3px;
   background: var(--bg);
   box-shadow: 4px 4px 0 var(--shadow-ink);
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
 }
 
 .block-quick-menu-title {
@@ -595,6 +597,7 @@
   border: none;
   pointer-events: none;
   background: transparent;
+  color-scheme: light;
   z-index: 4;
 }
 
@@ -833,6 +836,7 @@
   border-radius: 3px;
   width: 100%;
   background: transparent;
+  color-scheme: light;
 }
 
 .custom-html-frame-bare {
