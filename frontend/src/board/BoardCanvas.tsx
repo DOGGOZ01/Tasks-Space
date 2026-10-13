@@ -33,6 +33,7 @@ import type { SavedDesignSummary } from './savedDesigns'
 import { TaskBoardProvider, useTaskBoard } from './TaskBoardContext'
 import { Toolbox } from './Toolbox'
 import { useDragOffset } from './useDragOffset'
+import { useGoogleFonts } from './useGoogleFonts'
 import { useIsMobileDevice } from './useIsMobileDevice'
 
 interface PageResponse {
@@ -1158,6 +1159,8 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
   const fieldSaveTimeoutsRef = useRef<Record<string, number | null>>({})
   const fieldSavePendingValuesRef = useRef<Record<string, unknown>>({})
   const fieldSaveControllersRef = useRef<Record<string, AbortController | null>>({})
+
+  useGoogleFonts([layouts, background, headerStyle])
 
   function abortInFlightFieldSaves() {
     Object.values(fieldSaveControllersRef.current).forEach((controller) => controller?.abort())

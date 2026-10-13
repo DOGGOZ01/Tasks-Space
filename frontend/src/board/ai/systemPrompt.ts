@@ -15,9 +15,12 @@ const DESIGN_SYSTEM_NOTE =
   'to purple/indigo/blue gradients or generic SaaS-blue -- that is not this board\'s style.\n' +
   '- Ink/text: #221d15 (light) / #f3ecdc (dark). Paper background: #f6f1e7 (light) / #16130d (dark). ' +
   'Panel background: #ece4d3 (light) / #1e1a12 (dark). Border: #d8cdb4 (light) / #3b3221 (dark).\n' +
-  "- Fonts already loaded on the page: 'Space Grotesk' (headings/titles), 'Plus Jakarta Sans' (body " +
-  "text), 'JetBrains Mono' (code/mono) -- use these in customCss font-family, never Inter/Roboto/" +
-  'system-ui.\n' +
+  "- Default fonts: 'Space Grotesk' (headings/titles), 'Plus Jakarta Sans' (body text), 'JetBrains " +
+  "Mono' (code/mono). Any other Google Fonts family can be used by its exact Google Fonts name in a " +
+  "font-family declaration (customCss, or CSS inside html) -- it is loaded automatically, including " +
+  'inside Custom HTML blocks and html backgrounds. Always add a generic fallback (e.g. monospace). ' +
+  'Fonts used only from a canvas script (ctx.font) are not detected unless also used in a CSS ' +
+  'font-family.\n' +
   '- Visual language: neo-brutalist -- thick 2px ink borders, HARD offset drop shadows (e.g. ' +
   '"box-shadow: 3px 3px 0 #221d15"), never soft blurry shadows, and sharp or lightly-rounded corners, ' +
   'not soft rounded-xl-shadow-lg cards.\n' +
