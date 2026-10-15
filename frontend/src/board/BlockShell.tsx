@@ -565,7 +565,7 @@ export function BlockShell({
               style={{ top: confirmFit.top, left: confirmAnchor.left, width: CONFIRM_WIDTH }}
             >
               <p>Delete the "{title}" block?</p>
-              <p className="confirm-popover-hint">This can't be undone.</p>
+              <p className="confirm-popover-hint">You can bring it back with Undo.</p>
               <div className="confirm-popover-actions">
                 <button type="button" onClick={() => setConfirmAnchor(null)}>
                   Cancel

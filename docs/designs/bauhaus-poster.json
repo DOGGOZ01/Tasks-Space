@@ -1,0 +1,857 @@
+{
+  "kind": "task-tracker-board-design",
+  "version": 1,
+  "device": "desktop",
+  "layout": {
+    "ROOT": {
+      "type": {
+        "resolvedName": "Container"
+      },
+      "isCanvas": true,
+      "props": {},
+      "displayName": "Container",
+      "custom": {},
+      "hidden": false,
+      "nodes": [
+        "bhdate",
+        "bhbar",
+        "bhdaily",
+        "bhweekly",
+        "bhnote",
+        "bhover"
+      ],
+      "linkedNodes": {}
+    },
+    "bhdate": {
+      "type": {
+        "resolvedName": "CustomHtmlBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 20,
+        "y": 20,
+        "width": 700,
+        "height": 600,
+        "html": "<style>\nbody { margin: 0; overflow: hidden; color: #111111; }\n.num { position: fixed; left: 70px; top: -10px; font-family: \"Anton\", sans-serif; font-size: 560px; line-height: 1; color: #e63b2e; letter-spacing: -.04em; animation: rise 1.2s cubic-bezier(.2,.8,.2,1) both; }\n@keyframes rise { from { transform: translateY(60px); } to { transform: translateY(0); } }\n.day { position: fixed; left: 0; top: 40px; width: 70px; height: 500px; display: flex; align-items: center; justify-content: center; }\n.day span { display: block; transform: rotate(-90deg); white-space: nowrap; font-family: \"Anton\", sans-serif; font-size: 58px; letter-spacing: .06em; }\n.month { position: fixed; left: 90px; top: 2px; font-family: \"IBM Plex Mono\", monospace; font-size: 15px; font-weight: 600; letter-spacing: .3em; }\n.stripes { position: fixed; right: 40px; bottom: 50px; width: 150px; height: 150px; border-radius: 50%; background: repeating-linear-gradient(-45deg, #1f4bb8 0 6px, transparent 6px 14px); animation: drift 12s ease-in-out infinite alternate; }\n@keyframes drift { from { transform: translate(0, 0); } to { transform: translate(-30px, 12px); } }\n.month b { display: inline-block; padding: 3px 8px; margin: 0 10px 0 0; background: #111111; color: #efe7d6; font-weight: 600; }\n</style>\n<div class=\"day\"><span id=\"day\">TODAY</span></div>\n<div class=\"stripes\"></div>\n<div class=\"num\" id=\"num\">✶</div>\n<div class=\"month\"><b id=\"month\">NOW</b><span id=\"year\">DESIGN YOUR DAY</span></div>\n<script>\nvar d = new Date();\nvar days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];\nvar months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];\ndocument.getElementById('num').textContent = d.getDate() < 10 ? '0' + d.getDate() : String(d.getDate());\ndocument.getElementById('day').textContent = days[d.getDay()];\ndocument.getElementById('month').textContent = months[d.getMonth()];\ndocument.getElementById('year').textContent = String(d.getFullYear()) + ' — WEEK ' + Math.ceil(((d - new Date(d.getFullYear(), 0, 1)) / 86400000 + new Date(d.getFullYear(), 0, 1).getDay() + 1) / 7);\n</script>",
+        "style": {},
+        "zIndex": 2
+      },
+      "displayName": "CustomHtmlBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "bhbar": {
+      "type": {
+        "resolvedName": "CustomHtmlBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 380,
+        "y": 440,
+        "width": 760,
+        "height": 240,
+        "html": "<style>\nbody { margin: 0; overflow: hidden; }\n.bar { position: fixed; left: 24px; top: 160px; width: 680px; height: 34px; background: #111111; transform: rotate(-11deg); transform-origin: left center; }\n</style>\n<div class=\"bar\"></div>",
+        "style": {},
+        "zIndex": 3
+      },
+      "displayName": "CustomHtmlBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "bhdaily": {
+      "type": {
+        "resolvedName": "DailyTaskListBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 760,
+        "y": 90,
+        "width": 330,
+        "height": 380,
+        "style": {
+          "textColor": "#111111",
+          "customCss": "background: transparent; border: none; font-family: \"Archivo\", sans-serif; font-weight: 600; letter-spacing: .01em; font-size: 15px;",
+          "animationCss": "& { transition: transform .3s ease; }\n&:hover { transform: translateX(6px); }"
+        },
+        "headerStyle": {
+          "textColor": "#efe7d6",
+          "customCss": "background: #111111; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 600; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; padding: 6px 12px;"
+        },
+        "titleOverride": "01 / TODAY",
+        "inputStyle": {
+          "textColor": "#111111",
+          "borderRadius": 0,
+          "customCss": "background: transparent; border: none; box-shadow: inset 0 -3px 0 #111111; font-family: \"Archivo\", sans-serif; font-weight: 600; font-size: 15px; padding: 6px 2px;",
+          "animationCss": "&:focus-within { box-shadow: inset 0 -3px 0 #e63b2e !important; }"
+        },
+        "addButtonStyle": {
+          "textColor": "#efe7d6",
+          "borderRadius": 0,
+          "customCss": "background: #111111; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 700; font-size: 18px; padding: 4px 14px;",
+          "animationCss": "& { transition: transform .15s ease, background .15s ease; }\n&:hover { background: #e63b2e !important; transform: translate(-3px, -3px); box-shadow: 3px 3px 0 #111111; }"
+        },
+        "addButtonIcon": "→",
+        "elementLayout": {
+          "header": {
+            "x": 0,
+            "y": 0,
+            "width": 50,
+            "height": 10
+          },
+          "body": {
+            "x": 0,
+            "y": 13,
+            "width": 100,
+            "height": 71
+          },
+          "addRow": {
+            "x": 0,
+            "y": 87,
+            "width": 100,
+            "height": 13
+          }
+        },
+        "zIndex": 6
+      },
+      "displayName": "DailyTaskListBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "bhweekly": {
+      "type": {
+        "resolvedName": "WeeklyTaskListBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 1110,
+        "y": 430,
+        "width": 300,
+        "height": 340,
+        "style": {
+          "textColor": "#111111",
+          "customCss": "background: transparent; border: none; font-family: \"Archivo\", sans-serif; font-weight: 600; letter-spacing: .01em; font-size: 15px;",
+          "animationCss": "& { transition: transform .3s ease; }\n&:hover { transform: translateX(-6px); }"
+        },
+        "headerStyle": {
+          "textColor": "#efe7d6",
+          "customCss": "background: #1f4bb8; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 600; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; padding: 6px 12px;"
+        },
+        "titleOverride": "02 / THIS WEEK",
+        "inputStyle": {
+          "textColor": "#111111",
+          "borderRadius": 0,
+          "customCss": "background: transparent; border: none; box-shadow: inset 0 -3px 0 #111111; font-family: \"Archivo\", sans-serif; font-weight: 600; font-size: 15px; padding: 6px 2px;",
+          "animationCss": "&:focus-within { box-shadow: inset 0 -3px 0 #e63b2e !important; }"
+        },
+        "addButtonStyle": {
+          "textColor": "#efe7d6",
+          "borderRadius": 0,
+          "customCss": "background: #1f4bb8; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 700; font-size: 18px; padding: 4px 14px;",
+          "animationCss": "& { transition: transform .15s ease, background .15s ease; }\n&:hover { background: #111111 !important; transform: translate(-3px, -3px); box-shadow: 3px 3px 0 #111111; }"
+        },
+        "addButtonIcon": "→",
+        "elementLayout": {
+          "header": {
+            "x": 0,
+            "y": 0,
+            "width": 70,
+            "height": 11
+          },
+          "body": {
+            "x": 0,
+            "y": 14,
+            "width": 100,
+            "height": 70
+          },
+          "addRow": {
+            "x": 0,
+            "y": 86,
+            "width": 100,
+            "height": 14
+          }
+        },
+        "zIndex": 6
+      },
+      "displayName": "WeeklyTaskListBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "bhnote": {
+      "type": {
+        "resolvedName": "NoteBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 560,
+        "y": 560,
+        "width": 300,
+        "height": 300,
+        "text": "slow down.\ndrink water.\nfinish one thing.",
+        "style": {
+          "background": "#1f4bb8",
+          "textColor": "#efe7d6",
+          "customCss": "border: none; border-radius: 50%; font-family: \"Archivo\", sans-serif; font-weight: 700; font-size: 20px; line-height: 1.3; text-align: center; box-shadow: 10px 10px 0 #111111;",
+          "animationCss": "& { transform: rotate(-8deg); transition: transform .4s cubic-bezier(.2,.8,.2,1); }\n&:hover { transform: rotate(4deg) scale(1.05); }"
+        },
+        "headerStyle": {
+          "textColor": "#efe7d6",
+          "customCss": "background: transparent; border: none; font-family: \"IBM Plex Mono\", monospace; font-size: 12px; letter-spacing: .3em; text-transform: uppercase; text-align: center;"
+        },
+        "titleOverride": "04 / MEMO",
+        "elementLayout": {
+          "header": {
+            "x": 25,
+            "y": 14,
+            "width": 50,
+            "height": 10
+          },
+          "body": {
+            "x": 17,
+            "y": 27,
+            "width": 66,
+            "height": 52
+          }
+        },
+        "zIndex": 7
+      },
+      "displayName": "NoteBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "bhover": {
+      "type": {
+        "resolvedName": "OverdueTaskListBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 50,
+        "y": 590,
+        "width": 460,
+        "height": 250,
+        "style": {
+          "background": "#111111",
+          "textColor": "#efe7d6",
+          "customCss": "border: none; border-radius: 230px 230px 0 0; font-family: \"Archivo\", sans-serif; font-weight: 600; box-shadow: 12px 12px 0 #e63b2e;",
+          "animationCss": "& { transform: rotate(-3deg); transition: transform .3s ease; }\n&:hover { transform: rotate(0deg); }"
+        },
+        "headerStyle": {
+          "textColor": "#efe7d6",
+          "customCss": "background: #e63b2e; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 600; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; padding: 6px 12px; text-align: center;"
+        },
+        "titleOverride": "03 / OVERDUE",
+        "elementLayout": {
+          "header": {
+            "x": 31,
+            "y": 16,
+            "width": 38,
+            "height": 12
+          },
+          "body": {
+            "x": 14,
+            "y": 36,
+            "width": 72,
+            "height": 60
+          }
+        },
+        "zIndex": 5
+      },
+      "displayName": "OverdueTaskListBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    }
+  },
+  "background": {
+    "type": "html",
+    "html": "<style>\nbody { margin: 0; overflow: hidden; background: #efe7d6; }\n.paper { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #efe7d6; background-image: radial-gradient(rgba(17,17,17,.07) 1px, transparent 1.2px), radial-gradient(rgba(17,17,17,.04) 1px, transparent 1.2px); background-size: 7px 7px, 13px 13px; background-position: 0 0, 3px 5px; }\n.grid { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-image: linear-gradient(90deg, rgba(17,17,17,.06) 1px, transparent 1px); background-size: 8.333vw 100%; }\n.mark { position: fixed; width: 22px; height: 22px; border: 1.5px solid #111111; border-radius: 50%; opacity: .55; }\n.mark i { position: absolute; display: block; background: #111111; }\n.h { left: -8px; top: 10px; width: 38px; height: 1.5px; }\n.v { top: -8px; left: 10px; width: 1.5px; height: 38px; }\n.m1 { top: 18px; left: 18px; } .m2 { top: 18px; right: 18px; } .m3 { bottom: 18px; left: 18px; } .m4 { bottom: 18px; right: 18px; }\n.meta { position: fixed; font-family: \"IBM Plex Mono\", monospace; font-size: 11px; letter-spacing: .25em; color: rgba(17,17,17,.55); }\n.t1 { bottom: 150px; left: 52px; } .t2 { bottom: 130px; left: 52px; }\n.ring { position: fixed; right: -6vmin; top: -22vmin; width: 66vmin; height: 66vmin; border-radius: 50%; border: 2px solid #111111; }\n.sun { position: fixed; right: -14vmin; top: -30vmin; width: 66vmin; height: 66vmin; border-radius: 50%; background: #e63b2e; animation: breathe 9s ease-in-out infinite; }\n@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }\n.fig { position: fixed; right: 4vmin; top: 40vmin; font-family: \"IBM Plex Mono\", monospace; font-size: 12px; letter-spacing: .3em; color: #111111; }\n.q { position: fixed; right: -48vmin; bottom: -48vmin; width: 96vmin; height: 96vmin; border-radius: 50%; background: #f6c026; }\n.star { position: fixed; right: 4vmin; bottom: 46vmin; font-size: 64px; color: #111111; animation: spin 14s linear infinite; }\n@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }\n.band { position: fixed; left: -3vw; bottom: 34px; width: 106vw; height: 64px; background: #111111; transform: rotate(-2deg); overflow: hidden; display: flex; align-items: center; }\n.track { display: flex; white-space: nowrap; animation: run 26s linear infinite; }\n.track span { font-family: \"Anton\", sans-serif; font-size: 40px; letter-spacing: .04em; color: #efe7d6; padding: 0 0 0 24px; }\n.track b { font-weight: 400; color: #f6c026; }\n.track i { font-style: normal; color: #e63b2e; }\n@keyframes run { from { transform: translateX(0); } to { transform: translateX(-50%); } }\n</style>\n<div class=\"paper\"></div><div class=\"grid\"></div>\n<div class=\"ring\"></div><div class=\"sun\"></div><div class=\"fig\">FIG. 1 — THE DAY</div>\n<div class=\"q\"></div><div class=\"star\">✺</div>\n<div class=\"band\"><div class=\"track\">\n<span>DESIGN YOUR DAY <b>✦</b> DO THE WORK <i>✦</i> TICK IT OFF <b>✦</b> REST <i>✦</i> REPEAT <b>✦</b></span>\n<span>DESIGN YOUR DAY <b>✦</b> DO THE WORK <i>✦</i> TICK IT OFF <b>✦</b> REST <i>✦</i> REPEAT <b>✦</b></span>\n<span>DESIGN YOUR DAY <b>✦</b> DO THE WORK <i>✦</i> TICK IT OFF <b>✦</b> REST <i>✦</i> REPEAT <b>✦</b></span>\n<span>DESIGN YOUR DAY <b>✦</b> DO THE WORK <i>✦</i> TICK IT OFF <b>✦</b> REST <i>✦</i> REPEAT <b>✦</b></span>\n</div></div>\n<div class=\"mark m1\"><i class=\"h\"></i><i class=\"v\"></i></div>\n<div class=\"mark m2\"><i class=\"h\"></i><i class=\"v\"></i></div>\n<div class=\"mark m3\"><i class=\"h\"></i><i class=\"v\"></i></div>\n<div class=\"mark m4\"><i class=\"h\"></i><i class=\"v\"></i></div>\n<div class=\"meta t1\">TASKS SPACE — ISSUE Nº 01</div>\n<div class=\"meta t2\">PRINTED IN YOUR BROWSER</div>"
+  },
+  "headerStyle": {
+    "edit": {
+      "textColor": "#efe7d6",
+      "borderRadius": 0,
+      "customCss": "background: #111111; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; font-size: 12px; padding: 8px 16px;",
+      "animationCss": "& { transition: transform .15s ease; }\n&:hover { transform: translate(-3px, -3px); box-shadow: 3px 3px 0 #e63b2e; }"
+    },
+    "logout": {
+      "textColor": "#efe7d6",
+      "borderRadius": 0,
+      "customCss": "background: #e63b2e; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; font-size: 12px; padding: 8px 16px;",
+      "animationCss": "& { transition: transform .15s ease; }\n&:hover { transform: translate(-3px, -3px); box-shadow: 3px 3px 0 #111111; }"
+    },
+    "username": {
+      "textColor": "#111111",
+      "customCss": "font-family: \"IBM Plex Mono\", monospace; font-weight: 600; letter-spacing: .3em; text-transform: uppercase; font-size: 12px;"
+    }
+  },
+  "layouts": {
+    "desktop": {
+      "ROOT": {
+        "type": {
+          "resolvedName": "Container"
+        },
+        "isCanvas": true,
+        "props": {},
+        "displayName": "Container",
+        "custom": {},
+        "hidden": false,
+        "nodes": [
+          "bhdate",
+          "bhbar",
+          "bhdaily",
+          "bhweekly",
+          "bhnote",
+          "bhover"
+        ],
+        "linkedNodes": {}
+      },
+      "bhdate": {
+        "type": {
+          "resolvedName": "CustomHtmlBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 20,
+          "y": 20,
+          "width": 700,
+          "height": 600,
+          "html": "<style>\nbody { margin: 0; overflow: hidden; color: #111111; }\n.num { position: fixed; left: 70px; top: -10px; font-family: \"Anton\", sans-serif; font-size: 560px; line-height: 1; color: #e63b2e; letter-spacing: -.04em; animation: rise 1.2s cubic-bezier(.2,.8,.2,1) both; }\n@keyframes rise { from { transform: translateY(60px); } to { transform: translateY(0); } }\n.day { position: fixed; left: 0; top: 40px; width: 70px; height: 500px; display: flex; align-items: center; justify-content: center; }\n.day span { display: block; transform: rotate(-90deg); white-space: nowrap; font-family: \"Anton\", sans-serif; font-size: 58px; letter-spacing: .06em; }\n.month { position: fixed; left: 90px; top: 2px; font-family: \"IBM Plex Mono\", monospace; font-size: 15px; font-weight: 600; letter-spacing: .3em; }\n.stripes { position: fixed; right: 40px; bottom: 50px; width: 150px; height: 150px; border-radius: 50%; background: repeating-linear-gradient(-45deg, #1f4bb8 0 6px, transparent 6px 14px); animation: drift 12s ease-in-out infinite alternate; }\n@keyframes drift { from { transform: translate(0, 0); } to { transform: translate(-30px, 12px); } }\n.month b { display: inline-block; padding: 3px 8px; margin: 0 10px 0 0; background: #111111; color: #efe7d6; font-weight: 600; }\n</style>\n<div class=\"day\"><span id=\"day\">TODAY</span></div>\n<div class=\"stripes\"></div>\n<div class=\"num\" id=\"num\">✶</div>\n<div class=\"month\"><b id=\"month\">NOW</b><span id=\"year\">DESIGN YOUR DAY</span></div>\n<script>\nvar d = new Date();\nvar days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];\nvar months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];\ndocument.getElementById('num').textContent = d.getDate() < 10 ? '0' + d.getDate() : String(d.getDate());\ndocument.getElementById('day').textContent = days[d.getDay()];\ndocument.getElementById('month').textContent = months[d.getMonth()];\ndocument.getElementById('year').textContent = String(d.getFullYear()) + ' — WEEK ' + Math.ceil(((d - new Date(d.getFullYear(), 0, 1)) / 86400000 + new Date(d.getFullYear(), 0, 1).getDay() + 1) / 7);\n</script>",
+          "style": {},
+          "zIndex": 2
+        },
+        "displayName": "CustomHtmlBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "bhbar": {
+        "type": {
+          "resolvedName": "CustomHtmlBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 380,
+          "y": 440,
+          "width": 760,
+          "height": 240,
+          "html": "<style>\nbody { margin: 0; overflow: hidden; }\n.bar { position: fixed; left: 24px; top: 160px; width: 680px; height: 34px; background: #111111; transform: rotate(-11deg); transform-origin: left center; }\n</style>\n<div class=\"bar\"></div>",
+          "style": {},
+          "zIndex": 3
+        },
+        "displayName": "CustomHtmlBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "bhdaily": {
+        "type": {
+          "resolvedName": "DailyTaskListBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 760,
+          "y": 90,
+          "width": 330,
+          "height": 380,
+          "style": {
+            "textColor": "#111111",
+            "customCss": "background: transparent; border: none; font-family: \"Archivo\", sans-serif; font-weight: 600; letter-spacing: .01em; font-size: 15px;",
+            "animationCss": "& { transition: transform .3s ease; }\n&:hover { transform: translateX(6px); }"
+          },
+          "headerStyle": {
+            "textColor": "#efe7d6",
+            "customCss": "background: #111111; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 600; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; padding: 6px 12px;"
+          },
+          "titleOverride": "01 / TODAY",
+          "inputStyle": {
+            "textColor": "#111111",
+            "borderRadius": 0,
+            "customCss": "background: transparent; border: none; box-shadow: inset 0 -3px 0 #111111; font-family: \"Archivo\", sans-serif; font-weight: 600; font-size: 15px; padding: 6px 2px;",
+            "animationCss": "&:focus-within { box-shadow: inset 0 -3px 0 #e63b2e !important; }"
+          },
+          "addButtonStyle": {
+            "textColor": "#efe7d6",
+            "borderRadius": 0,
+            "customCss": "background: #111111; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 700; font-size: 18px; padding: 4px 14px;",
+            "animationCss": "& { transition: transform .15s ease, background .15s ease; }\n&:hover { background: #e63b2e !important; transform: translate(-3px, -3px); box-shadow: 3px 3px 0 #111111; }"
+          },
+          "addButtonIcon": "→",
+          "elementLayout": {
+            "header": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 10
+            },
+            "body": {
+              "x": 0,
+              "y": 13,
+              "width": 100,
+              "height": 71
+            },
+            "addRow": {
+              "x": 0,
+              "y": 87,
+              "width": 100,
+              "height": 13
+            }
+          },
+          "zIndex": 6
+        },
+        "displayName": "DailyTaskListBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "bhweekly": {
+        "type": {
+          "resolvedName": "WeeklyTaskListBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 1110,
+          "y": 430,
+          "width": 300,
+          "height": 340,
+          "style": {
+            "textColor": "#111111",
+            "customCss": "background: transparent; border: none; font-family: \"Archivo\", sans-serif; font-weight: 600; letter-spacing: .01em; font-size: 15px;",
+            "animationCss": "& { transition: transform .3s ease; }\n&:hover { transform: translateX(-6px); }"
+          },
+          "headerStyle": {
+            "textColor": "#efe7d6",
+            "customCss": "background: #1f4bb8; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 600; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; padding: 6px 12px;"
+          },
+          "titleOverride": "02 / THIS WEEK",
+          "inputStyle": {
+            "textColor": "#111111",
+            "borderRadius": 0,
+            "customCss": "background: transparent; border: none; box-shadow: inset 0 -3px 0 #111111; font-family: \"Archivo\", sans-serif; font-weight: 600; font-size: 15px; padding: 6px 2px;",
+            "animationCss": "&:focus-within { box-shadow: inset 0 -3px 0 #e63b2e !important; }"
+          },
+          "addButtonStyle": {
+            "textColor": "#efe7d6",
+            "borderRadius": 0,
+            "customCss": "background: #1f4bb8; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 700; font-size: 18px; padding: 4px 14px;",
+            "animationCss": "& { transition: transform .15s ease, background .15s ease; }\n&:hover { background: #111111 !important; transform: translate(-3px, -3px); box-shadow: 3px 3px 0 #111111; }"
+          },
+          "addButtonIcon": "→",
+          "elementLayout": {
+            "header": {
+              "x": 0,
+              "y": 0,
+              "width": 70,
+              "height": 11
+            },
+            "body": {
+              "x": 0,
+              "y": 14,
+              "width": 100,
+              "height": 70
+            },
+            "addRow": {
+              "x": 0,
+              "y": 86,
+              "width": 100,
+              "height": 14
+            }
+          },
+          "zIndex": 6
+        },
+        "displayName": "WeeklyTaskListBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "bhnote": {
+        "type": {
+          "resolvedName": "NoteBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 560,
+          "y": 560,
+          "width": 300,
+          "height": 300,
+          "text": "slow down.\ndrink water.\nfinish one thing.",
+          "style": {
+            "background": "#1f4bb8",
+            "textColor": "#efe7d6",
+            "customCss": "border: none; border-radius: 50%; font-family: \"Archivo\", sans-serif; font-weight: 700; font-size: 20px; line-height: 1.3; text-align: center; box-shadow: 10px 10px 0 #111111;",
+            "animationCss": "& { transform: rotate(-8deg); transition: transform .4s cubic-bezier(.2,.8,.2,1); }\n&:hover { transform: rotate(4deg) scale(1.05); }"
+          },
+          "headerStyle": {
+            "textColor": "#efe7d6",
+            "customCss": "background: transparent; border: none; font-family: \"IBM Plex Mono\", monospace; font-size: 12px; letter-spacing: .3em; text-transform: uppercase; text-align: center;"
+          },
+          "titleOverride": "04 / MEMO",
+          "elementLayout": {
+            "header": {
+              "x": 25,
+              "y": 14,
+              "width": 50,
+              "height": 10
+            },
+            "body": {
+              "x": 17,
+              "y": 27,
+              "width": 66,
+              "height": 52
+            }
+          },
+          "zIndex": 7
+        },
+        "displayName": "NoteBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "bhover": {
+        "type": {
+          "resolvedName": "OverdueTaskListBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 50,
+          "y": 590,
+          "width": 460,
+          "height": 250,
+          "style": {
+            "background": "#111111",
+            "textColor": "#efe7d6",
+            "customCss": "border: none; border-radius: 230px 230px 0 0; font-family: \"Archivo\", sans-serif; font-weight: 600; box-shadow: 12px 12px 0 #e63b2e;",
+            "animationCss": "& { transform: rotate(-3deg); transition: transform .3s ease; }\n&:hover { transform: rotate(0deg); }"
+          },
+          "headerStyle": {
+            "textColor": "#efe7d6",
+            "customCss": "background: #e63b2e; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 600; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; padding: 6px 12px; text-align: center;"
+          },
+          "titleOverride": "03 / OVERDUE",
+          "elementLayout": {
+            "header": {
+              "x": 31,
+              "y": 16,
+              "width": 38,
+              "height": 12
+            },
+            "body": {
+              "x": 14,
+              "y": 36,
+              "width": 72,
+              "height": 60
+            }
+          },
+          "zIndex": 5
+        },
+        "displayName": "OverdueTaskListBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      }
+    },
+    "mobile": {
+      "ROOT": {
+        "type": {
+          "resolvedName": "Container"
+        },
+        "isCanvas": true,
+        "props": {},
+        "displayName": "Container",
+        "custom": {},
+        "hidden": false,
+        "nodes": [
+          "bhdate",
+          "bhbar",
+          "bhdaily",
+          "bhnote",
+          "bhweekly",
+          "bhover"
+        ],
+        "linkedNodes": {}
+      },
+      "bhdate": {
+        "type": {
+          "resolvedName": "CustomHtmlBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 10,
+          "y": 70,
+          "width": 370,
+          "height": 340,
+          "html": "<style>\nbody { margin: 0; overflow: hidden; color: #111111; }\n.num { position: fixed; left: 52px; top: 10px; font-family: \"Anton\", sans-serif; font-size: 300px; line-height: 1; color: #e63b2e; letter-spacing: -.04em; animation: rise 1.2s cubic-bezier(.2,.8,.2,1) both; }\n@keyframes rise { from { transform: translateY(60px); } to { transform: translateY(0); } }\n.day { position: fixed; left: 0; top: 36px; width: 46px; height: 290px; display: flex; align-items: center; justify-content: center; }\n.day span { display: block; transform: rotate(-90deg); white-space: nowrap; font-family: \"Anton\", sans-serif; font-size: 32px; letter-spacing: .06em; }\n.month { position: fixed; left: 54px; top: 0; font-family: \"IBM Plex Mono\", monospace; font-size: 11px; font-weight: 600; letter-spacing: .3em; }\n.stripes { position: fixed; right: 6px; bottom: 10px; width: 92px; height: 92px; border-radius: 50%; background: repeating-linear-gradient(-45deg, #1f4bb8 0 6px, transparent 6px 14px); animation: drift 12s ease-in-out infinite alternate; }\n@keyframes drift { from { transform: translate(0, 0); } to { transform: translate(-30px, 12px); } }\n.month b { display: inline-block; padding: 3px 8px; margin: 0 10px 0 0; background: #111111; color: #efe7d6; font-weight: 600; }\n</style>\n<div class=\"day\"><span id=\"day\">TODAY</span></div>\n<div class=\"stripes\"></div>\n<div class=\"num\" id=\"num\">✶</div>\n<div class=\"month\"><b id=\"month\">NOW</b><span id=\"year\">DESIGN YOUR DAY</span></div>\n<script>\nvar d = new Date();\nvar days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];\nvar months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];\ndocument.getElementById('num').textContent = d.getDate() < 10 ? '0' + d.getDate() : String(d.getDate());\ndocument.getElementById('day').textContent = days[d.getDay()];\ndocument.getElementById('month').textContent = months[d.getMonth()];\ndocument.getElementById('year').textContent = String(d.getFullYear()) + ' — WEEK ' + Math.ceil(((d - new Date(d.getFullYear(), 0, 1)) / 86400000 + new Date(d.getFullYear(), 0, 1).getDay() + 1) / 7);\n</script>",
+          "style": {},
+          "zIndex": 2
+        },
+        "displayName": "CustomHtmlBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "bhbar": {
+        "type": {
+          "resolvedName": "CustomHtmlBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 0,
+          "y": 360,
+          "width": 390,
+          "height": 130,
+          "html": "<style>\nbody { margin: 0; overflow: hidden; }\n.bar { position: fixed; left: 14px; top: 76px; width: 350px; height: 22px; background: #111111; transform: rotate(-9deg); transform-origin: left center; }\n</style>\n<div class=\"bar\"></div>",
+          "style": {},
+          "zIndex": 3
+        },
+        "displayName": "CustomHtmlBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "bhdaily": {
+        "type": {
+          "resolvedName": "DailyTaskListBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 24,
+          "y": 470,
+          "width": 342,
+          "height": 290,
+          "style": {
+            "textColor": "#111111",
+            "customCss": "background: transparent; border: none; font-family: \"Archivo\", sans-serif; font-weight: 600; letter-spacing: .01em; font-size: 15px;",
+            "animationCss": "& { transition: transform .3s ease; }\n&:hover { transform: translateX(6px); }"
+          },
+          "headerStyle": {
+            "textColor": "#efe7d6",
+            "customCss": "background: #111111; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 600; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; padding: 6px 12px;"
+          },
+          "titleOverride": "01 / TODAY",
+          "inputStyle": {
+            "textColor": "#111111",
+            "borderRadius": 0,
+            "customCss": "background: transparent; border: none; box-shadow: inset 0 -3px 0 #111111; font-family: \"Archivo\", sans-serif; font-weight: 600; font-size: 15px; padding: 6px 2px;",
+            "animationCss": "&:focus-within { box-shadow: inset 0 -3px 0 #e63b2e !important; }"
+          },
+          "addButtonStyle": {
+            "textColor": "#efe7d6",
+            "borderRadius": 0,
+            "customCss": "background: #111111; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 700; font-size: 18px; padding: 4px 14px;",
+            "animationCss": "& { transition: transform .15s ease, background .15s ease; }\n&:hover { background: #e63b2e !important; transform: translate(-3px, -3px); box-shadow: 3px 3px 0 #111111; }"
+          },
+          "addButtonIcon": "→",
+          "elementLayout": {
+            "header": {
+              "x": 0,
+              "y": 0,
+              "width": 56,
+              "height": 11
+            },
+            "body": {
+              "x": 0,
+              "y": 14,
+              "width": 100,
+              "height": 70
+            },
+            "addRow": {
+              "x": 0,
+              "y": 86,
+              "width": 100,
+              "height": 14
+            }
+          },
+          "zIndex": 6
+        },
+        "displayName": "DailyTaskListBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "bhnote": {
+        "type": {
+          "resolvedName": "NoteBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 170,
+          "y": 765,
+          "width": 200,
+          "height": 200,
+          "text": "slow down.\ndrink water.\nfinish one thing.",
+          "style": {
+            "background": "#1f4bb8",
+            "textColor": "#efe7d6",
+            "customCss": "border: none; border-radius: 50%; font-family: \"Archivo\", sans-serif; font-weight: 700; font-size: 14px; line-height: 1.3; text-align: center; box-shadow: 7px 7px 0 #111111;",
+            "animationCss": "& { transform: rotate(-8deg); transition: transform .4s cubic-bezier(.2,.8,.2,1); }\n&:hover { transform: rotate(4deg) scale(1.05); }"
+          },
+          "headerStyle": {
+            "textColor": "#efe7d6",
+            "customCss": "background: transparent; border: none; font-family: \"IBM Plex Mono\", monospace; font-size: 9px; letter-spacing: .3em; text-transform: uppercase; text-align: center;"
+          },
+          "titleOverride": "04 / MEMO",
+          "elementLayout": {
+            "header": {
+              "x": 25,
+              "y": 14,
+              "width": 50,
+              "height": 10
+            },
+            "body": {
+              "x": 17,
+              "y": 27,
+              "width": 66,
+              "height": 52
+            }
+          },
+          "zIndex": 7
+        },
+        "displayName": "NoteBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "bhweekly": {
+        "type": {
+          "resolvedName": "WeeklyTaskListBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 24,
+          "y": 985,
+          "width": 342,
+          "height": 220,
+          "style": {
+            "textColor": "#111111",
+            "customCss": "background: transparent; border: none; font-family: \"Archivo\", sans-serif; font-weight: 600; letter-spacing: .01em; font-size: 15px;",
+            "animationCss": "& { transition: transform .3s ease; }\n&:hover { transform: translateX(-6px); }"
+          },
+          "headerStyle": {
+            "textColor": "#efe7d6",
+            "customCss": "background: #1f4bb8; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 600; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; padding: 6px 12px;"
+          },
+          "titleOverride": "02 / THIS WEEK",
+          "inputStyle": {
+            "textColor": "#111111",
+            "borderRadius": 0,
+            "customCss": "background: transparent; border: none; box-shadow: inset 0 -3px 0 #111111; font-family: \"Archivo\", sans-serif; font-weight: 600; font-size: 15px; padding: 6px 2px;",
+            "animationCss": "&:focus-within { box-shadow: inset 0 -3px 0 #e63b2e !important; }"
+          },
+          "addButtonStyle": {
+            "textColor": "#efe7d6",
+            "borderRadius": 0,
+            "customCss": "background: #1f4bb8; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 700; font-size: 18px; padding: 4px 14px;",
+            "animationCss": "& { transition: transform .15s ease, background .15s ease; }\n&:hover { background: #111111 !important; transform: translate(-3px, -3px); box-shadow: 3px 3px 0 #111111; }"
+          },
+          "addButtonIcon": "→",
+          "elementLayout": {
+            "header": {
+              "x": 0,
+              "y": 0,
+              "width": 70,
+              "height": 11
+            },
+            "body": {
+              "x": 0,
+              "y": 14,
+              "width": 100,
+              "height": 70
+            },
+            "addRow": {
+              "x": 0,
+              "y": 86,
+              "width": 100,
+              "height": 14
+            }
+          },
+          "zIndex": 6
+        },
+        "displayName": "WeeklyTaskListBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "bhover": {
+        "type": {
+          "resolvedName": "OverdueTaskListBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 30,
+          "y": 1220,
+          "width": 330,
+          "height": 190,
+          "style": {
+            "background": "#111111",
+            "textColor": "#efe7d6",
+            "customCss": "border: none; border-radius: 165px 165px 0 0; font-family: \"Archivo\", sans-serif; font-weight: 600; box-shadow: 8px 8px 0 #e63b2e;",
+            "animationCss": "& { transform: rotate(-3deg); transition: transform .3s ease; }\n&:hover { transform: rotate(0deg); }"
+          },
+          "headerStyle": {
+            "textColor": "#efe7d6",
+            "customCss": "background: #e63b2e; border: none; font-family: \"IBM Plex Mono\", monospace; font-weight: 600; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; padding: 6px 12px; text-align: center;"
+          },
+          "titleOverride": "03 / OVERDUE",
+          "elementLayout": {
+            "header": {
+              "x": 27,
+              "y": 18,
+              "width": 46,
+              "height": 15
+            },
+            "body": {
+              "x": 14,
+              "y": 40,
+              "width": 72,
+              "height": 58
+            }
+          },
+          "zIndex": 5
+        },
+        "displayName": "OverdueTaskListBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      }
+    }
+  }
+}

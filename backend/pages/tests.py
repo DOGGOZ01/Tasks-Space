@@ -534,3 +534,40 @@ class RenderPreviewTests(APITestCase):
         token = post.data["token"]
         get = self.client.get(f"/api/render-preview/?token={token}")
         self.assertIn("window.taskBoardData", get.content.decode())
+
+    def _render(self, html, kind="html_block"):
+        post = self.client.post("/api/render-preview/", {"html": html, "kind": kind}, format="json")
+        return self.client.get(f"/api/render-preview/?token={post.data['token']}")
+
+    def test_google_fonts_linked_for_used_families(self):
+        html = (
+            "<div style='font-family: \"Press Start 2P\", \"Courier New\", monospace'>a</div>"
+            "<style>.x { font-family: VT323, monospace !important; }</style>"
+        )
+        for kind in ("html_block", "background", "overlay"):
+            body = self._render(html, kind).content.decode()
+            self.assertIn("fonts.googleapis.com/css?family=Press+Start+2P:", body)
+            self.assertIn("fonts.googleapis.com/css?family=VT323:", body)
+            self.assertNotIn("family=Courier", body)
+            self.assertNotIn("family=monospace", body)
+
+    def test_no_font_links_without_custom_families(self):
+        body = self._render("<div style='font-family: Arial, sans-serif'>a</div>").content.decode()
+        self.assertNotIn("fonts.googleapis.com", body)
+
+    def test_font_names_with_unsafe_characters_are_ignored(self):
+        body = self._render("<style>.x { font-family: \"Bad/Name\", Roboto; }</style>").content.decode()
+        self.assertIn("family=Roboto:", body)
+        self.assertNotIn("family=Bad", body)
+        self.assertEqual(body.count("fonts.googleapis.com/css?family="), 1)
+
+    def test_font_links_capped(self):
+        families = ", ".join(f"Font{i}" for i in range(40))
+        body = self._render(f"<style>.x {{ font-family: {families}; }}</style>").content.decode()
+        self.assertEqual(body.count("fonts.googleapis.com/css?family="), 20)
+
+    def test_preview_csp_allows_google_fonts_only(self):
+        csp = self._render("<b>x</b>")["Content-Security-Policy"]
+        self.assertIn("style-src 'unsafe-inline' https://fonts.googleapis.com", csp)
+        self.assertIn("font-src https://fonts.gstatic.com", csp)
+        self.assertIn("default-src 'none'", csp)

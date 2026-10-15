@@ -4,6 +4,7 @@ import { BlockStylePanel } from '../BlockStylePanel'
 import type { BlockStyle } from '../blockStyle'
 import { anchorBelowRect } from '../popoverAnchor'
 import { useDragOffset } from '../useDragOffset'
+import { useViewportFit } from '../useViewportFit'
 
 export const TASK_INPUT_STYLE_PANEL_WIDTH = 300
 
@@ -71,12 +72,14 @@ export function TaskInputStylePanel({
   buttonIcon: string
   onButtonIconChange: (next: string) => void
 }) {
+  const fit = useViewportFit<HTMLDivElement>(anchor)
   return createPortal(
     <>
       <div className="block-style-backdrop" onClick={onClose} />
       <div
+        ref={fit.ref}
         className="block-style-panel-wrap header-style-panel-wrap"
-        style={{ top: anchor.top, left: anchor.left, transform: `translate3d(${offset.dx}px, ${offset.dy}px, 0)` }}
+        style={{ top: fit.top, left: anchor.left, transform: `translate3d(${offset.dx}px, ${offset.dy}px, 0)` }}
         onPointerDown={(e) => e.stopPropagation()}
       >
         <div className="board-bg-type-tabs" role="tablist">

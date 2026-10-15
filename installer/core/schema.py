@@ -29,15 +29,15 @@ FIELDS = [
     Field("SECRET_KEY", "Core", "secret", never_prompt=True),
     Field("JWT_SIGNING_KEY", "Core", "secret", never_prompt=True),
     Field("ALLOWED_HOSTS", "Core", "str", default="localhost,127.0.0.1",
-          help="Auto-derived from Domain -- change Domain to update this."),
+          help="Derived from Domain."),
     Field("CORS_ALLOWED_ORIGINS", "Core", "str", default="http://localhost:5173,http://127.0.0.1:5173",
-          help="Auto-derived from Domain/HTTP port -- change those to update this."),
+          help="Derived from Domain and HTTP port."),
     Field("FRONTEND_ORIGIN", "Core", "str", default="http://localhost:5173",
-          help="Auto-derived from Domain/HTTP port -- change those to update this."),
+          help="Derived from Domain and HTTP port."),
     Field("COOKIE_SECURE", "Core", "bool", default="False",
-          help="Auto-derived from Domain -- change Domain to update this."),
+          help="Derived from Domain."),
     Field("NGINX_HOST_BIND", "Core", "str", default="",
-          help="Auto-derived from Domain -- change Domain to update this."),
+          help="Derived from Domain."),
 
     Field("DOMAIN", "Deployment", "str", default="",
           help="Leave blank for local/IP-only access. See README's \"Real domain + HTTPS\" section."),
@@ -46,13 +46,13 @@ FIELDS = [
     Field("INSTALLER_WEB_PORT", "Deployment", "int", default="7000"),
 
     Field("ALLOW_CUSTOM_SCRIPTS", "Security", "bool", default="False",
-          help="Allows <script> tags in Custom HTML/CSS blocks to actually run. "
-               "Only for a fully trusted, single-user local instance."),
+          help="Lets <script> tags run in Custom HTML blocks. "
+               "Only for a trusted single-user instance."),
     Field("ALLOW_PUBLIC_REGISTRATION", "Security", "bool", default="False"),
 
     Field("DAY_LOCK_MODE", "Day lock", "choice", default="local", options=("local", "global"),
-          help="local locks as soon as the day/week is over in DAY_LOCK_TIMEZONE; "
-               "global locks only once the day/week is over everywhere on Earth."),
+          help="local: a day locks when it ends in DAY_LOCK_TIMEZONE. "
+               "global: a day locks when it ends everywhere on Earth."),
     Field("DAY_LOCK_TIMEZONE", "Day lock", "str", default="Europe/Paris",
           help="IANA timezone name, e.g. Europe/Paris, America/New_York."),
 

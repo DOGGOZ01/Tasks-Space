@@ -1,11 +1,3 @@
-"""One-off data migration: the Daily/Weekly Tasks blocks used to store
-their tasksByDate data inline in Page.layout (per block instance). That
-data now lives on the account-level TaskBoard model instead, so this copies
-anything found in existing layouts over before the frontend stops reading
-the old location -- deleting a block should never have silently discarded
-someone's tasks.
-"""
-
 from django.db import migrations
 
 

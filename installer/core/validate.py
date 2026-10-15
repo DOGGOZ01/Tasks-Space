@@ -19,7 +19,7 @@ RESERVED_PROXY_PORTS = ("80", "443")
 def validate_domain_port(domain, port):
     if domain and str(port).strip() in RESERVED_PROXY_PORTS:
         raise ValidationError(
-            f"HTTP_PORT can't be {str(port).strip()} when a domain is set -- your host nginx uses it. Use e.g. 8080."
+            f"HTTP_PORT can't be {str(port).strip()} when a domain is set, because your host nginx uses it. Use another port, e.g. 8080."
         )
 
 

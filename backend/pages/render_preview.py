@@ -1,3 +1,4 @@
+import html as html_lib
 import json
 import re
 from urllib.parse import quote_plus
@@ -27,10 +28,10 @@ _SKIPPED_FONT_FAMILIES = {
 
 def _extract_font_families(html: str) -> list[str]:
     found: dict[str, str] = {}
-    for match in _FONT_FAMILY_RE.finditer(html):
+    for match in _FONT_FAMILY_RE.finditer(html_lib.unescape(html)):
         for part in match.group(1).split(","):
             name = re.sub(r"!important", "", part, flags=re.IGNORECASE)
-            name = name.replace("&quot;", "").replace("\\", "").replace('"', "").replace("'", "").strip()
+            name = name.replace("\\", "").replace('"', "").replace("'", "").strip()
             key = name.lower()
             if not _FONT_NAME_RE.match(name) or key in _SKIPPED_FONT_FAMILIES or key in found:
                 continue

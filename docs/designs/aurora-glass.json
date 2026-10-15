@@ -1,0 +1,241 @@
+{
+  "kind": "task-tracker-board-design",
+  "version": 1,
+  "device": "desktop",
+  "layout": {
+    "ROOT": {
+      "type": {
+        "resolvedName": "Container"
+      },
+      "isCanvas": true,
+      "props": {},
+      "displayName": "Container",
+      "custom": {},
+      "hidden": false,
+      "nodes": [
+        "auhero",
+        "audaily",
+        "auweekly",
+        "aubreathe",
+        "aunote",
+        "auover"
+      ],
+      "linkedNodes": {}
+    },
+    "auhero": {
+      "type": {
+        "resolvedName": "CustomHtmlBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 60,
+        "y": 40,
+        "width": 760,
+        "height": 280,
+        "html": "<style>\nbody { margin: 0; color: #eef1ff; font-family: \"Outfit\", sans-serif; }\n.hero { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; padding: 8px 6px; }\n.greet { margin: 0; font-size: 22px; letter-spacing: .2em; opacity: .7; }\n.clock { margin: 4px 0 0 0; font-family: \"Fraunces\", serif; font-size: 112px; font-weight: 300; line-height: 1; text-shadow: 0 0 40px rgba(139,123,255,.55); }\n.date { margin: 6px 0 14px 4px; font-family: \"Fraunces\", serif; font-style: italic; font-size: 24px; opacity: .85; }\n.progress { width: 420px; height: 8px; border-radius: 99px; background: rgba(255,255,255,.12); overflow: hidden; }\n.fill { width: 0%; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #5ef2c8, #8b7bff, #ff5fa2); transition: width 1s ease; }\n.stat { margin: 8px 0 0 2px; font-size: 15px; opacity: .75; }\n</style>\n<div class=\"hero\">\n<p class=\"greet\" id=\"greet\">HELLO</p>\n<div class=\"clock\" id=\"clock\">--:--</div>\n<p class=\"date\" id=\"date\">a calm day ahead</p>\n<div class=\"progress\"><div class=\"fill\" id=\"fill\"></div></div>\n<p class=\"stat\" id=\"stat\">your tasks for today live below</p>\n</div>\n<script>\nvar days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];\nvar months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];\nfunction pad(n) { return n < 10 ? '0' + n : String(n); }\nfunction render() {\n  var d = new Date();\n  var h = d.getHours();\n  var part = h < 5 ? 'GOOD NIGHT' : h < 12 ? 'GOOD MORNING' : h < 18 ? 'GOOD AFTERNOON' : 'GOOD EVENING';\n  document.getElementById('greet').textContent = part;\n  document.getElementById('clock').textContent = pad(h) + ':' + pad(d.getMinutes());\n  document.getElementById('date').textContent = days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()];\n}\nrender();\nsetInterval(render, 15000);\nvar data = window.taskBoardData;\nif (data && data.dailyTasks) {\n  var list = data.dailyTasks[data.todayKey] || [];\n  var done = list.filter(function (t) { return t.done; }).length;\n  var total = list.length;\n  document.getElementById('stat').textContent = total ? done + ' of ' + total + ' done today' : 'nothing planned yet. add something below';\n  document.getElementById('fill').style.width = (total ? Math.round(done / total * 100) : 0) + '%';\n}\n</script>",
+        "style": {},
+        "zIndex": 1
+      },
+      "displayName": "CustomHtmlBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "audaily": {
+      "type": {
+        "resolvedName": "DailyTaskListBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 60,
+        "y": 340,
+        "width": 400,
+        "height": 480,
+        "style": {
+          "textColor": "#eef1ff",
+          "borderRadius": 24,
+          "customCss": "background: linear-gradient(150deg, rgba(255,255,255,.16), rgba(255,255,255,.04)); border: 1px solid rgba(255,255,255,.22); box-shadow: 0 24px 60px -24px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.25); padding: 6px 8px; font-family: \"Outfit\", sans-serif; font-size: 16px;",
+          "animationCss": "& { transition: transform .35s ease, box-shadow .35s ease; }\n&:hover { transform: translateY(-5px); box-shadow: 0 30px 70px -24px rgba(94,242,200,.45), inset 0 1px 0 rgba(255,255,255,.3) !important; }"
+        },
+        "headerStyle": {
+          "textColor": "#5ef2c8",
+          "customCss": "background: transparent; border: none; font-family: \"Fraunces\", serif; font-style: italic; font-weight: 600; font-size: 24px; letter-spacing: .01em; padding: 10px 14px 4px 14px;"
+        },
+        "titleOverride": "Today",
+        "inputStyle": {
+          "textColor": "#ffffff",
+          "borderRadius": 60,
+          "customCss": "background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); padding: 8px 14px; font-family: \"Outfit\", sans-serif; font-size: 15px;",
+          "animationCss": "&:focus-within { border-color: #5ef2c8 !important; box-shadow: 0 0 0 4px rgba(94,242,200,.18); }"
+        },
+        "addButtonStyle": {
+          "textColor": "#0b1024",
+          "borderRadius": 60,
+          "customCss": "background: linear-gradient(135deg, #5ef2c8, #8b7bff); border: none; font-family: \"Outfit\", sans-serif; font-weight: 700; font-size: 18px; padding: 6px 14px; box-shadow: 0 8px 22px -8px rgba(139,123,255,.8);",
+          "animationCss": "& { transition: transform .2s ease, filter .2s ease; }\n&:hover { transform: scale(1.1) rotate(90deg); filter: brightness(1.15); }"
+        },
+        "addButtonIcon": "+",
+        "elementLayout": {},
+        "zIndex": 2
+      },
+      "displayName": "DailyTaskListBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "auweekly": {
+      "type": {
+        "resolvedName": "WeeklyTaskListBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 500,
+        "y": 340,
+        "width": 400,
+        "height": 480,
+        "style": {
+          "textColor": "#eef1ff",
+          "borderRadius": 24,
+          "customCss": "background: linear-gradient(150deg, rgba(255,255,255,.16), rgba(255,255,255,.04)); border: 1px solid rgba(255,255,255,.22); box-shadow: 0 24px 60px -24px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.25); padding: 6px 8px; font-family: \"Outfit\", sans-serif; font-size: 16px;",
+          "animationCss": "& { transition: transform .35s ease, box-shadow .35s ease; }\n&:hover { transform: translateY(-5px); box-shadow: 0 30px 70px -24px rgba(139,123,255,.55), inset 0 1px 0 rgba(255,255,255,.3) !important; }"
+        },
+        "headerStyle": {
+          "textColor": "#b9a8ff",
+          "customCss": "background: transparent; border: none; font-family: \"Fraunces\", serif; font-style: italic; font-weight: 600; font-size: 24px; letter-spacing: .01em; padding: 10px 14px 4px 14px;"
+        },
+        "titleOverride": "This week",
+        "inputStyle": {
+          "textColor": "#ffffff",
+          "borderRadius": 60,
+          "customCss": "background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); padding: 8px 14px; font-family: \"Outfit\", sans-serif; font-size: 15px;",
+          "animationCss": "&:focus-within { border-color: #5ef2c8 !important; box-shadow: 0 0 0 4px rgba(94,242,200,.18); }"
+        },
+        "addButtonStyle": {
+          "textColor": "#0b1024",
+          "borderRadius": 60,
+          "customCss": "background: linear-gradient(135deg, #5ef2c8, #8b7bff); border: none; font-family: \"Outfit\", sans-serif; font-weight: 700; font-size: 18px; padding: 6px 14px; box-shadow: 0 8px 22px -8px rgba(139,123,255,.8);",
+          "animationCss": "& { transition: transform .2s ease, filter .2s ease; }\n&:hover { transform: scale(1.1) rotate(90deg); filter: brightness(1.15); }"
+        },
+        "addButtonIcon": "+",
+        "elementLayout": {},
+        "zIndex": 2
+      },
+      "displayName": "WeeklyTaskListBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "aubreathe": {
+      "type": {
+        "resolvedName": "CustomHtmlBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 940,
+        "y": 40,
+        "width": 440,
+        "height": 300,
+        "html": "<style>\nbody { margin: 0; color: #eef1ff; font-family: \"Outfit\", sans-serif; }\n.card { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; border-radius: 24px; border: 1px solid rgba(255,255,255,.22); background: linear-gradient(150deg, rgba(255,255,255,.14), rgba(255,255,255,.03)); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }\n.label { position: absolute; top: 18px; left: 22px; font-family: \"Fraunces\", serif; font-style: italic; font-size: 24px; color: #b9a8ff; }\n.ring { width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #a8fff0, #5ef2c8 35%, #8b7bff 75%); box-shadow: 0 0 60px rgba(94,242,200,.45); animation: breathe 10s ease-in-out infinite; display: flex; align-items: center; justify-content: center; }\n@keyframes breathe { 0%, 100% { transform: scale(.55); box-shadow: 0 0 20px rgba(94,242,200,.3); } 40%, 50% { transform: scale(1); box-shadow: 0 0 80px rgba(139,123,255,.7); } }\n.words { position: relative; width: 100%; height: 30px; margin: 18px 0 0 0; text-align: center; font-size: 18px; letter-spacing: .3em; }\n.words span { position: absolute; left: 0; width: 100%; opacity: 0; }\n.in { animation: show-in 10s ease-in-out infinite; }\n.out { animation: show-out 10s ease-in-out infinite; }\n@keyframes show-in { 0% { opacity: 0; } 10%, 35% { opacity: .9; } 45%, 100% { opacity: 0; } }\n@keyframes show-out { 0%, 50% { opacity: 0; } 60%, 90% { opacity: .9; } 100% { opacity: 0; } }\n</style>\n<div class=\"card\">\n<div class=\"label\">take a breath</div>\n<div class=\"ring\"></div>\n<div class=\"words\"><span class=\"in\">BREATHE IN</span><span class=\"out\">BREATHE OUT</span></div>\n</div>",
+        "style": {},
+        "zIndex": 2
+      },
+      "displayName": "CustomHtmlBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "aunote": {
+      "type": {
+        "resolvedName": "NoteBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 940,
+        "y": 370,
+        "width": 440,
+        "height": 230,
+        "text": "Slow is smooth, smooth is fast.\n\nOne task at a time.",
+        "style": {
+          "textColor": "#eef1ff",
+          "borderRadius": 24,
+          "customCss": "background: linear-gradient(150deg, rgba(255,255,255,.16), rgba(255,255,255,.04)); border: 1px solid rgba(255,255,255,.22); box-shadow: 0 24px 60px -24px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.25); padding: 6px 8px; font-family: \"Outfit\", sans-serif; font-size: 16px;",
+          "animationCss": "& { transition: transform .35s ease, box-shadow .35s ease; }\n&:hover { transform: translateY(-5px); box-shadow: 0 30px 70px -24px rgba(47,168,255,.5), inset 0 1px 0 rgba(255,255,255,.3) !important; }"
+        },
+        "headerStyle": {
+          "textColor": "#8fd3ff",
+          "customCss": "background: transparent; border: none; font-family: \"Fraunces\", serif; font-style: italic; font-weight: 600; font-size: 24px; letter-spacing: .01em; padding: 10px 14px 4px 14px;"
+        },
+        "titleOverride": "Thoughts",
+        "elementLayout": {},
+        "zIndex": 2
+      },
+      "displayName": "NoteBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "auover": {
+      "type": {
+        "resolvedName": "OverdueTaskListBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 940,
+        "y": 630,
+        "width": 440,
+        "height": 190,
+        "style": {
+          "textColor": "#eef1ff",
+          "borderRadius": 24,
+          "customCss": "background: linear-gradient(150deg, rgba(255,255,255,.16), rgba(255,255,255,.04)); border: 1px solid rgba(255,255,255,.22); box-shadow: 0 24px 60px -24px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.25); padding: 6px 8px; font-family: \"Outfit\", sans-serif; font-size: 16px;",
+          "animationCss": "& { transition: transform .35s ease, box-shadow .35s ease; }\n&:hover { transform: translateY(-5px); box-shadow: 0 30px 70px -24px rgba(255,95,162,.5), inset 0 1px 0 rgba(255,255,255,.3) !important; }"
+        },
+        "headerStyle": {
+          "textColor": "#ff8fbf",
+          "customCss": "background: transparent; border: none; font-family: \"Fraunces\", serif; font-style: italic; font-weight: 600; font-size: 24px; letter-spacing: .01em; padding: 10px 14px 4px 14px;"
+        },
+        "titleOverride": "Slipped through",
+        "elementLayout": {},
+        "zIndex": 2
+      },
+      "displayName": "OverdueTaskListBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    }
+  },
+  "background": {
+    "type": "html",
+    "html": "<style>\nbody { margin: 0; overflow: hidden; background: #060a19; }\n.sky { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(ellipse at 50% 120%, #1b1440 0%, #0a1030 45%, #060a19 100%); }\n.blob { position: fixed; border-radius: 50%; filter: blur(90px); opacity: .55; }\n.b1 { width: 55vw; height: 45vh; left: -10vw; top: 5vh; background: #2de3b0; animation: drift1 26s ease-in-out infinite alternate; }\n.b2 { width: 50vw; height: 50vh; right: -12vw; top: -10vh; background: #7b5cff; animation: drift2 32s ease-in-out infinite alternate; }\n.b3 { width: 45vw; height: 40vh; left: 30vw; bottom: -18vh; background: #ff5fa2; opacity: .35; animation: drift3 28s ease-in-out infinite alternate; }\n.b4 { width: 30vw; height: 30vh; left: 55vw; top: 35vh; background: #2fa8ff; opacity: .35; animation: drift1 22s ease-in-out infinite alternate-reverse; }\n@keyframes drift1 { from { transform: translate(0, 0) scale(1); } to { transform: translate(18vw, 12vh) scale(1.25); } }\n@keyframes drift2 { from { transform: translate(0, 0) scale(1.1); } to { transform: translate(-22vw, 20vh) scale(.9); } }\n@keyframes drift3 { from { transform: translate(0, 0); } to { transform: translate(-15vw, -14vh) scale(1.2); } }\n.stars { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-image: radial-gradient(1.5px 1.5px at 12% 18%, #ffffff, transparent), radial-gradient(1px 1px at 27% 62%, #ffffff, transparent), radial-gradient(1.5px 1.5px at 41% 33%, #ffffff, transparent), radial-gradient(1px 1px at 58% 12%, #ffffff, transparent), radial-gradient(1.5px 1.5px at 66% 74%, #ffffff, transparent), radial-gradient(1px 1px at 79% 41%, #ffffff, transparent), radial-gradient(1.5px 1.5px at 88% 85%, #ffffff, transparent), radial-gradient(1px 1px at 93% 22%, #ffffff, transparent), radial-gradient(1px 1px at 6% 82%, #ffffff, transparent), radial-gradient(1px 1px at 35% 90%, #ffffff, transparent); animation: twinkle 5s ease-in-out infinite alternate; }\n@keyframes twinkle { from { opacity: .35; } to { opacity: .9; } }\n</style>\n<div class=\"sky\"></div>\n<div class=\"blob b1\"></div><div class=\"blob b2\"></div><div class=\"blob b3\"></div><div class=\"blob b4\"></div>\n<div class=\"stars\"></div>"
+  },
+  "headerStyle": {
+    "edit": {
+      "textColor": "#eef1ff",
+      "borderRadius": 60,
+      "customCss": "background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25); font-family: \"Outfit\", sans-serif; font-weight: 600; letter-spacing: .08em; padding: 6px 16px; box-shadow: 0 8px 24px -10px rgba(0,0,0,.6);",
+      "animationCss": "& { transition: transform .2s ease; }\n&:hover { transform: translateY(-2px); border-color: #5ef2c8 !important; }"
+    },
+    "logout": {
+      "textColor": "#0b1024",
+      "borderRadius": 60,
+      "customCss": "background: linear-gradient(135deg, #ff8fbf, #8b7bff); border: none; font-family: \"Outfit\", sans-serif; font-weight: 700; letter-spacing: .08em; padding: 6px 16px;",
+      "animationCss": "& { transition: transform .2s ease; }\n&:hover { transform: translateY(-2px); }"
+    },
+    "username": {
+      "textColor": "#eef1ff",
+      "customCss": "font-family: \"Fraunces\", serif; font-style: italic; font-size: 20px; text-shadow: 0 0 18px rgba(139,123,255,.8);"
+    }
+  }
+}

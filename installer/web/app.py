@@ -12,7 +12,7 @@ from installer.core import apply, envfile, schema, validate
 
 BASE_DIR = Path(__file__).resolve().parent
 
-app = FastAPI(title="Task Tracker Installer")
+app = FastAPI(title="Tasks Space Installer")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
@@ -73,6 +73,15 @@ WIZARD_STR_FIELDS = tuple(
 
 GENERIC_SETUP_SECTIONS = ("Auth throttling", "Render preview", "Image / GIF uploads", "Board content limits")
 
+LABEL_ACRONYMS = {"ai", "api", "cors", "css", "gif", "html", "http", "json", "jwt", "ttl", "url"}
+
+
+def _field_label(name):
+    words = [w.upper() if w.lower() in LABEL_ACRONYMS else w.lower() for w in name.split("_")]
+    if words and words[0].islower():
+        words[0] = words[0].capitalize()
+    return " ".join(words)
+
 
 def _field_dict(field, values):
     raw = values.get(field.name, field.default)
@@ -86,7 +95,7 @@ def _field_dict(field, values):
         value = raw
     entry = {
         "name": field.name,
-        "label": field.name.replace("_", " ").title(),
+        "label": _field_label(field.name),
         "kind": field.kind,
         "value": value,
         "help": field.help,

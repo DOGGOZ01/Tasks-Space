@@ -141,7 +141,7 @@ function UndoRedoControls() {
 function HoverRevealToggle() {
   const { hoverToRevealBlocks, setHoverToRevealBlocks } = useBoardUi()
   return (
-    <label className="board-hover-reveal-toggle" title="When off, every block's edit controls always stay on top. When on, a block only surfaces on hover so overlapping blocks look right while you're not touching them.">
+    <label className="board-hover-reveal-toggle" title="Off: edit controls of every block stay on top. On: a block comes to the front only on hover, so overlapping blocks keep their order.">
       <input
         type="checkbox"
         checked={hoverToRevealBlocks}
@@ -317,8 +317,7 @@ function SettingsButton() {
                 </label>
                 {rememberAiKey && (
                   <p className="settings-warning">
-                    Less secure: your AI assistant passphrase will stay unlocked across page reloads
-                    until you close this tab, instead of asking again every time you reload.
+                    Less secure: the passphrase is not asked again until you close this tab.
                   </p>
                 )}
               </div>
@@ -355,7 +354,7 @@ function ExportDesignButton() {
 
 function ImportDesignButton() {
   const { actions } = useEditor()
-  const { applyDesignNow } = useBoardUi()
+  const { device, applyDesignNow } = useBoardUi()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [pending, setPending] = useState<BoardDesignExport | null>(null)
@@ -407,9 +406,11 @@ function ImportDesignButton() {
 
   function confirmImport() {
     if (!pending) return
-    actions.deserialize(pending.layout)
-    applyDesignNow(pending.layout, pending.background, pending.headerStyle)
-    createSavedDesign(pendingName, pending).catch(() => {})
+    const layoutForDevice = pending.layouts?.[device] ?? pending.layout
+    actions.deserialize(layoutForDevice)
+    applyDesignNow(layoutForDevice, pending.background, pending.headerStyle, pending.layouts)
+    const { layouts: _layouts, ...singleDesign } = pending
+    createSavedDesign(pendingName, { ...singleDesign, device, layout: layoutForDevice }).catch(() => {})
     close()
   }
 
@@ -447,10 +448,12 @@ function ImportDesignButton() {
                 <>
                   <p>Replace this board's design?</p>
                   <p className="confirm-popover-hint">
-                    Overwrites the current layout, background, and button styling. Images aren't
-                    included in a design import -- image blocks come back empty, ready to
-                    re-upload.
+                    Overwrites the current layout, background, and button styling. Imported designs
+                    don't include images, so image blocks will be empty.
                   </p>
+                  {pending?.layouts?.desktop && pending.layouts.mobile && (
+                    <p className="confirm-popover-hint">This design has layouts for both desktop and phone.</p>
+                  )}
                   <div className="confirm-popover-actions">
                     <button type="button" onClick={close}>
                       Cancel
@@ -537,7 +540,7 @@ function DesignsButton() {
         setScreen({ kind: 'list' })
         showFlash(`Design saved: "${created.name}"`)
       })
-      .catch(() => setSaveError('Could not save that design. Try again?'))
+      .catch(() => setSaveError('Could not save that design. Try again.'))
       .finally(() => setSaving(false))
   }
 
@@ -550,7 +553,7 @@ function DesignsButton() {
         applyDesignNow(design.layout, design.background, design.headerStyle)
         close()
       })
-      .catch(() => setApplyError('Could not apply that design. Try again?'))
+      .catch(() => setApplyError('Could not apply that design. Try again.'))
       .finally(() => setApplying(false))
   }
 
@@ -670,10 +673,9 @@ function DesignsButton() {
                 <>
                   <p>Revert to the original site design?</p>
                   <p className="confirm-popover-hint">
-                    Wipes your layout, background, and top bar styling on both desktop and mobile
-                    back to the blank starting design. This can't be undone, and it isn't saved as
-                    a design you can bring back later -- save your current design first if you
-                    might want it again.
+                    Resets the layout, background, and top bar on desktop and mobile to the blank
+                    starting design. This can't be undone. Save your current design first if you
+                    may want it back.
                   </p>
                   <div className="confirm-popover-actions">
                     <button type="button" onClick={() => setScreen({ kind: 'list' })}>
@@ -1290,7 +1292,12 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
       })
   }
 
-  function applyDesignNow(nextLayout: SerializedNodes, nextBackground: BoardBackground, nextHeaderStyle: HeaderStyle) {
+  function applyDesignNow(
+    nextLayout: SerializedNodes,
+    nextBackground: BoardBackground,
+    nextHeaderStyle: HeaderStyle,
+    otherLayouts: Partial<Record<DeviceMode, SerializedNodes>> = {},
+  ) {
     Object.values(fieldSaveTimeoutsRef.current).forEach((timeoutId) => {
       if (timeoutId) window.clearTimeout(timeoutId)
     })
@@ -1298,15 +1305,19 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
     fieldSavePendingValuesRef.current = {}
     abortInFlightFieldSaves()
 
-    setLayouts((prev) => (prev ? { ...prev, [device]: nextLayout } : prev))
+    const nextLayouts: Partial<Record<DeviceMode, SerializedNodes>> = { ...otherLayouts, [device]: nextLayout }
+    setLayouts((prev) => (prev ? { ...prev, ...nextLayouts } : prev))
     setBackgroundState(nextBackground)
     setHeaderStyleState(nextHeaderStyle)
 
+    const layoutFields = Object.fromEntries(
+      (Object.keys(nextLayouts) as DeviceMode[]).map((key) => [LAYOUT_FIELD[key], nextLayouts[key]]),
+    )
     setStatus('saving')
     apiFetch('/api/page/', {
       method: 'PATCH',
       body: JSON.stringify({
-        [LAYOUT_FIELD[device]]: nextLayout,
+        ...layoutFields,
         background: nextBackground,
         header_style: nextHeaderStyle,
       }),

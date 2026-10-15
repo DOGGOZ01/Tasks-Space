@@ -1,11 +1,8 @@
-# Claude Code project settings/config -- local tooling, not part of the app
+# Local tooling
 .claude/
-
-# Old pre-rewrite app, kept locally for reference only
 taskTracker/
 
-# Environment/secrets (never commit real values -- see .env.example for the
-# variables a fresh checkout needs to set)
+# Environment
 .env
 .env.*
 !.env.example
@@ -26,7 +23,7 @@ __pycache__/
 *.pyc
 venv/
 db.sqlite3
-media/
+backend/media/
 staticfiles/
 
 # Logs

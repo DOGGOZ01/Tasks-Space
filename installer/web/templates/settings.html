@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Settings - Task Tracker Installer{% endblock %}
+{% block title %}Settings - Tasks Space Installer{% endblock %}
 {% block content %}
 <h1>Settings</h1>
 
@@ -40,7 +40,7 @@
 {% elif field.kind == 'secret_input' %}
 <label for="{{ field.name }}">{{ field.label }}</label>
 <div class="secret-row">
-<input type="password" name="{{ field.name }}" id="{{ field.name }}" placeholder="{{ 'Set -- leave blank to keep current' if field.value else 'Not set' }}" autocomplete="off">
+<input type="password" name="{{ field.name }}" id="{{ field.name }}" placeholder="{{ 'Set (leave blank to keep current)' if field.value else 'Not set' }}" autocomplete="off">
 </div>
 
 {% elif field.kind == 'choice' %}

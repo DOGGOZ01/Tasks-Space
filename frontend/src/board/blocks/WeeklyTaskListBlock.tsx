@@ -94,7 +94,7 @@ export function WeeklyTaskListBlock() {
         query={query}
         addRowSlot={
           locked ? (
-            <div className="task-list-locked-note">This week is locked — no new tasks</div>
+            <div className="task-list-locked-note">This week is locked. No new tasks.</div>
           ) : (
             <TaskListAddRow
               nodeId={id}

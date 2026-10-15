@@ -1,0 +1,355 @@
+{
+  "kind": "task-tracker-board-design",
+  "version": 1,
+  "device": "desktop",
+  "layout": {
+    "ROOT": {
+      "type": {
+        "resolvedName": "Container"
+      },
+      "isCanvas": true,
+      "props": {},
+      "displayName": "Container",
+      "custom": {},
+      "hidden": false,
+      "nodes": [
+        "pjtitle",
+        "pjdaily",
+        "pjweekly",
+        "pjnote",
+        "pjcal",
+        "pjhabits",
+        "pjover",
+        "pjtape1",
+        "pjtape2",
+        "pjtape3",
+        "pjtape4"
+      ],
+      "linkedNodes": {}
+    },
+    "pjtitle": {
+      "type": {
+        "resolvedName": "CustomHtmlBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 100,
+        "y": 40,
+        "width": 560,
+        "height": 120,
+        "html": "<style>\nbody { margin: 0; font-family: \"Caveat\", cursive; color: #3d3a35; }\nh1 { margin: 0; font-size: 70px; line-height: 1; font-weight: 700; display: inline-block; padding: 0 10px; background: linear-gradient(transparent 58%, rgba(255,214,102,.75) 58%, rgba(255,214,102,.75) 88%, transparent 88%); transform: rotate(-2deg); }\n.fl { color: #e85d75; font-size: 54px; }\np { margin: 10px 0 0 14px; font-family: \"Patrick Hand\", cursive; font-size: 21px; letter-spacing: .08em; opacity: .7; }\n</style>\n<h1>my little week <span class=\"fl\">❀</span></h1>\n<p>plan · do · tick off · repeat</p>",
+        "style": {},
+        "zIndex": 1
+      },
+      "displayName": "CustomHtmlBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "pjdaily": {
+      "type": {
+        "resolvedName": "DailyTaskListBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 60,
+        "y": 170,
+        "width": 380,
+        "height": 400,
+        "style": {
+          "background": "#fff2a8",
+          "textColor": "#3d3a35",
+          "borderRadius": 2,
+          "customCss": "border: none; box-shadow: 0 14px 22px -12px rgba(70,50,20,.45), 0 2px 0 rgba(0,0,0,.04); font-family: \"Patrick Hand\", cursive; font-size: 19px;",
+          "animationCss": "& { transform: rotate(-1.5deg); transition: transform .3s ease; }\n&:hover { transform: rotate(0deg) scale(1.02); }"
+        },
+        "headerStyle": {
+          "textColor": "#3d3a35",
+          "customCss": "background: transparent; border: none; font-family: \"Caveat\", cursive; font-size: 30px; font-weight: 700; padding: 4px 12px 0 14px;"
+        },
+        "titleOverride": "☀ today",
+        "inputStyle": {
+          "textColor": "#3d3a35",
+          "customCss": "background: transparent; border: none; border-radius: 0; box-shadow: inset 0 -2px 0 rgba(61,58,53,.35); font-family: \"Patrick Hand\", cursive; font-size: 19px;",
+          "animationCss": "&:focus-within { box-shadow: inset 0 -2px 0 #e85d75 !important; }"
+        },
+        "addButtonStyle": {
+          "textColor": "#ffffff",
+          "borderRadius": 60,
+          "customCss": "background: #e85d75; border: none; font-family: \"Patrick Hand\", cursive; font-size: 20px; padding: 2px 12px; box-shadow: 0 3px 0 #b8405a;",
+          "animationCss": "&:hover { transform: rotate(-6deg) scale(1.08); }\n&:active { transform: translateY(2px); box-shadow: 0 1px 0 #b8405a !important; }"
+        },
+        "addButtonIcon": "+",
+        "elementLayout": {},
+        "zIndex": 2
+      },
+      "displayName": "DailyTaskListBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "pjweekly": {
+      "type": {
+        "resolvedName": "WeeklyTaskListBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 480,
+        "y": 160,
+        "width": 420,
+        "height": 440,
+        "style": {
+          "background": "#ffffff",
+          "textColor": "#3d3a35",
+          "borderRadius": 2,
+          "customCss": "border: none; background: linear-gradient(90deg, transparent 38px, #f4a6a6 38px, #f4a6a6 40px, transparent 40px), repeating-linear-gradient(#ffffff 0px, #ffffff 29px, #cfe0f0 29px, #cfe0f0 30px); box-shadow: 0 14px 22px -12px rgba(70,50,20,.45); padding: 6px 10px 10px 48px; font-family: \"Patrick Hand\", cursive; font-size: 19px;",
+          "animationCss": "& { transform: rotate(1deg); transition: transform .3s ease; }\n&:hover { transform: rotate(0deg) scale(1.01); }"
+        },
+        "headerStyle": {
+          "textColor": "#3d3a35",
+          "customCss": "background: transparent; border: none; font-family: \"Caveat\", cursive; font-size: 30px; font-weight: 700; padding: 4px 12px 0 14px;"
+        },
+        "titleOverride": "this week",
+        "inputStyle": {
+          "textColor": "#3d3a35",
+          "customCss": "background: transparent; border: none; border-radius: 0; box-shadow: inset 0 -2px 0 rgba(61,58,53,.35); font-family: \"Patrick Hand\", cursive; font-size: 19px;",
+          "animationCss": "&:focus-within { box-shadow: inset 0 -2px 0 #e85d75 !important; }"
+        },
+        "addButtonStyle": {
+          "textColor": "#ffffff",
+          "borderRadius": 60,
+          "customCss": "background: #e85d75; border: none; font-family: \"Patrick Hand\", cursive; font-size: 20px; padding: 2px 12px; box-shadow: 0 3px 0 #b8405a;",
+          "animationCss": "&:hover { transform: rotate(-6deg) scale(1.08); }\n&:active { transform: translateY(2px); box-shadow: 0 1px 0 #b8405a !important; }"
+        },
+        "addButtonIcon": "+",
+        "elementLayout": {},
+        "zIndex": 2
+      },
+      "displayName": "WeeklyTaskListBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "pjnote": {
+      "type": {
+        "resolvedName": "NoteBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 960,
+        "y": 50,
+        "width": 300,
+        "height": 280,
+        "text": "call grandma 📞\nbuy oat milk\nreturn the library book\nyou are doing great ♡",
+        "style": {
+          "background": "#ffd1dc",
+          "textColor": "#3d3a35",
+          "borderRadius": 2,
+          "customCss": "border: none; box-shadow: 0 14px 22px -12px rgba(70,50,20,.45), 0 2px 0 rgba(0,0,0,.04); font-family: \"Patrick Hand\", cursive; font-size: 19px;",
+          "animationCss": "& { transform: rotate(2.5deg); transition: transform .3s ease; }\n&:hover { transform: rotate(0deg) scale(1.02); }"
+        },
+        "headerStyle": {
+          "textColor": "#3d3a35",
+          "customCss": "background: transparent; border: none; font-family: \"Caveat\", cursive; font-size: 30px; font-weight: 700; padding: 4px 12px 0 14px;"
+        },
+        "titleOverride": "remember ♡",
+        "elementLayout": {},
+        "zIndex": 2
+      },
+      "displayName": "NoteBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "pjcal": {
+      "type": {
+        "resolvedName": "CustomHtmlBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 960,
+        "y": 370,
+        "width": 320,
+        "height": 300,
+        "html": "<style>\nbody { margin: 0; font-family: \"Patrick Hand\", cursive; color: #3d3a35; }\n.card { position: fixed; top: 8px; left: 8px; width: calc(100vw - 48px); height: calc(100vh - 44px); background: #fffdf7; box-shadow: 0 10px 16px -10px rgba(70,50,20,.45); padding: 12px 16px; transform: rotate(1.5deg); }\nh2 { margin: 0 0 8px 0; font-family: \"Caveat\", cursive; font-size: 34px; font-weight: 700; }\n.grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; font-size: 17px; }\n.grid b { font-weight: 400; color: #e85d75; }\n.grid span { padding: 3px 0; }\n.today { border: 2px solid #e85d75; border-radius: 50%; transform: rotate(-8deg); }\n</style>\n<div class=\"card\"><h2 id=\"month\">this month</h2><div class=\"grid\" id=\"grid\"><b>M</b><b>T</b><b>W</b><b>T</b><b>F</b><b>S</b><b>S</b></div></div>\n<script>\nvar now = new Date();\nvar months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];\ndocument.getElementById('month').textContent = months[now.getMonth()] + ' ' + now.getFullYear();\nvar gridEl = document.getElementById('grid');\nvar first = new Date(now.getFullYear(), now.getMonth(), 1);\nvar offset = (first.getDay() + 6) % 7;\nvar days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();\nfor (var i = 0; i < offset; i++) gridEl.appendChild(document.createElement('span'));\nfor (var day = 1; day <= days; day++) {\n  var cell = document.createElement('span');\n  cell.textContent = day;\n  if (day === now.getDate()) cell.className = 'today';\n  gridEl.appendChild(cell);\n}\n</script>",
+        "style": {},
+        "zIndex": 2
+      },
+      "displayName": "CustomHtmlBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "pjhabits": {
+      "type": {
+        "resolvedName": "CustomHtmlBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 480,
+        "y": 640,
+        "width": 420,
+        "height": 200,
+        "html": "<style>\nbody { margin: 0; font-family: \"Patrick Hand\", cursive; color: #3d3a35; }\n.card { position: fixed; top: 8px; left: 8px; width: calc(100vw - 48px); height: calc(100vh - 36px); background: #e8f4ff; box-shadow: 0 10px 16px -10px rgba(70,50,20,.45); padding: 10px 16px; transform: rotate(-1deg); }\nh2 { margin: 0 0 4px 0; font-family: \"Caveat\", cursive; font-size: 30px; }\n.row { display: grid; grid-template-columns: 120px repeat(7, 26px); gap: 6px; align-items: center; font-size: 18px; margin: 3px 0; }\n.dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #3d3a35; cursor: pointer; transition: transform .15s ease; }\n.on { background: #7fb8e6; }\n.hint { font-size: 14px; opacity: .55; }\n</style>\n<div class=\"card\" id=\"card\">\n<h2>habits <span class=\"hint\">(click a circle)</span></h2>\n<div class=\"row\">💧 water<i class=\"dot on\"></i><i class=\"dot on\"></i><i class=\"dot on\"></i><i class=\"dot\"></i><i class=\"dot on\"></i><i class=\"dot\"></i><i class=\"dot\"></i></div>\n<div class=\"row\">🚶 walk<i class=\"dot on\"></i><i class=\"dot\"></i><i class=\"dot on\"></i><i class=\"dot on\"></i><i class=\"dot\"></i><i class=\"dot\"></i><i class=\"dot\"></i></div>\n<div class=\"row\">📖 read<i class=\"dot\"></i><i class=\"dot on\"></i><i class=\"dot on\"></i><i class=\"dot\"></i><i class=\"dot\"></i><i class=\"dot\"></i><i class=\"dot\"></i></div>\n<div class=\"row\">😴 8h sleep<i class=\"dot on\"></i><i class=\"dot on\"></i><i class=\"dot\"></i><i class=\"dot on\"></i><i class=\"dot on\"></i><i class=\"dot\"></i><i class=\"dot\"></i></div>\n</div>\n<script>\ndocument.getElementById('card').addEventListener('click', function (event) {\n  if (event.target.classList.contains('dot')) event.target.classList.toggle('on');\n});\n</script>",
+        "style": {},
+        "zIndex": 2
+      },
+      "displayName": "CustomHtmlBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "pjover": {
+      "type": {
+        "resolvedName": "OverdueTaskListBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 60,
+        "y": 620,
+        "width": 380,
+        "height": 220,
+        "style": {
+          "background": "#c9f0dc",
+          "textColor": "#3d3a35",
+          "borderRadius": 2,
+          "customCss": "border: none; box-shadow: 0 14px 22px -12px rgba(70,50,20,.45), 0 2px 0 rgba(0,0,0,.04); font-family: \"Patrick Hand\", cursive; font-size: 19px;",
+          "animationCss": "& { transform: rotate(-2deg); transition: transform .3s ease; }\n&:hover { transform: rotate(0deg) scale(1.02); }"
+        },
+        "headerStyle": {
+          "textColor": "#3d3a35",
+          "customCss": "background: transparent; border: none; font-family: \"Caveat\", cursive; font-size: 30px; font-weight: 700; padding: 4px 12px 0 14px;"
+        },
+        "titleOverride": "oops, still to do",
+        "elementLayout": {},
+        "zIndex": 2
+      },
+      "displayName": "OverdueTaskListBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "pjtape1": {
+      "type": {
+        "resolvedName": "CustomHtmlBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 190,
+        "y": 150,
+        "width": 120,
+        "height": 40,
+        "html": "<style>\nbody { margin: 0; }\n.t { position: fixed; top: 4px; left: 4px; width: calc(100vw - 8px); height: calc(100vh - 8px); background: repeating-linear-gradient(45deg, rgba(255,140,160,.75) 0 9px, rgba(255,200,210,.75) 9px 18px); opacity: .82; transform: rotate(-4deg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }\n</style>\n<div class=\"t\"></div>",
+        "style": {},
+        "zIndex": 5
+      },
+      "displayName": "CustomHtmlBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "pjtape2": {
+      "type": {
+        "resolvedName": "CustomHtmlBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 630,
+        "y": 140,
+        "width": 140,
+        "height": 40,
+        "html": "<style>\nbody { margin: 0; }\n.t { position: fixed; top: 4px; left: 4px; width: calc(100vw - 8px); height: calc(100vh - 8px); background: repeating-linear-gradient(45deg, rgba(120,190,230,.75) 0 9px, rgba(190,225,245,.75) 9px 18px); opacity: .82; transform: rotate(3deg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }\n</style>\n<div class=\"t\"></div>",
+        "style": {},
+        "zIndex": 5
+      },
+      "displayName": "CustomHtmlBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "pjtape3": {
+      "type": {
+        "resolvedName": "CustomHtmlBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 1060,
+        "y": 30,
+        "width": 110,
+        "height": 40,
+        "html": "<style>\nbody { margin: 0; }\n.t { position: fixed; top: 4px; left: 4px; width: calc(100vw - 8px); height: calc(100vh - 8px); background: repeating-linear-gradient(45deg, rgba(170,215,140,.8) 0 9px, rgba(215,240,190,.8) 9px 18px); opacity: .82; transform: rotate(-3deg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }\n</style>\n<div class=\"t\"></div>",
+        "style": {},
+        "zIndex": 5
+      },
+      "displayName": "CustomHtmlBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "pjtape4": {
+      "type": {
+        "resolvedName": "CustomHtmlBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 1200,
+        "y": 350,
+        "width": 100,
+        "height": 40,
+        "html": "<style>\nbody { margin: 0; }\n.t { position: fixed; top: 4px; left: 4px; width: calc(100vw - 8px); height: calc(100vh - 8px); background: repeating-linear-gradient(45deg, rgba(255,190,110,.8) 0 9px, rgba(255,225,170,.8) 9px 18px); opacity: .82; transform: rotate(38deg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }\n</style>\n<div class=\"t\"></div>",
+        "style": {},
+        "zIndex": 5
+      },
+      "displayName": "CustomHtmlBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    }
+  },
+  "background": {
+    "type": "html",
+    "html": "<style>\nbody { margin: 0; overflow: hidden; }\n.paper { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #f3ede1; background-image: radial-gradient(circle, #d6cdb9 1.3px, transparent 1.6px), radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.7), rgba(214,197,163,.35)); background-size: 26px 26px, 100% 100%; }\n.ring { position: fixed; right: 7vw; bottom: 9vh; width: 170px; height: 170px; border-radius: 50%; border: 9px solid rgba(140,96,48,.13); filter: blur(1.5px); transform: rotate(18deg) scaleX(1.05); }\n.ring2 { position: fixed; right: calc(7vw + 22px); bottom: calc(9vh + 30px); width: 120px; height: 120px; border-radius: 50%; border: 3px solid rgba(140,96,48,.09); }\n.doodle { position: fixed; font-family: \"Caveat\", cursive; color: rgba(61,58,53,.28); }\n.d1 { right: 4vw; top: 6vh; font-size: 44px; transform: rotate(12deg); }\n.d2 { right: 2vw; bottom: 2vh; font-size: 28px; transform: rotate(-6deg); }\n.d3 { right: 22vw; bottom: 4vh; font-size: 34px; }\n</style>\n<div class=\"paper\"></div>\n<div class=\"ring\"></div><div class=\"ring2\"></div>\n<div class=\"doodle d1\">✶ ✶</div>\n<div class=\"doodle d2\">~ one thing at a time ~</div>\n<div class=\"doodle d3\">❀</div>"
+  },
+  "headerStyle": {
+    "edit": {
+      "background": "#fffdf6",
+      "textColor": "#3d3a35",
+      "borderRadius": 2,
+      "customCss": "border: 2px dashed #3d3a35; font-family: \"Caveat\", cursive; font-size: 22px; font-weight: 700; box-shadow: 0 6px 12px -8px rgba(70,50,20,.5);",
+      "animationCss": "& { transform: rotate(-2deg); }\n&:hover { transform: rotate(1deg) scale(1.05); }"
+    },
+    "logout": {
+      "background": "#fffdf6",
+      "textColor": "#c0392b",
+      "borderRadius": 4,
+      "customCss": "border: 3px solid #c0392b; font-family: \"Caveat\", cursive; font-size: 22px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;",
+      "animationCss": "& { transform: rotate(3deg); }\n&:hover { transform: rotate(-3deg) scale(1.05); }"
+    },
+    "username": {
+      "textColor": "#3d3a35",
+      "customCss": "font-family: \"Caveat\", cursive; font-size: 28px; font-weight: 700;"
+    }
+  }
+}

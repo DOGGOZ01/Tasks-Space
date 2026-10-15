@@ -12,10 +12,10 @@ def read_dotenv(path):
     values = {}
     if path.is_dir():
         raise EnvFileIsDirectory(
-            f"{path} is a directory, not a file. Docker created it automatically because the "
-            f"file didn't exist before the first `docker compose` run. Remove it and run "
-            f"`cp {path.name}.example {path.name}` (or the Windows `copy` equivalent) in that "
-            f"directory before trying again."
+            f"{path} is a directory, not a file. Docker creates it when the "
+            f"file is missing on the first `docker compose` run. Remove it and run "
+            f"`cp {path.name}.example {path.name}` (`copy` on Windows) in that "
+            f"directory, then try again."
         )
     if not path.exists():
         return values

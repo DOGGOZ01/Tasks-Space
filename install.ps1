@@ -55,14 +55,14 @@ function Wait-BackendHealthy {
         }
         Start-Sleep -Seconds 2
     }
-    Write-Host "Timed out waiting for backend to become healthy -- check 'docker compose logs backend'."
+    Write-Host "Backend did not become healthy in time. Check 'docker compose logs backend'."
     return $false
 }
 
 function Show-DomainSetup {
     param($Domain, $Port)
     Write-Host ""
-    Write-Host "Domain '$Domain' is configured in .env -- point your own nginx at it and get a cert:"
+    Write-Host "Domain '$Domain' is set in .env. Add this to your nginx and get a certificate:"
     Write-Host ""
     Write-Host "  server {"
     Write-Host "      listen 80;"
@@ -103,7 +103,7 @@ function Show-AccessInfo {
     Write-Host "This server should be reachable at:"
     Write-Host "  This machine:    http://localhost:$httpPort"
     if ($localIp) { Write-Host "  Local network:   http://${localIp}:$httpPort" }
-    if ($publicIp) { Write-Host "  Public internet: http://${publicIp}:$httpPort  (only if your router/firewall forwards this port -- for a real domain with HTTPS, see README's `"Real domain + HTTPS`" section)" }
+    if ($publicIp) { Write-Host "  Public internet: http://${publicIp}:$httpPort  (if your firewall forwards this port; for HTTPS with a domain see README)" }
     Write-Host ""
 }
 
@@ -114,12 +114,12 @@ if (Test-Configured) {
     exit 0
 }
 
-Write-Host "Task Tracker has not been configured yet."
+Write-Host "Tasks Space has not been configured yet."
 Write-Host ""
 Write-Host "How do you want to set it up?"
 Write-Host "  1) Terminal wizard"
-Write-Host "  2) Web browser wizard -- only reachable from this machine (binds to 127.0.0.1)."
-Write-Host "     If you're on a remote server over SSH/RDP tunnel, keep that in mind."
+Write-Host "  2) Web browser wizard (only reachable from this machine, 127.0.0.1)"
+Write-Host "     On a remote server, pick Terminal or use an SSH tunnel."
 $choice = Read-Host "Choice [1]"
 
 if ($choice -eq "2") {

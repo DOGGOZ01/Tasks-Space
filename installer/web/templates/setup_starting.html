@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Starting - Task Tracker Installer{% endblock %}
+{% block title %}Starting - Tasks Space Installer{% endblock %}
 {% block content %}
 <h1>Setting up your board</h1>
-<p class="lede">backend/.env has been written and the admin account created. The rest of the stack is starting in the background -- this can take a minute the first time, since images still need to build.</p>
+<p class="lede">Settings are saved and the admin account is ready. The app is starting. The first start can take a few minutes while images build.</p>
 
 <section class="card">
 <div class="spinner" aria-hidden="true"></div>
 <p id="wait-status">Waiting for the site to come up...</p>
 </section>
 
-<p class="help">This installer closes itself now, on purpose -- it isn't meant to stay reachable. You'll be redirected automatically once the site responds; if you close this tab, just check back later at <code>{{ target_url }}</code>.</p>
+<p class="help">The installer is shutting down. This page redirects to the site once it responds. If you close it, open <code>{{ target_url }}</code>.</p>
 
 <script>
 (function () {
@@ -18,7 +18,7 @@
   function poll() {
     fetch(targetUrl, { mode: 'no-cors', cache: 'no-store' })
       .then(function () {
-        statusEl.textContent = 'Site is up -- redirecting...';
+        statusEl.textContent = 'Site is up. Redirecting...';
         window.location.href = targetUrl;
       })
       .catch(function () {

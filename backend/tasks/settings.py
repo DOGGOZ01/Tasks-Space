@@ -76,6 +76,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": env("SQLITE_PATH", default=str(BASE_DIR / "db.sqlite3")),
+        "OPTIONS": {"transaction_mode": "IMMEDIATE", "timeout": 20},
     }
 }
 

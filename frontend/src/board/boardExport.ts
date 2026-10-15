@@ -12,6 +12,7 @@ export interface BoardDesignExport {
   version: typeof EXPORT_VERSION
   device: DeviceMode
   layout: SerializedNodes
+  layouts?: Partial<Record<DeviceMode, SerializedNodes>>
   background: BoardBackground
   headerStyle: HeaderStyle
 }
@@ -72,7 +73,7 @@ export function downloadBoardDesignExport(data: BoardDesignExport) {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = `task-tracker-${data.device}-design.json`
+  link.download = `tasks-space-${data.device}-design.json`
   document.body.appendChild(link)
   link.click()
   link.remove()
@@ -92,18 +93,27 @@ export function parseBoardDesignImport(raw: string): BoardDesignExport {
   }
 
   if (!parsed || typeof parsed !== 'object') {
-    throw new BoardDesignImportError("That file isn't a task-tracker design export.")
+    throw new BoardDesignImportError("That file isn't a Tasks Space design export.")
   }
   const data = parsed as Partial<BoardDesignExport>
-  if (data.kind !== EXPORT_KIND || !data.layout || typeof data.layout !== 'object') {
-    throw new BoardDesignImportError("That file isn't a task-tracker design export.")
+  const layouts: Partial<Record<DeviceMode, SerializedNodes>> = {}
+  if (data.layouts && typeof data.layouts === 'object') {
+    for (const key of ['desktop', 'mobile'] as const) {
+      const value = (data.layouts as Record<string, unknown>)[key]
+      if (value && typeof value === 'object') layouts[key] = stripImageUrls(value as SerializedNodes)
+    }
+  }
+  const mainLayout = data.layout && typeof data.layout === 'object' ? data.layout : layouts.desktop ?? layouts.mobile
+  if (data.kind !== EXPORT_KIND || !mainLayout) {
+    throw new BoardDesignImportError("That file isn't a Tasks Space design export.")
   }
 
   return {
     kind: EXPORT_KIND,
     version: EXPORT_VERSION,
     device: data.device === 'mobile' ? 'mobile' : 'desktop',
-    layout: stripImageUrls(data.layout),
+    layout: stripImageUrls(mainLayout),
+    ...(Object.keys(layouts).length ? { layouts } : {}),
     background:
       data.background && typeof data.background === 'object'
         ? stripBackgroundImage(data.background)

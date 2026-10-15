@@ -48,7 +48,7 @@ wait_for_backend_healthy() {
         i=$((i + 1))
         sleep 2
     done
-    echo "Timed out waiting for backend to become healthy -- check 'docker compose logs backend'." >&2
+    echo "Backend did not become healthy in time. Check 'docker compose logs backend'." >&2
     return 1
 }
 
@@ -56,7 +56,7 @@ print_domain_setup() {
     domain="$1"
     port="$2"
     echo ""
-    echo "Domain '$domain' is configured in .env -- point your own nginx at it and get a cert:"
+    echo "Domain '$domain' is set in .env. Add this to your nginx and get a certificate:"
     echo ""
     echo "  server {"
     echo "      listen 80;"
@@ -99,7 +99,7 @@ print_access_info() {
     echo "  This machine:    http://localhost:${http_port}"
     [ -n "$local_ip" ] && echo "  Local network:   http://${local_ip}:${http_port}"
     if [ -n "$public_ip" ]; then
-        echo "  Public internet: http://${public_ip}:${http_port}  (only if your router/firewall forwards this port -- for a real domain with HTTPS, see README's \"Real domain + HTTPS\" section)"
+        echo "  Public internet: http://${public_ip}:${http_port}  (if your firewall forwards this port; for HTTPS with a domain see README)"
     fi
     echo ""
 }
@@ -122,12 +122,12 @@ open_browser() {
     fi
 }
 
-echo "Task Tracker has not been configured yet."
+echo "Tasks Space has not been configured yet."
 echo ""
 echo "How do you want to set it up?"
 echo "  1) Terminal wizard"
-echo "  2) Web browser wizard -- only reachable from this machine (binds to 127.0.0.1)."
-echo "     If you're on a remote server over SSH, use an SSH tunnel or pick Terminal instead."
+echo "  2) Web browser wizard (only reachable from this machine, 127.0.0.1)"
+echo "     On a remote server, pick Terminal or use an SSH tunnel."
 printf "Choice [1]: "
 read -r choice
 

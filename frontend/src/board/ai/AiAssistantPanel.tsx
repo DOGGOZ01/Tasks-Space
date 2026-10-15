@@ -165,7 +165,7 @@ export function AiAssistantButton() {
         setSetupPassphraseConfirm('')
         setScreen('chat')
       })
-      .catch(() => setSetupError('Could not save the key. Try again?'))
+      .catch(() => setSetupError('Could not save the key. Try again.'))
   }
 
   function handleUnlock() {
@@ -250,7 +250,7 @@ export function AiAssistantButton() {
           memoryNote:
             conv.length > 1
               ? 'Some of the conversation above may be restored from this browser\'s local storage ' +
-                "(kept for up to 24 hours) rather than from this exact session -- treat it as real " +
+                "(kept for up to 24 hours) rather than from this exact session. Treat it as real " +
                 "prior context you already agreed to, not something to redo or re-explain."
               : '',
         })
@@ -291,8 +291,8 @@ export function AiAssistantButton() {
       }
       if (cappedOut) {
         setChatError(
-          `Paused after ${MAX_AGENT_STEPS} steps to avoid an unbounded loop -- the request may be only ` +
-            'partly done. Just send another message (e.g. "continue") and it will keep going from here.',
+          `Paused after ${MAX_AGENT_STEPS} steps. The request may be only partly done. ` +
+            'Send another message, e.g. "continue", to keep going.',
         )
       }
     } catch (err) {
@@ -383,7 +383,7 @@ export function AiAssistantButton() {
                   <p>Set up AI assistant</p>
                   <p className="confirm-popover-hint">
                     Your API key is encrypted with the passphrase below and stored only in this
-                    browser -- this app's server never sees it.
+                    browser. The server never sees it.
                   </p>
                   <label className="ai-field-label">Provider</label>
                   <select
@@ -511,12 +511,12 @@ export function AiAssistantButton() {
                   </div>
                   {aiAssistant.enabled && (
                     <p className="confirm-popover-hint">
-                      Using this server's shared {aiAssistant.provider} key -- no key of your own needed.
+                      Using the server's {aiAssistant.provider} key. You don't need your own.
                     </p>
                   )}
                   <p className="confirm-popover-hint ai-memory-note">
-                    Chat history is kept in this browser for 24 hours (not sent anywhere extra), then
-                    cleared automatically -- use "Clear chat" to reset it sooner.
+                    Chat history is kept in this browser for 24 hours. Use "Clear chat" to reset it
+                    sooner.
                   </p>
                   <label className="ai-agent-mode-row">
                     <input
@@ -525,7 +525,7 @@ export function AiAssistantButton() {
                       disabled={running}
                       onChange={(e) => setAgentMode(e.target.checked)}
                     />
-                    Agent mode -- run multiple steps and apply automatically
+                    Agent mode: run several steps and apply them automatically
                   </label>
                   <div className="ai-chat-scroll" ref={chatScrollRef}>
                     {conversation.length === 0 && (
@@ -579,7 +579,7 @@ export function AiAssistantButton() {
                                     className={result?.isError ? 'ai-chat-applied-error' : 'ai-chat-applied-ok'}
                                   >
                                     {result?.isError
-                                      ? `Failed -- ${describeToolCall(call)} (${result.output})`
+                                      ? `Failed: ${describeToolCall(call)} (${result.output})`
                                       : describeToolCall(call)}
                                   </li>
                                 )

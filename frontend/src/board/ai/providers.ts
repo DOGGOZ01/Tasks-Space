@@ -41,8 +41,8 @@ async function safeFetch(url: string, init: RequestInit): Promise<Response> {
     return await fetch(url, { ...init, credentials: 'omit' })
   } catch {
     throw new ProviderRequestError(
-      "Couldn't reach the provider's API. This is usually the provider blocking direct browser " +
-        'requests (CORS), a network issue, or an invalid API key -- not a bug in this app.',
+      "Couldn't reach the provider's API. The provider may block browser requests (CORS), " +
+        'or there is a network problem or an invalid API key.',
     )
   }
 }

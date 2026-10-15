@@ -49,7 +49,7 @@ function buildBlockStyleSchema(allowCustomScripts: boolean) {
     description:
       'Visual style overrides: hex colors, pixel sizes, raw CSS. customCss/animationCss/overlayHtml are the ' +
       "SAME manual/advanced fields as the block's own 'Custom code (manual)' button (CSS / Animation / JS " +
-      'overlay tabs) -- not separate from what the user sees in that UI.',
+      'overlay tabs), not separate from what the user sees there.',
     properties: {
       background: { type: 'string', description: 'Hex color, e.g. #ff5a1f' },
       textColor: { type: 'string', description: 'Hex color' },
@@ -60,7 +60,7 @@ function buildBlockStyleSchema(allowCustomScripts: boolean) {
       customCss: {
         type: 'string',
         description:
-          'Raw CSS declarations applied inline to this part, e.g. "box-shadow: 2px 2px 0 #000;" -- no ' +
+          'Raw CSS declarations applied inline to this part, e.g. "box-shadow: 2px 2px 0 #000;". No ' +
           'selectors, no :hover, no @keyframes (use animationCss for those).',
       },
       animationCss: {
@@ -70,7 +70,7 @@ function buildBlockStyleSchema(allowCustomScripts: boolean) {
           "literal '&' to mean this element, e.g. \"&:hover { transform: scale(1.05); }\\n@keyframes pulse " +
           '{ 0% { opacity: .6; } 100% { opacity: 1; } }\\n& { animation: pulse 1.2s infinite; }". Only ' +
           "'&', '&:hover', '&:active', '&:focus', '&:focus-within' selectors are allowed; anything else is " +
-          'silently dropped.',
+          'dropped.',
       },
       ...(allowCustomScripts
         ? {
@@ -82,7 +82,7 @@ function buildBlockStyleSchema(allowCustomScripts: boolean) {
                 "listen for window.addEventListener('board:trigger', e => { e.detail.event is " +
                 "'hover'|'active'|'click', e.detail.active is boolean }) to react to real hover/press/click " +
                 'on the real element. Only offer this when the user wants JS-driven effects (particles, ' +
-                'canvas, click reactions) -- CSS-only hover/keyframe effects should use animationCss instead.',
+                'canvas, click reactions). Use animationCss for CSS-only hover/keyframe effects.',
             },
           }
         : {}),
@@ -95,30 +95,30 @@ function buildPartStylesSchema(headerTypes: string, inputTypes: string, allowCus
   return {
     type: 'object',
     description:
-      "Style a SPECIFIC visual part of the block -- pick exactly one key per part you're changing. " +
-      'These match the tabs/buttons in the block\'s own "..." menu 1:1. Do not guess -- if the user ' +
+      "Style a SPECIFIC visual part of the block. Use exactly one key per part you change. " +
+      'These match the tabs/buttons in the block\'s own "..." menu 1:1. Do not guess: if the user ' +
       'says "input"/"the text field", that is `input`, never `body`; if they say "button"/"+ button", ' +
       'that is `addButton`; if they say "header"/"title bar"/"shapka", that is `header`. `body` is only ' +
       'for the overall block background/border, i.e. what the "Body style" button controls.',
     properties: {
-      body: { ...blockStyleSchema, description: "The block's own background/border, etc -- the 'Body style' button. Every block type has this." },
+      body: { ...blockStyleSchema, description: "The block's own background, border, etc. (the 'Body style' button). Every block type has this." },
       header: {
         ...blockStyleSchema,
         description:
-          "The title bar specifically, NOT the block body -- the 'Header' button. Only blocks with a " +
+          "The title bar, NOT the block body (the 'Header' button). Only blocks with a " +
           `header have this: ${headerTypes}.`,
       },
       input: {
         ...blockStyleSchema,
         description:
-          'The "Add a task..." text input specifically -- the Input tab under \'Input style\'. ' +
+          'The "Add a task..." text input (the Input tab under \'Input style\'). ' +
           `Only ${inputTypes} have this.`,
       },
       addButton: {
         ...blockStyleSchema,
         description:
-          'The "+" submit button next to the input, NOT the input itself -- the Button tab under ' +
-          `'Input style'. Only ${inputTypes} have this.`,
+          'The "+" submit button next to the input, NOT the input itself (the Button tab under ' +
+          `'Input style'). Only ${inputTypes} have this.`,
       },
     },
   }
@@ -141,14 +141,13 @@ function buildElementLayoutSchema() {
   return {
     type: 'object',
     description:
-      "Reposition/resize/hide the block's own sub-elements -- matches the block's own 'Layout' button " +
+      "Reposition, resize or hide the block's sub-elements, same as the block's 'Layout' button " +
       "(header/body/add-row tabs in the mini position editor). Percentages are relative to the block's " +
       "OWN box, e.g. header {x:0,y:0,width:100,height:20} is a full-width strip across the top 20% of " +
-      "the block. IMPORTANT: this block only has a custom layout at all once EVERY one of its elements " +
-      "has an explicit rect here -- if you only include one key (say, just to hide the header), the " +
-      "OTHERS silently revert to their default stacked layout unless you also include them. So when " +
-      "changing just one element, always also copy the CURRENT elementLayout values for the block's " +
-      "other elements from the board state (or, if the block has none yet, use a sensible default like " +
+      "the block. A custom layout applies only when EVERY element of the block has a rect here. If " +
+      "you include only one key (say, to hide the header), the other elements fall back to the default " +
+      "stacked layout. When changing one element, copy the current elementLayout values of the other " +
+      "elements from the board state (or, if the block has none yet, use a default like " +
       "header {x:0,y:0,width:100,height:16-20}, body filling the rest, addRow a strip at the bottom).",
     properties: {
       header: { ...elementRectSchema, description: `${elementRectSchema.description} Only blocks with a header have this.` },
@@ -161,31 +160,31 @@ function buildElementLayoutSchema() {
 const zIndexSchema = {
   type: 'number',
   description:
-    'Stacking order among blocks on the canvas -- higher paints on top of lower when blocks overlap. ' +
+    'Stacking order of blocks on the canvas. Higher values are drawn on top when blocks overlap. ' +
     '0 is the default/back. Use this for "put X behind/in front of Y", "send to back", "bring to ' +
     'front" requests. Leave unset to keep the current value.',
 }
 
 function buildPropsDescription(allowCustomScripts: boolean): string {
   const htmlBlockNote = allowCustomScripts
-    ? 'raw HTML/CSS, and <script> tags are allowed -- it runs sandboxed in an iframe. A read-only ' +
+    ? 'raw HTML/CSS with <script> tags allowed. It runs sandboxed in an iframe. A read-only ' +
       'window.taskBoardData object is available to any <script> you write: {dailyTasks, weeklyTasks, ' +
       'todayKey, startOfWeekKey}. dailyTasks/weeklyTasks are objects keyed by dateKey (a "YYYY-MM-DD" ' +
-      'string, e.g. "2026-08-05"), each value an array of {id, text, done} -- IMPORTANT: individual ' +
+      'string, e.g. "2026-08-05"), each value an array of {id, text, done}. IMPORTANT: individual ' +
       'task objects do NOT carry their own date field, the date is ONLY the object key they are filed ' +
       'under (e.g. `for (const [dateKey, tasks] of Object.entries(window.taskBoardData.dailyTasks)) ' +
       "{ /* dateKey is that bucket's date */ }`). If you need to show or compare a dateKey as a real " +
-      'date, do NOT do `new Date(dateKey)` -- that string is parsed as UTC midnight by JS and can ' +
+      'date, do NOT use `new Date(dateKey)`. JS parses that string as UTC midnight, so it can ' +
       'render as the wrong calendar day depending on the viewer\'s timezone; instead split it yourself, ' +
       "e.g. `const [y, m, d] = dateKey.split('-').map(Number); const date = new Date(y, m - 1, d)`. " +
-      'nothing is rendered automatically -- only what your own script/HTML explicitly outputs shows up. ' +
+      'Nothing is rendered automatically; only what your script/HTML outputs shows up. ' +
       'Use this when the user wants a custom-designed task list/board summary rather than the built-in task blocks.'
-    : 'raw HTML/CSS only -- <script> tags are stripped on this server, use CSS animations/transitions instead of JS'
+    : 'raw HTML/CSS only. <script> tags are removed on this server; use CSS animations/transitions instead of JS'
   return (
     'Block-type-specific fields. NoteBlock: {text}. ImageBlock: {imageUrl (https:// URL), ' +
     "imageFit ('cover'|'contain'|'fill'|'none'), imageZoom (1-4), imageFocusX/imageFocusY (0-100), " +
-    "filter -- one of the preset NAMES 'none'|'cyberpunk'|'grayscale'|'sepia'|'vivid'|'soft' (not a raw CSS " +
-    `filter string -- anything else is silently ignored)}. CustomHtmlBlock: {html -- ${htmlBlockNote}}. ` +
+    "filter: one of the preset NAMES 'none'|'cyberpunk'|'grayscale'|'sepia'|'vivid'|'soft' (not a raw CSS " +
+    `filter string; anything else is ignored)}. CustomHtmlBlock: {html: ${htmlBlockNote}}. ` +
     'Task list blocks take no props.'
   )
 }
@@ -200,7 +199,7 @@ export function buildTools(allowCustomScripts: boolean): ToolDefinition[] {
   const elementLayoutSchema = buildElementLayoutSchema()
   const backgroundHtmlNote = allowCustomScripts
     ? 'Sandboxed HTML/CSS/JS, used when type is "html"'
-    : 'Sandboxed HTML/CSS, used when type is "html" -- <script> tags are stripped on this server'
+    : 'Sandboxed HTML/CSS, used when type is "html". <script> tags are removed on this server'
 
   return [
   {

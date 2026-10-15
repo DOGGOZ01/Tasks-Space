@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}First-run setup - Task Tracker Installer{% endblock %}
+{% block title %}First-run setup - Tasks Space Installer{% endblock %}
 {% block content %}
 <h1>First-run setup</h1>
 <p class="lede">This wizard writes <code>backend/.env</code>. You can change any of these later from the settings page.</p>
@@ -37,7 +37,7 @@
 <div class="field">
 <label for="INSTALLER_WEB_PORT">Installer web port</label>
 <input type="number" name="INSTALLER_WEB_PORT" id="INSTALLER_WEB_PORT" value="7000">
-<p class="help">Port this setup wizard itself listens on. Only reachable from this machine (bound to 127.0.0.1) -- if you're setting this up over SSH on a remote server, use an SSH tunnel or the terminal wizard instead.</p>
+<p class="help">Port of this setup wizard. It is only reachable from this machine (127.0.0.1). On a remote server, use the terminal wizard or an SSH tunnel.</p>
 </div>
 
 <div class="actions"><button type="button" class="primary wizard-next">Next</button></div>
@@ -80,7 +80,7 @@
 <input type="checkbox" name="ALLOW_CUSTOM_SCRIPTS" id="ALLOW_CUSTOM_SCRIPTS" value="True">
 <label for="ALLOW_CUSTOM_SCRIPTS">Allow custom scripts in Custom HTML/CSS blocks</label>
 </div>
-<p class="help warning">Only enable this for a fully trusted, single-user instance. It lets board content run arbitrary &lt;script&gt; tags.</p>
+<p class="help warning">Lets board content run any &lt;script&gt; code. Only enable this on a trusted single-user instance.</p>
 
 <div class="field field-inline recap-key">
 <input type="checkbox" name="ALLOW_PUBLIC_REGISTRATION" id="ALLOW_PUBLIC_REGISTRATION" value="True">
@@ -245,7 +245,7 @@
 
 <section class="card wizard-step" hidden>
 <h2>Review &amp; install</h2>
-<p class="lede">Double check everything below, then click Install. Writing starts only when you click it.</p>
+<p class="lede">Check the settings below, then click Install. Nothing is written before that.</p>
 <div id="recap-content" class="recap"></div>
 <div class="actions">
 <button type="button" class="wizard-back">Back</button>

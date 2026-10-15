@@ -1,0 +1,735 @@
+{
+  "kind": "task-tracker-board-design",
+  "version": 1,
+  "device": "desktop",
+  "layout": {
+    "ROOT": {
+      "type": {
+        "resolvedName": "Container"
+      },
+      "isCanvas": true,
+      "props": {},
+      "displayName": "Container",
+      "custom": {},
+      "hidden": false,
+      "nodes": [
+        "w98daily",
+        "w98weekly",
+        "w98note",
+        "w98amp",
+        "w98over",
+        "w98mines",
+        "w98clip"
+      ],
+      "linkedNodes": {}
+    },
+    "w98daily": {
+      "type": {
+        "resolvedName": "DailyTaskListBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 140,
+        "y": 40,
+        "width": 420,
+        "height": 400,
+        "style": {
+          "background": "#c0c0c0",
+          "textColor": "#000000",
+          "borderRadius": 0,
+          "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; padding: 3px; font-family: \"Pixelify Sans\", monospace; font-size: 15px;"
+        },
+        "headerStyle": {
+          "textColor": "#ffffff",
+          "borderRadius": 0,
+          "customCss": "background: linear-gradient(90deg, #000080, #1084d0); border: none; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px; letter-spacing: .03em; padding: 4px 8px;"
+        },
+        "titleOverride": "Today.exe",
+        "inputStyle": {
+          "background": "#ffffff",
+          "textColor": "#000000",
+          "borderRadius": 0,
+          "customCss": "border: 2px solid; border-color: #808080 #ffffff #ffffff #808080; box-shadow: inset 1px 1px #0a0a0a; font-family: \"Pixelify Sans\", monospace; font-size: 15px;"
+        },
+        "addButtonStyle": {
+          "background": "#c0c0c0",
+          "textColor": "#000000",
+          "borderRadius": 0,
+          "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px;",
+          "animationCss": "&:hover { background: #d4d0c8 !important; }\n&:active { border-color: #0a0a0a #ffffff #ffffff #0a0a0a !important; box-shadow: inset 1px 1px #808080 !important; }"
+        },
+        "addButtonIcon": "OK",
+        "elementLayout": {},
+        "zIndex": 2
+      },
+      "displayName": "DailyTaskListBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "w98weekly": {
+      "type": {
+        "resolvedName": "WeeklyTaskListBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 600,
+        "y": 40,
+        "width": 420,
+        "height": 400,
+        "style": {
+          "background": "#c0c0c0",
+          "textColor": "#000000",
+          "borderRadius": 0,
+          "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; padding: 3px; font-family: \"Pixelify Sans\", monospace; font-size: 15px;"
+        },
+        "headerStyle": {
+          "textColor": "#ffffff",
+          "borderRadius": 0,
+          "customCss": "background: linear-gradient(90deg, #000080, #1084d0); border: none; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px; letter-spacing: .03em; padding: 4px 8px;"
+        },
+        "titleOverride": "Week.exe",
+        "inputStyle": {
+          "background": "#ffffff",
+          "textColor": "#000000",
+          "borderRadius": 0,
+          "customCss": "border: 2px solid; border-color: #808080 #ffffff #ffffff #808080; box-shadow: inset 1px 1px #0a0a0a; font-family: \"Pixelify Sans\", monospace; font-size: 15px;"
+        },
+        "addButtonStyle": {
+          "background": "#c0c0c0",
+          "textColor": "#000000",
+          "borderRadius": 0,
+          "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px;",
+          "animationCss": "&:hover { background: #d4d0c8 !important; }\n&:active { border-color: #0a0a0a #ffffff #ffffff #0a0a0a !important; box-shadow: inset 1px 1px #808080 !important; }"
+        },
+        "addButtonIcon": "OK",
+        "elementLayout": {},
+        "zIndex": 2
+      },
+      "displayName": "WeeklyTaskListBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "w98note": {
+      "type": {
+        "resolvedName": "NoteBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 1060,
+        "y": 40,
+        "width": 340,
+        "height": 260,
+        "text": "README.TXT\n\n- water the plants\n- reply to emails\n- back up the floppy disks\n\n:)",
+        "style": {
+          "background": "#ffffff",
+          "textColor": "#000000",
+          "borderRadius": 0,
+          "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; padding: 3px; font-family: \"VT323\", monospace; font-size: 22px;"
+        },
+        "headerStyle": {
+          "textColor": "#ffffff",
+          "borderRadius": 0,
+          "customCss": "background: linear-gradient(90deg, #000080, #1084d0); border: none; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px; letter-spacing: .03em; padding: 4px 8px;"
+        },
+        "titleOverride": "README.TXT - Notepad",
+        "elementLayout": {},
+        "zIndex": 2
+      },
+      "displayName": "NoteBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "w98amp": {
+      "type": {
+        "resolvedName": "CustomHtmlBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 1060,
+        "y": 340,
+        "width": 340,
+        "height": 180,
+        "html": "<style>\nbody { margin: 0; font-family: \"Pixelify Sans\", monospace; }\n.amp { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #232333; border: 2px solid; border-color: #6b6b8a #0e0e16 #0e0e16 #6b6b8a; display: flex; flex-direction: column; }\n.title { height: 18px; display: flex; align-items: center; justify-content: center; font-size: 11px; letter-spacing: .3em; color: #d6d6ff; background: linear-gradient(90deg, #3a3a5a, #6060a0, #3a3a5a); }\n.screen { margin: 6px; padding: 6px 8px; background: #000000; border: 2px solid; border-color: #0e0e16 #6b6b8a #6b6b8a #0e0e16; display: flex; gap: 10px; align-items: flex-end; height: 64px; }\n.time { color: #00ff66; font-size: 30px; line-height: 1; text-shadow: 0 0 6px #00ff66; }\n.bars { display: flex; align-items: flex-end; gap: 2px; height: 46px; flex: 1; }\n.bars i { display: block; width: 6px; height: 100%; background: linear-gradient(0deg, #00ff66, #ffee00 60%, #ff3b3b); transform-origin: bottom; animation: eq 0.9s ease-in-out infinite alternate; }\n.bars i:nth-child(2n) { animation-duration: .6s; }\n.bars i:nth-child(3n) { animation-duration: 1.2s; animation-delay: -.4s; }\n.bars i:nth-child(4n) { animation-duration: .75s; animation-delay: -.2s; }\n@keyframes eq { 0% { transform: scaleY(.15); } 50% { transform: scaleY(.8); } 100% { transform: scaleY(.35); } }\n.marquee { margin: 0 6px; height: 18px; overflow: hidden; white-space: nowrap; background: #000000; color: #00ff66; font-size: 13px; border: 2px solid; border-color: #0e0e16 #6b6b8a #6b6b8a #0e0e16; }\n.marquee span { display: inline-block; padding: 0 0 0 100%; animation: scroll 11s linear infinite; }\n@keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }\n.ctrl { display: flex; gap: 4px; margin: 7px 6px; }\n.ctrl b { width: 30px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #000000; background: #c0c0d0; border: 2px solid; border-color: #ffffff #50506a #50506a #ffffff; }\n.vol { flex: 1; height: 8px; margin: 6px 0 0 8px; background: linear-gradient(90deg, #00b84a 0%, #ffd500 70%, #ff3b3b 100%); border: 1px solid #000000; }\n</style>\n<div class=\"amp\">\n<div class=\"title\">WINAMP</div>\n<div class=\"screen\"><div class=\"time\">3:14</div><div class=\"bars\"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>\n<div class=\"marquee\"><span>01. lofi_focus_beats.mp3 *** 128 kbps *** 44 kHz *** stay productive ***</span></div>\n<div class=\"ctrl\"><b>⏮</b><b>▶</b><b>⏸</b><b>⏹</b><b>⏭</b><div class=\"vol\"></div></div>\n</div>",
+        "style": {},
+        "zIndex": 2
+      },
+      "displayName": "CustomHtmlBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "w98over": {
+      "type": {
+        "resolvedName": "OverdueTaskListBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 600,
+        "y": 480,
+        "width": 420,
+        "height": 200,
+        "style": {
+          "background": "#c0c0c0",
+          "textColor": "#000000",
+          "borderRadius": 0,
+          "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; padding: 3px; font-family: \"Pixelify Sans\", monospace; font-size: 15px;"
+        },
+        "headerStyle": {
+          "textColor": "#ffffff",
+          "borderRadius": 0,
+          "customCss": "background: linear-gradient(90deg, #800000, #d04040); border: none; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px; letter-spacing: .03em; padding: 4px 8px;"
+        },
+        "titleOverride": "⚠ Overdue tasks - Error",
+        "elementLayout": {},
+        "zIndex": 3
+      },
+      "displayName": "OverdueTaskListBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "w98mines": {
+      "type": {
+        "resolvedName": "CustomHtmlBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 140,
+        "y": 480,
+        "width": 420,
+        "height": 320,
+        "html": "<style>\nbody { margin: 0; font-family: \"Pixelify Sans\", monospace; }\n.win { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #c0c0c0; border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080; padding: 3px; }\n.title { display: flex; align-items: center; height: 24px; padding: 0 8px; color: #ffffff; font-size: 14px; font-weight: 700; background: linear-gradient(90deg, #000080, #1084d0); }\n.panel { margin: 8px; padding: 6px; display: flex; align-items: center; justify-content: space-between; border: 2px solid; border-color: #808080 #ffffff #ffffff #808080; }\n.lcd { width: 54px; padding: 0 4px; text-align: right; font-size: 24px; color: #ff2020; background: #000000; line-height: 1.2; }\n.face { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; background: #c0c0c0; border: 2px solid; border-color: #ffffff #808080 #808080 #ffffff; }\n.board { margin: 0 8px; display: grid; grid-template-columns: repeat(12, 1fr); border: 3px solid; border-color: #808080 #ffffff #ffffff #808080; }\n.c { height: 21px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; cursor: pointer; background: #c0c0c0; border: 2px solid; border-color: #ffffff #808080 #808080 #ffffff; }\n.open { border: 1px solid #9a9a9a; cursor: default; }\n.boom { background: #ff2020; }\n</style>\n<div class=\"win\">\n<div class=\"title\">Minesweeper</div>\n<div class=\"panel\"><div class=\"lcd\" id=\"left\">015</div><div class=\"face\" id=\"face\">🙂</div><div class=\"lcd\" id=\"time\">000</div></div>\n<div class=\"board\" id=\"board\"></div>\n</div>\n<script>\nvar COLS = 12, ROWS = 8, MINES = 15;\nvar colors = ['', '#0000ff', '#008000', '#ff0000', '#000080', '#800000', '#008080', '#000000', '#808080'];\nvar boardEl = document.getElementById('board');\nvar faceEl = document.getElementById('face');\nvar timeEl = document.getElementById('time');\nvar leftEl = document.getElementById('left');\nvar cells, over, opened, seconds, timer, flags;\nfunction pad(n) { return ('00' + n).slice(-3); }\nfunction around(i) {\n  var r = Math.floor(i / COLS), c = i % COLS, out = [];\n  for (var dr = -1; dr <= 1; dr++) for (var dc = -1; dc <= 1; dc++) {\n    var nr = r + dr, nc = c + dc;\n    if ((dr || dc) && nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) out.push(nr * COLS + nc);\n  }\n  return out;\n}\nfunction start() {\n  boardEl.innerHTML = '';\n  cells = []; over = false; opened = 0; seconds = 0; flags = 0;\n  clearInterval(timer); timer = null;\n  timeEl.textContent = pad(0); leftEl.textContent = pad(MINES); faceEl.textContent = '🙂';\n  var mines = {};\n  while (Object.keys(mines).length < MINES) mines[Math.floor(Math.random() * COLS * ROWS)] = true;\n  for (var i = 0; i < COLS * ROWS; i++) {\n    var el = document.createElement('div');\n    el.className = 'c';\n    el.dataset.i = i;\n    boardEl.appendChild(el);\n    cells.push({ el: el, mine: !!mines[i], open: false, flag: false });\n  }\n  cells.forEach(function (cell, i) { cell.n = around(i).filter(function (j) { return cells[j].mine; }).length; });\n}\nfunction reveal(i) {\n  var cell = cells[i];\n  if (cell.open || cell.flag) return;\n  cell.open = true; opened++;\n  cell.el.className = 'c open';\n  if (cell.mine) { cell.el.textContent = '💣'; cell.el.className = 'c open boom'; return lose(); }\n  if (cell.n) { cell.el.textContent = cell.n; cell.el.style.color = colors[cell.n]; }\n  else around(i).forEach(reveal);\n}\nfunction lose() {\n  over = true; faceEl.textContent = '😵'; clearInterval(timer);\n  cells.forEach(function (cell) { if (cell.mine && !cell.open) { cell.el.className = 'c open'; cell.el.textContent = '💣'; } });\n}\nboardEl.addEventListener('click', function (e) {\n  var i = e.target.dataset.i;\n  if (over || i === undefined) return;\n  if (!timer) timer = setInterval(function () { seconds++; timeEl.textContent = pad(Math.min(seconds, 999)); }, 1000);\n  reveal(Number(i));\n  if (!over && opened === COLS * ROWS - MINES) { over = true; faceEl.textContent = '😎'; clearInterval(timer); }\n});\nboardEl.addEventListener('contextmenu', function (e) {\n  e.preventDefault();\n  var i = e.target.dataset.i;\n  if (over || i === undefined || cells[i].open) return;\n  var cell = cells[i];\n  cell.flag = !cell.flag;\n  flags += cell.flag ? 1 : -1;\n  cell.el.textContent = cell.flag ? '🚩' : '';\n  leftEl.textContent = pad(Math.max(MINES - flags, 0));\n});\nfaceEl.addEventListener('click', start);\nstart();\n</script>\n",
+        "style": {},
+        "zIndex": 2
+      },
+      "displayName": "CustomHtmlBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    },
+    "w98clip": {
+      "type": {
+        "resolvedName": "CustomHtmlBlock"
+      },
+      "isCanvas": false,
+      "props": {
+        "x": 1060,
+        "y": 560,
+        "width": 340,
+        "height": 220,
+        "html": "<style>\nbody { margin: 0; font-family: \"Pixelify Sans\", monospace; }\n.wrap { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }\n.bubble { position: absolute; top: 4px; left: 4px; right: 4px; padding: 12px 14px; background: #ffffcc; color: #000000; border: 1px solid #000000; border-radius: 10px; font-size: 14px; line-height: 1.35; box-shadow: 3px 3px 0 rgba(0,0,0,.35); }\n.bubble p { margin: 0 0 10px 0; }\n.btns { display: flex; gap: 8px; }\n.btns b { padding: 3px 10px; font-weight: 400; background: #c0c0c0; border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; cursor: pointer; }\n.clip { position: absolute; right: 18px; bottom: 6px; font-size: 64px; animation: wiggle 2.6s ease-in-out infinite; transform-origin: 50% 90%; }\n@keyframes wiggle { 0%, 70%, 100% { transform: rotate(0deg); } 76% { transform: rotate(-14deg); } 82% { transform: rotate(12deg); } 88% { transform: rotate(-6deg); } }\n</style>\n<div class=\"wrap\">\n<div class=\"bubble\"><p id=\"say\">It looks like you're trying to get things done today. Would you like help?</p><div class=\"btns\"><b id=\"yes\">Yes</b><b id=\"no\">Don't show this again</b></div></div>\n<div class=\"clip\">📎</div>\n</div>\n<script>\nvar sayEl = document.getElementById('say');\nvar tips = ['Tip: big tasks feel smaller when you split them in three.', 'Tip: tick off one easy task first. Momentum is real.', 'Tip: a glass of water counts as a task. Go drink it.', 'Tip: future you will thank you for the weekly list.'];\nvar tipIndex = 0;\ndocument.getElementById('yes').addEventListener('click', function () {\n  sayEl.textContent = tips[tipIndex % tips.length];\n  tipIndex = tipIndex + 1;\n});\ndocument.getElementById('no').addEventListener('click', function () {\n  sayEl.textContent = 'Okay! I will be right here. Watching. Always.';\n});\n</script>",
+        "style": {},
+        "zIndex": 3
+      },
+      "displayName": "CustomHtmlBlock",
+      "custom": {},
+      "parent": "ROOT",
+      "hidden": false,
+      "nodes": [],
+      "linkedNodes": {}
+    }
+  },
+  "background": {
+    "type": "html",
+    "html": "<style>\nbody { margin: 0; background: #008080; font-family: \"Pixelify Sans\", monospace; overflow: hidden; }\n.desk { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(ellipse at 60% 40%, #0a9494 0%, #008080 55%, #006a6a 100%); }\n.icons { position: fixed; top: 70px; left: 18px; display: flex; flex-direction: column; gap: 26px; }\n.icon { width: 84px; text-align: center; color: #ffffff; font-size: 13px; line-height: 1.2; text-shadow: 1px 1px 0 #000000; }\n.icon b { display: block; font-size: 34px; margin: 0 0 6px 0; text-shadow: none; }\n.bar { position: fixed; left: 0; bottom: 0; width: 100vw; height: 36px; background: #c0c0c0; border: 2px solid; border-color: #ffffff #c0c0c0 #c0c0c0 #c0c0c0; display: flex; align-items: center; gap: 6px; padding: 0 4px; }\n.btn { height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 8px; font-size: 14px; color: #000000; background: #c0c0c0; border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080; }\n.start { font-weight: 700; }\n.logo { display: grid; grid-template-columns: 7px 7px; gap: 1px; transform: skewX(-8deg); }\n.logo i { display: block; width: 7px; height: 6px; }\n.task { width: 170px; }\n.pressed { border-color: #0a0a0a #ffffff #ffffff #0a0a0a; box-shadow: inset 1px 1px #808080; background: #d8d8d8; }\n.phone .icons { top: 64px; left: 0; width: 100vw; flex-direction: row; justify-content: space-around; gap: 0; }\n.phone .icon { width: 72px; font-size: 11px; }\n.phone .icon b { font-size: 26px; margin: 0 0 4px 0; }\n.phone .task { display: none; }\n.tray { margin: 0 4px 0 auto; height: 24px; display: flex; align-items: center; gap: 8px; padding: 0 10px; font-size: 14px; border: 2px solid; border-color: #808080 #ffffff #ffffff #808080; }\n</style>\n<div class=\"desk\"></div>\n<div class=\"icons\">\n<div class=\"icon\"><b>🖥️</b>My Computer</div>\n<div class=\"icon\"><b>📁</b>My Tasks</div>\n<div class=\"icon\"><b>🌐</b>Internet Explorer</div>\n<div class=\"icon\"><b>🎨</b>Paint</div>\n<div class=\"icon\"><b>🗑️</b>Recycle Bin</div>\n</div>\n<div class=\"bar\">\n<div class=\"btn start\"><span class=\"logo\"><i style=\"background:#f35325\"></i><i style=\"background:#81bc06\"></i><i style=\"background:#05a6f0\"></i><i style=\"background:#ffba08\"></i></span>Start</div>\n<div class=\"btn task pressed\">📋 Today.exe</div>\n<div class=\"btn task\">📅 Week.exe</div>\n<div class=\"btn task\">📝 README.TXT</div>\n<div class=\"tray\">🔊 <span id=\"clock\">12:00 PM</span></div>\n</div>\n<script>\nvar clockEl = document.getElementById('clock');\nfunction tick() {\n  var d = new Date();\n  var h = d.getHours();\n  var m = d.getMinutes();\n  var suffix = h >= 12 ? 'PM' : 'AM';\n  h = h % 12;\n  if (h === 0) h = 12;\n  clockEl.textContent = h + ':' + (m < 10 ? '0' + m : m) + ' ' + suffix;\n}\ntick();\nsetInterval(tick, 10000);\nfunction fit() { document.body.className = window.innerWidth < 600 ? 'phone' : ''; }\nfit();\nwindow.addEventListener('resize', fit);\n</script>"
+  },
+  "headerStyle": {
+    "edit": {
+      "background": "#c0c0c0",
+      "textColor": "#000000",
+      "borderRadius": 0,
+      "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px;",
+      "animationCss": "&:active { border-color: #0a0a0a #ffffff #ffffff #0a0a0a !important; }"
+    },
+    "logout": {
+      "background": "#c0c0c0",
+      "textColor": "#800000",
+      "borderRadius": 0,
+      "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px;",
+      "animationCss": "&:active { border-color: #0a0a0a #ffffff #ffffff #0a0a0a !important; }"
+    },
+    "username": {
+      "textColor": "#ffffff",
+      "customCss": "font-family: \"Pixelify Sans\", monospace; font-size: 15px; text-shadow: 1px 1px 0 #000000;"
+    }
+  },
+  "layouts": {
+    "desktop": {
+      "ROOT": {
+        "type": {
+          "resolvedName": "Container"
+        },
+        "isCanvas": true,
+        "props": {},
+        "displayName": "Container",
+        "custom": {},
+        "hidden": false,
+        "nodes": [
+          "w98daily",
+          "w98weekly",
+          "w98note",
+          "w98amp",
+          "w98over",
+          "w98mines",
+          "w98clip"
+        ],
+        "linkedNodes": {}
+      },
+      "w98daily": {
+        "type": {
+          "resolvedName": "DailyTaskListBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 140,
+          "y": 40,
+          "width": 420,
+          "height": 400,
+          "style": {
+            "background": "#c0c0c0",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; padding: 3px; font-family: \"Pixelify Sans\", monospace; font-size: 15px;"
+          },
+          "headerStyle": {
+            "textColor": "#ffffff",
+            "borderRadius": 0,
+            "customCss": "background: linear-gradient(90deg, #000080, #1084d0); border: none; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px; letter-spacing: .03em; padding: 4px 8px;"
+          },
+          "titleOverride": "Today.exe",
+          "inputStyle": {
+            "background": "#ffffff",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #808080 #ffffff #ffffff #808080; box-shadow: inset 1px 1px #0a0a0a; font-family: \"Pixelify Sans\", monospace; font-size: 15px;"
+          },
+          "addButtonStyle": {
+            "background": "#c0c0c0",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px;",
+            "animationCss": "&:hover { background: #d4d0c8 !important; }\n&:active { border-color: #0a0a0a #ffffff #ffffff #0a0a0a !important; box-shadow: inset 1px 1px #808080 !important; }"
+          },
+          "addButtonIcon": "OK",
+          "elementLayout": {},
+          "zIndex": 2
+        },
+        "displayName": "DailyTaskListBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "w98weekly": {
+        "type": {
+          "resolvedName": "WeeklyTaskListBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 600,
+          "y": 40,
+          "width": 420,
+          "height": 400,
+          "style": {
+            "background": "#c0c0c0",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; padding: 3px; font-family: \"Pixelify Sans\", monospace; font-size: 15px;"
+          },
+          "headerStyle": {
+            "textColor": "#ffffff",
+            "borderRadius": 0,
+            "customCss": "background: linear-gradient(90deg, #000080, #1084d0); border: none; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px; letter-spacing: .03em; padding: 4px 8px;"
+          },
+          "titleOverride": "Week.exe",
+          "inputStyle": {
+            "background": "#ffffff",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #808080 #ffffff #ffffff #808080; box-shadow: inset 1px 1px #0a0a0a; font-family: \"Pixelify Sans\", monospace; font-size: 15px;"
+          },
+          "addButtonStyle": {
+            "background": "#c0c0c0",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px;",
+            "animationCss": "&:hover { background: #d4d0c8 !important; }\n&:active { border-color: #0a0a0a #ffffff #ffffff #0a0a0a !important; box-shadow: inset 1px 1px #808080 !important; }"
+          },
+          "addButtonIcon": "OK",
+          "elementLayout": {},
+          "zIndex": 2
+        },
+        "displayName": "WeeklyTaskListBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "w98note": {
+        "type": {
+          "resolvedName": "NoteBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 1060,
+          "y": 40,
+          "width": 340,
+          "height": 260,
+          "text": "README.TXT\n\n- water the plants\n- reply to emails\n- back up the floppy disks\n\n:)",
+          "style": {
+            "background": "#ffffff",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; padding: 3px; font-family: \"VT323\", monospace; font-size: 22px;"
+          },
+          "headerStyle": {
+            "textColor": "#ffffff",
+            "borderRadius": 0,
+            "customCss": "background: linear-gradient(90deg, #000080, #1084d0); border: none; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px; letter-spacing: .03em; padding: 4px 8px;"
+          },
+          "titleOverride": "README.TXT - Notepad",
+          "elementLayout": {},
+          "zIndex": 2
+        },
+        "displayName": "NoteBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "w98amp": {
+        "type": {
+          "resolvedName": "CustomHtmlBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 1060,
+          "y": 340,
+          "width": 340,
+          "height": 180,
+          "html": "<style>\nbody { margin: 0; font-family: \"Pixelify Sans\", monospace; }\n.amp { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #232333; border: 2px solid; border-color: #6b6b8a #0e0e16 #0e0e16 #6b6b8a; display: flex; flex-direction: column; }\n.title { height: 18px; display: flex; align-items: center; justify-content: center; font-size: 11px; letter-spacing: .3em; color: #d6d6ff; background: linear-gradient(90deg, #3a3a5a, #6060a0, #3a3a5a); }\n.screen { margin: 6px; padding: 6px 8px; background: #000000; border: 2px solid; border-color: #0e0e16 #6b6b8a #6b6b8a #0e0e16; display: flex; gap: 10px; align-items: flex-end; height: 64px; }\n.time { color: #00ff66; font-size: 30px; line-height: 1; text-shadow: 0 0 6px #00ff66; }\n.bars { display: flex; align-items: flex-end; gap: 2px; height: 46px; flex: 1; }\n.bars i { display: block; width: 6px; height: 100%; background: linear-gradient(0deg, #00ff66, #ffee00 60%, #ff3b3b); transform-origin: bottom; animation: eq 0.9s ease-in-out infinite alternate; }\n.bars i:nth-child(2n) { animation-duration: .6s; }\n.bars i:nth-child(3n) { animation-duration: 1.2s; animation-delay: -.4s; }\n.bars i:nth-child(4n) { animation-duration: .75s; animation-delay: -.2s; }\n@keyframes eq { 0% { transform: scaleY(.15); } 50% { transform: scaleY(.8); } 100% { transform: scaleY(.35); } }\n.marquee { margin: 0 6px; height: 18px; overflow: hidden; white-space: nowrap; background: #000000; color: #00ff66; font-size: 13px; border: 2px solid; border-color: #0e0e16 #6b6b8a #6b6b8a #0e0e16; }\n.marquee span { display: inline-block; padding: 0 0 0 100%; animation: scroll 11s linear infinite; }\n@keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }\n.ctrl { display: flex; gap: 4px; margin: 7px 6px; }\n.ctrl b { width: 30px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #000000; background: #c0c0d0; border: 2px solid; border-color: #ffffff #50506a #50506a #ffffff; }\n.vol { flex: 1; height: 8px; margin: 6px 0 0 8px; background: linear-gradient(90deg, #00b84a 0%, #ffd500 70%, #ff3b3b 100%); border: 1px solid #000000; }\n</style>\n<div class=\"amp\">\n<div class=\"title\">WINAMP</div>\n<div class=\"screen\"><div class=\"time\">3:14</div><div class=\"bars\"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>\n<div class=\"marquee\"><span>01. lofi_focus_beats.mp3 *** 128 kbps *** 44 kHz *** stay productive ***</span></div>\n<div class=\"ctrl\"><b>⏮</b><b>▶</b><b>⏸</b><b>⏹</b><b>⏭</b><div class=\"vol\"></div></div>\n</div>",
+          "style": {},
+          "zIndex": 2
+        },
+        "displayName": "CustomHtmlBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "w98over": {
+        "type": {
+          "resolvedName": "OverdueTaskListBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 600,
+          "y": 480,
+          "width": 420,
+          "height": 200,
+          "style": {
+            "background": "#c0c0c0",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; padding: 3px; font-family: \"Pixelify Sans\", monospace; font-size: 15px;"
+          },
+          "headerStyle": {
+            "textColor": "#ffffff",
+            "borderRadius": 0,
+            "customCss": "background: linear-gradient(90deg, #800000, #d04040); border: none; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px; letter-spacing: .03em; padding: 4px 8px;"
+          },
+          "titleOverride": "⚠ Overdue tasks - Error",
+          "elementLayout": {},
+          "zIndex": 3
+        },
+        "displayName": "OverdueTaskListBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "w98mines": {
+        "type": {
+          "resolvedName": "CustomHtmlBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 140,
+          "y": 480,
+          "width": 420,
+          "height": 320,
+          "html": "<style>\nbody { margin: 0; font-family: \"Pixelify Sans\", monospace; }\n.win { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #c0c0c0; border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080; padding: 3px; }\n.title { display: flex; align-items: center; height: 24px; padding: 0 8px; color: #ffffff; font-size: 14px; font-weight: 700; background: linear-gradient(90deg, #000080, #1084d0); }\n.panel { margin: 8px; padding: 6px; display: flex; align-items: center; justify-content: space-between; border: 2px solid; border-color: #808080 #ffffff #ffffff #808080; }\n.lcd { width: 54px; padding: 0 4px; text-align: right; font-size: 24px; color: #ff2020; background: #000000; line-height: 1.2; }\n.face { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; background: #c0c0c0; border: 2px solid; border-color: #ffffff #808080 #808080 #ffffff; }\n.board { margin: 0 8px; display: grid; grid-template-columns: repeat(12, 1fr); border: 3px solid; border-color: #808080 #ffffff #ffffff #808080; }\n.c { height: 21px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; cursor: pointer; background: #c0c0c0; border: 2px solid; border-color: #ffffff #808080 #808080 #ffffff; }\n.open { border: 1px solid #9a9a9a; cursor: default; }\n.boom { background: #ff2020; }\n</style>\n<div class=\"win\">\n<div class=\"title\">Minesweeper</div>\n<div class=\"panel\"><div class=\"lcd\" id=\"left\">015</div><div class=\"face\" id=\"face\">🙂</div><div class=\"lcd\" id=\"time\">000</div></div>\n<div class=\"board\" id=\"board\"></div>\n</div>\n<script>\nvar COLS = 12, ROWS = 8, MINES = 15;\nvar colors = ['', '#0000ff', '#008000', '#ff0000', '#000080', '#800000', '#008080', '#000000', '#808080'];\nvar boardEl = document.getElementById('board');\nvar faceEl = document.getElementById('face');\nvar timeEl = document.getElementById('time');\nvar leftEl = document.getElementById('left');\nvar cells, over, opened, seconds, timer, flags;\nfunction pad(n) { return ('00' + n).slice(-3); }\nfunction around(i) {\n  var r = Math.floor(i / COLS), c = i % COLS, out = [];\n  for (var dr = -1; dr <= 1; dr++) for (var dc = -1; dc <= 1; dc++) {\n    var nr = r + dr, nc = c + dc;\n    if ((dr || dc) && nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) out.push(nr * COLS + nc);\n  }\n  return out;\n}\nfunction start() {\n  boardEl.innerHTML = '';\n  cells = []; over = false; opened = 0; seconds = 0; flags = 0;\n  clearInterval(timer); timer = null;\n  timeEl.textContent = pad(0); leftEl.textContent = pad(MINES); faceEl.textContent = '🙂';\n  var mines = {};\n  while (Object.keys(mines).length < MINES) mines[Math.floor(Math.random() * COLS * ROWS)] = true;\n  for (var i = 0; i < COLS * ROWS; i++) {\n    var el = document.createElement('div');\n    el.className = 'c';\n    el.dataset.i = i;\n    boardEl.appendChild(el);\n    cells.push({ el: el, mine: !!mines[i], open: false, flag: false });\n  }\n  cells.forEach(function (cell, i) { cell.n = around(i).filter(function (j) { return cells[j].mine; }).length; });\n}\nfunction reveal(i) {\n  var cell = cells[i];\n  if (cell.open || cell.flag) return;\n  cell.open = true; opened++;\n  cell.el.className = 'c open';\n  if (cell.mine) { cell.el.textContent = '💣'; cell.el.className = 'c open boom'; return lose(); }\n  if (cell.n) { cell.el.textContent = cell.n; cell.el.style.color = colors[cell.n]; }\n  else around(i).forEach(reveal);\n}\nfunction lose() {\n  over = true; faceEl.textContent = '😵'; clearInterval(timer);\n  cells.forEach(function (cell) { if (cell.mine && !cell.open) { cell.el.className = 'c open'; cell.el.textContent = '💣'; } });\n}\nboardEl.addEventListener('click', function (e) {\n  var i = e.target.dataset.i;\n  if (over || i === undefined) return;\n  if (!timer) timer = setInterval(function () { seconds++; timeEl.textContent = pad(Math.min(seconds, 999)); }, 1000);\n  reveal(Number(i));\n  if (!over && opened === COLS * ROWS - MINES) { over = true; faceEl.textContent = '😎'; clearInterval(timer); }\n});\nboardEl.addEventListener('contextmenu', function (e) {\n  e.preventDefault();\n  var i = e.target.dataset.i;\n  if (over || i === undefined || cells[i].open) return;\n  var cell = cells[i];\n  cell.flag = !cell.flag;\n  flags += cell.flag ? 1 : -1;\n  cell.el.textContent = cell.flag ? '🚩' : '';\n  leftEl.textContent = pad(Math.max(MINES - flags, 0));\n});\nfaceEl.addEventListener('click', start);\nstart();\n</script>\n",
+          "style": {},
+          "zIndex": 2
+        },
+        "displayName": "CustomHtmlBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "w98clip": {
+        "type": {
+          "resolvedName": "CustomHtmlBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 1060,
+          "y": 560,
+          "width": 340,
+          "height": 220,
+          "html": "<style>\nbody { margin: 0; font-family: \"Pixelify Sans\", monospace; }\n.wrap { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }\n.bubble { position: absolute; top: 4px; left: 4px; right: 4px; padding: 12px 14px; background: #ffffcc; color: #000000; border: 1px solid #000000; border-radius: 10px; font-size: 14px; line-height: 1.35; box-shadow: 3px 3px 0 rgba(0,0,0,.35); }\n.bubble p { margin: 0 0 10px 0; }\n.btns { display: flex; gap: 8px; }\n.btns b { padding: 3px 10px; font-weight: 400; background: #c0c0c0; border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; cursor: pointer; }\n.clip { position: absolute; right: 18px; bottom: 6px; font-size: 64px; animation: wiggle 2.6s ease-in-out infinite; transform-origin: 50% 90%; }\n@keyframes wiggle { 0%, 70%, 100% { transform: rotate(0deg); } 76% { transform: rotate(-14deg); } 82% { transform: rotate(12deg); } 88% { transform: rotate(-6deg); } }\n</style>\n<div class=\"wrap\">\n<div class=\"bubble\"><p id=\"say\">It looks like you're trying to get things done today. Would you like help?</p><div class=\"btns\"><b id=\"yes\">Yes</b><b id=\"no\">Don't show this again</b></div></div>\n<div class=\"clip\">📎</div>\n</div>\n<script>\nvar sayEl = document.getElementById('say');\nvar tips = ['Tip: big tasks feel smaller when you split them in three.', 'Tip: tick off one easy task first. Momentum is real.', 'Tip: a glass of water counts as a task. Go drink it.', 'Tip: future you will thank you for the weekly list.'];\nvar tipIndex = 0;\ndocument.getElementById('yes').addEventListener('click', function () {\n  sayEl.textContent = tips[tipIndex % tips.length];\n  tipIndex = tipIndex + 1;\n});\ndocument.getElementById('no').addEventListener('click', function () {\n  sayEl.textContent = 'Okay! I will be right here. Watching. Always.';\n});\n</script>",
+          "style": {},
+          "zIndex": 3
+        },
+        "displayName": "CustomHtmlBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      }
+    },
+    "mobile": {
+      "ROOT": {
+        "type": {
+          "resolvedName": "Container"
+        },
+        "isCanvas": true,
+        "props": {},
+        "displayName": "Container",
+        "custom": {},
+        "hidden": false,
+        "nodes": [
+          "w98daily",
+          "w98weekly",
+          "w98over",
+          "w98note",
+          "w98amp",
+          "w98clip"
+        ],
+        "linkedNodes": {}
+      },
+      "w98daily": {
+        "type": {
+          "resolvedName": "DailyTaskListBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 10,
+          "y": 150,
+          "width": 370,
+          "height": 320,
+          "style": {
+            "background": "#c0c0c0",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; padding: 3px; font-family: \"Pixelify Sans\", monospace; font-size: 15px;"
+          },
+          "headerStyle": {
+            "textColor": "#ffffff",
+            "borderRadius": 0,
+            "customCss": "background: linear-gradient(90deg, #000080, #1084d0); border: none; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px; letter-spacing: .03em; padding: 4px 8px;"
+          },
+          "titleOverride": "Today.exe",
+          "inputStyle": {
+            "background": "#ffffff",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #808080 #ffffff #ffffff #808080; box-shadow: inset 1px 1px #0a0a0a; font-family: \"Pixelify Sans\", monospace; font-size: 15px;"
+          },
+          "addButtonStyle": {
+            "background": "#c0c0c0",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px;",
+            "animationCss": "&:hover { background: #d4d0c8 !important; }\n&:active { border-color: #0a0a0a #ffffff #ffffff #0a0a0a !important; box-shadow: inset 1px 1px #808080 !important; }"
+          },
+          "addButtonIcon": "OK",
+          "elementLayout": {},
+          "zIndex": 2
+        },
+        "displayName": "DailyTaskListBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "w98weekly": {
+        "type": {
+          "resolvedName": "WeeklyTaskListBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 10,
+          "y": 490,
+          "width": 370,
+          "height": 320,
+          "style": {
+            "background": "#c0c0c0",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; padding: 3px; font-family: \"Pixelify Sans\", monospace; font-size: 15px;"
+          },
+          "headerStyle": {
+            "textColor": "#ffffff",
+            "borderRadius": 0,
+            "customCss": "background: linear-gradient(90deg, #000080, #1084d0); border: none; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px; letter-spacing: .03em; padding: 4px 8px;"
+          },
+          "titleOverride": "Week.exe",
+          "inputStyle": {
+            "background": "#ffffff",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #808080 #ffffff #ffffff #808080; box-shadow: inset 1px 1px #0a0a0a; font-family: \"Pixelify Sans\", monospace; font-size: 15px;"
+          },
+          "addButtonStyle": {
+            "background": "#c0c0c0",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px;",
+            "animationCss": "&:hover { background: #d4d0c8 !important; }\n&:active { border-color: #0a0a0a #ffffff #ffffff #0a0a0a !important; box-shadow: inset 1px 1px #808080 !important; }"
+          },
+          "addButtonIcon": "OK",
+          "elementLayout": {},
+          "zIndex": 2
+        },
+        "displayName": "WeeklyTaskListBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "w98over": {
+        "type": {
+          "resolvedName": "OverdueTaskListBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 10,
+          "y": 830,
+          "width": 370,
+          "height": 170,
+          "style": {
+            "background": "#c0c0c0",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; padding: 3px; font-family: \"Pixelify Sans\", monospace; font-size: 15px;"
+          },
+          "headerStyle": {
+            "textColor": "#ffffff",
+            "borderRadius": 0,
+            "customCss": "background: linear-gradient(90deg, #800000, #d04040); border: none; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px; letter-spacing: .03em; padding: 4px 8px;"
+          },
+          "titleOverride": "⚠ Overdue - Error",
+          "elementLayout": {},
+          "zIndex": 2
+        },
+        "displayName": "OverdueTaskListBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "w98note": {
+        "type": {
+          "resolvedName": "NoteBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 10,
+          "y": 1020,
+          "width": 370,
+          "height": 200,
+          "text": "README.TXT\n\n- water the plants\n- reply to emails\n- back up the floppy disks",
+          "style": {
+            "background": "#ffffff",
+            "textColor": "#000000",
+            "borderRadius": 0,
+            "customCss": "border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf; padding: 3px; font-family: \"VT323\", monospace; font-size: 22px;"
+          },
+          "headerStyle": {
+            "textColor": "#ffffff",
+            "borderRadius": 0,
+            "customCss": "background: linear-gradient(90deg, #000080, #1084d0); border: none; font-family: \"Pixelify Sans\", monospace; font-weight: 700; font-size: 14px; letter-spacing: .03em; padding: 4px 8px;"
+          },
+          "titleOverride": "README.TXT - Notepad",
+          "elementLayout": {},
+          "zIndex": 2
+        },
+        "displayName": "NoteBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "w98amp": {
+        "type": {
+          "resolvedName": "CustomHtmlBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 10,
+          "y": 1240,
+          "width": 370,
+          "height": 170,
+          "html": "<style>\nbody { margin: 0; font-family: \"Pixelify Sans\", monospace; }\n.amp { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #232333; border: 2px solid; border-color: #6b6b8a #0e0e16 #0e0e16 #6b6b8a; display: flex; flex-direction: column; }\n.title { height: 18px; display: flex; align-items: center; justify-content: center; font-size: 11px; letter-spacing: .3em; color: #d6d6ff; background: linear-gradient(90deg, #3a3a5a, #6060a0, #3a3a5a); }\n.screen { margin: 6px; padding: 6px 8px; background: #000000; border: 2px solid; border-color: #0e0e16 #6b6b8a #6b6b8a #0e0e16; display: flex; gap: 10px; align-items: flex-end; height: 64px; }\n.time { color: #00ff66; font-size: 30px; line-height: 1; text-shadow: 0 0 6px #00ff66; }\n.bars { display: flex; align-items: flex-end; gap: 2px; height: 46px; flex: 1; }\n.bars i { display: block; width: 6px; height: 100%; background: linear-gradient(0deg, #00ff66, #ffee00 60%, #ff3b3b); transform-origin: bottom; animation: eq 0.9s ease-in-out infinite alternate; }\n.bars i:nth-child(2n) { animation-duration: .6s; }\n.bars i:nth-child(3n) { animation-duration: 1.2s; animation-delay: -.4s; }\n.bars i:nth-child(4n) { animation-duration: .75s; animation-delay: -.2s; }\n@keyframes eq { 0% { transform: scaleY(.15); } 50% { transform: scaleY(.8); } 100% { transform: scaleY(.35); } }\n.marquee { margin: 0 6px; height: 18px; overflow: hidden; white-space: nowrap; background: #000000; color: #00ff66; font-size: 13px; border: 2px solid; border-color: #0e0e16 #6b6b8a #6b6b8a #0e0e16; }\n.marquee span { display: inline-block; padding: 0 0 0 100%; animation: scroll 11s linear infinite; }\n@keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }\n.ctrl { display: flex; gap: 4px; margin: 7px 6px; }\n.ctrl b { width: 30px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #000000; background: #c0c0d0; border: 2px solid; border-color: #ffffff #50506a #50506a #ffffff; }\n.vol { flex: 1; height: 8px; margin: 6px 0 0 8px; background: linear-gradient(90deg, #00b84a 0%, #ffd500 70%, #ff3b3b 100%); border: 1px solid #000000; }\n</style>\n<div class=\"amp\">\n<div class=\"title\">WINAMP</div>\n<div class=\"screen\"><div class=\"time\">3:14</div><div class=\"bars\"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>\n<div class=\"marquee\"><span>01. lofi_focus_beats.mp3 *** 128 kbps *** 44 kHz *** stay productive ***</span></div>\n<div class=\"ctrl\"><b>⏮</b><b>▶</b><b>⏸</b><b>⏹</b><b>⏭</b><div class=\"vol\"></div></div>\n</div>",
+          "style": {},
+          "zIndex": 2
+        },
+        "displayName": "CustomHtmlBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      },
+      "w98clip": {
+        "type": {
+          "resolvedName": "CustomHtmlBlock"
+        },
+        "isCanvas": false,
+        "props": {
+          "x": 10,
+          "y": 1420,
+          "width": 370,
+          "height": 150,
+          "html": "<style>\nbody { margin: 0; font-family: \"Pixelify Sans\", monospace; }\n.wrap { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }\n.bubble { position: absolute; top: 4px; left: 4px; right: 4px; padding: 12px 14px; background: #ffffcc; color: #000000; border: 1px solid #000000; border-radius: 10px; font-size: 14px; line-height: 1.35; box-shadow: 3px 3px 0 rgba(0,0,0,.35); }\n.bubble p { margin: 0 0 10px 0; }\n.btns { display: flex; gap: 8px; }\n.btns b { padding: 3px 10px; font-weight: 400; background: #c0c0c0; border: 2px solid; border-color: #ffffff #0a0a0a #0a0a0a #ffffff; cursor: pointer; }\n.clip { position: absolute; right: 18px; bottom: 6px; font-size: 64px; animation: wiggle 2.6s ease-in-out infinite; transform-origin: 50% 90%; }\n@keyframes wiggle { 0%, 70%, 100% { transform: rotate(0deg); } 76% { transform: rotate(-14deg); } 82% { transform: rotate(12deg); } 88% { transform: rotate(-6deg); } }\n</style>\n<div class=\"wrap\">\n<div class=\"bubble\"><p id=\"say\">It looks like you're trying to get things done today. Would you like help?</p><div class=\"btns\"><b id=\"yes\">Yes</b><b id=\"no\">Don't show this again</b></div></div>\n<div class=\"clip\">📎</div>\n</div>\n<script>\nvar sayEl = document.getElementById('say');\nvar tips = ['Tip: big tasks feel smaller when you split them in three.', 'Tip: tick off one easy task first. Momentum is real.', 'Tip: a glass of water counts as a task. Go drink it.', 'Tip: future you will thank you for the weekly list.'];\nvar tipIndex = 0;\ndocument.getElementById('yes').addEventListener('click', function () {\n  sayEl.textContent = tips[tipIndex % tips.length];\n  tipIndex = tipIndex + 1;\n});\ndocument.getElementById('no').addEventListener('click', function () {\n  sayEl.textContent = 'Okay! I will be right here. Watching. Always.';\n});\n</script>",
+          "style": {},
+          "zIndex": 2
+        },
+        "displayName": "CustomHtmlBlock",
+        "custom": {},
+        "parent": "ROOT",
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {}
+      }
+    }
+  }
+}

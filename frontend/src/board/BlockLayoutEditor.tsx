@@ -131,8 +131,8 @@ export function BlockLayoutEditor({
       <p className="block-layout-editor-hint">Drag a box to move it, the corner to resize. The eye toggles visibility.</p>
       {overlappingIds.size > 0 && (
         <p className="block-layout-editor-warning">
-          Overlapping boxes (outlined below) will hide each other's content on the real block -- header
-          always draws on top, then add row, then content.
+          Overlapping boxes (outlined below) hide each other's content. The header is drawn on top,
+          then the add row, then the content.
         </p>
       )}
 

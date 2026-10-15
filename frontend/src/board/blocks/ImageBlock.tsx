@@ -7,6 +7,7 @@ import { BlockShell } from '../BlockShell'
 import type { BlockStyle } from '../blockStyle'
 import { applyGeometry, clamp } from '../geometry'
 import { anchorBelowRect } from '../popoverAnchor'
+import { useViewportFit } from '../useViewportFit'
 import { reorderZIndex } from '../zOrder'
 
 interface UploadedImageResponse {
@@ -82,12 +83,14 @@ function ImageAdjustmentsPanel({
   onChange: (patch: Partial<ImageAdjustmentsValue>) => void
   onClose: () => void
 }) {
+  const fit = useViewportFit<HTMLDivElement>(anchor)
   return createPortal(
     <>
       <div className="block-style-backdrop" onClick={onClose} />
       <div
+        ref={fit.ref}
         className="block-style-panel-wrap"
-        style={{ top: anchor.top, left: anchor.left }}
+        style={{ top: fit.top, left: anchor.left }}
         onPointerDown={(e) => e.stopPropagation()}
       >
         <div className="block-style-panel" style={{ width: FIT_WIDTH }}>

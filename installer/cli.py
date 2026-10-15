@@ -19,7 +19,7 @@ def _required(message):
 def _prompt_domain():
     mode = questionary.select(
         "How will this be hosted?",
-        choices=["Local / IP only", "A real domain (needs your own nginx -- see README)"],
+        choices=["Local / IP only", "A real domain (needs your own nginx, see README)"],
         default="Local / IP only",
     ).ask()
     if mode is None or mode.startswith("Local"):
@@ -71,8 +71,8 @@ def _prompt_security_and_daylock():
 
     values["ALLOW_CUSTOM_SCRIPTS"] = str(
         questionary.confirm(
-            "Allow <script> tags in Custom HTML/CSS blocks to actually run? "
-            "Only enable this for a fully trusted, single-user instance.",
+            "Let <script> tags run in Custom HTML blocks? "
+            "Only for a trusted single-user instance.",
             default=False,
         ).ask()
     )
@@ -139,7 +139,7 @@ def _prompt_generic_sections():
 
 def _print_recap(field_values, admin_username):
     typer.echo("\nReview:")
-    typer.echo(f"  Domain: {field_values.get('DOMAIN') or '(none -- local/IP-only)'}")
+    typer.echo(f"  Domain: {field_values.get('DOMAIN') or '(none, local/IP only)'}")
     typer.echo(f"  HTTP port: {field_values.get('HTTP_PORT')}")
     typer.echo(f"  Installer web port: {field_values.get('INSTALLER_WEB_PORT')}")
     typer.echo(f"  Admin username: {admin_username}")
@@ -166,7 +166,7 @@ def install():
 
     _print_recap(field_values, username)
     if not questionary.confirm("Install with these settings?", default=True).ask():
-        typer.echo("Aborted -- nothing was written.")
+        typer.echo("Aborted. Nothing was written.")
         raise typer.Exit(code=1)
 
     try:
@@ -236,7 +236,7 @@ def edit():
     if field.name in schema.DERIVED_FIELDS:
         typer.echo(
             f"{field.name} is auto-derived from DOMAIN/HTTP_PORT and can't be "
-            "edited directly -- change one of those fields instead."
+            "edited directly. Change one of those fields instead."
         )
         return
 

@@ -94,7 +94,7 @@ export function DailyTaskListBlock() {
         query={query}
         addRowSlot={
           locked ? (
-            <div className="task-list-locked-note">This day is locked — no new tasks</div>
+            <div className="task-list-locked-note">This day is locked. No new tasks.</div>
           ) : (
             <TaskListAddRow
               nodeId={id}

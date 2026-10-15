@@ -167,9 +167,8 @@ export function BoardBackgroundPanel({
       {background.type === 'html' && (
         <>
           <p className="board-bg-html-hint">
-            Full-bleed sandboxed HTML/CSS rendered behind every block (same sandbox as a Custom
-            HTML block). &lt;script&gt; tags only actually run if this instance has scripts
-            enabled server-side.
+            Sandboxed HTML/CSS shown behind all blocks, like a Custom HTML block. &lt;script&gt;
+            tags run only if scripts are enabled on the server.
           </p>
           <CustomCssButton
             className="block-style-full-button"

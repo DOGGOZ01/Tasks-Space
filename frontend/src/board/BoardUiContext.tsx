@@ -24,7 +24,12 @@ interface BoardUiValue {
   dateFormat: DateFormatPref
   setDateFormat: (format: DateFormatPref) => void
   revertToOriginalDesign: () => void
-  applyDesignNow: (layout: SerializedNodes, background: BoardBackground, headerStyle: HeaderStyle) => void
+  applyDesignNow: (
+    layout: SerializedNodes,
+    background: BoardBackground,
+    headerStyle: HeaderStyle,
+    otherLayouts?: Partial<Record<DeviceMode, SerializedNodes>>,
+  ) => void
   flushFieldSaves: () => void
   hoverToRevealBlocks: boolean
   setHoverToRevealBlocks: (next: boolean) => void
@@ -58,7 +63,12 @@ interface BoardUiProviderProps {
   dateFormat: DateFormatPref
   onDateFormatChange: (format: DateFormatPref) => void
   onRevertToOriginalDesign: () => void
-  onApplyDesignNow: (layout: SerializedNodes, background: BoardBackground, headerStyle: HeaderStyle) => void
+  onApplyDesignNow: (
+    layout: SerializedNodes,
+    background: BoardBackground,
+    headerStyle: HeaderStyle,
+    otherLayouts?: Partial<Record<DeviceMode, SerializedNodes>>,
+  ) => void
   onFlushFieldSaves: () => void
 }
 
