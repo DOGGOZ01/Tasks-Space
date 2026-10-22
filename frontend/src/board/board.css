@@ -299,6 +299,10 @@
   padding: 20px 0;
 }
 
+.board-stage-phone {
+  padding: 0;
+}
+
 .board-canvas-scaler {
   position: relative;
   overflow: hidden;

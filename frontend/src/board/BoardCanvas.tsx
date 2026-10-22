@@ -963,13 +963,20 @@ function BoardStage({ children }: { children: ReactNode }) {
   }, [device, canvasWidth, canvasHeight, setScale])
 
   const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
+  const phone = device === 'mobile' && !editMode
   return (
     <div
-      className={`board-stage board-stage-${device}`}
+      className={`board-stage board-stage-${device}${phone ? ' board-stage-phone' : ''}`}
       ref={wrapperRef}
-      style={resolveBoardBackground(background)}
+      style={{
+        ...resolveBoardBackground(background),
+        ...(background.type === 'html' && phone ? { background: 'transparent' } : {}),
+      }}
     >
       {background.type === 'html' && device === 'desktop' && <BoardBackgroundLayer background={background} />}
+      {background.type === 'html' && phone && (
+        <BoardBackgroundLayer background={background} style={{ position: 'fixed' }} />
+      )}
       <div
         className="board-canvas-scaler"
         style={{
@@ -977,7 +984,7 @@ function BoardStage({ children }: { children: ReactNode }) {
           height: canvasHeight * scale,
         }}
       >
-        {background.type === 'html' && device === 'mobile' && <BoardBackgroundLayer background={background} />}
+        {background.type === 'html' && device === 'mobile' && !phone && <BoardBackgroundLayer background={background} />}
         {editMode && (
           <div
             className="board-canvas-grid-overlay"
