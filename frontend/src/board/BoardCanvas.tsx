@@ -409,8 +409,7 @@ function ImportDesignButton() {
     const layoutForDevice = pending.layouts?.[device] ?? pending.layout
     actions.deserialize(layoutForDevice)
     applyDesignNow(layoutForDevice, pending.background, pending.headerStyle, pending.layouts)
-    const { layouts: _layouts, ...singleDesign } = pending
-    createSavedDesign(pendingName, { ...singleDesign, device, layout: layoutForDevice }).catch(() => {})
+    createSavedDesign(pendingName, { ...pending, device, layout: layoutForDevice }).catch(() => {})
     close()
   }
 
@@ -549,8 +548,9 @@ function DesignsButton() {
     setApplyError(null)
     applySavedDesign(item.id)
       .then((design) => {
-        actions.deserialize(design.layout)
-        applyDesignNow(design.layout, design.background, design.headerStyle)
+        const layoutForDevice = design.layouts?.[device] ?? design.layout
+        actions.deserialize(layoutForDevice)
+        applyDesignNow(layoutForDevice, design.background, design.headerStyle, design.layouts)
         close()
       })
       .catch(() => setApplyError('Could not apply that design. Try again.'))

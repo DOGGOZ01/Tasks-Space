@@ -114,7 +114,7 @@ def _clean_design_payload(value):
     background = value.get("background")
     header_style = value.get("headerStyle")
 
-    return {
+    cleaned = {
         "kind": SAVED_DESIGN_KIND,
         "version": SAVED_DESIGN_VERSION,
         "device": device,
@@ -122,6 +122,16 @@ def _clean_design_payload(value):
         "background": sanitize_board_background(background if isinstance(background, dict) else {}),
         "headerStyle": sanitize_header_style(header_style if isinstance(header_style, dict) else {}),
     }
+    layouts = value.get("layouts")
+    if isinstance(layouts, dict):
+        cleaned_layouts = {
+            key: sanitize_layout(layouts[key])
+            for key in ("desktop", "mobile")
+            if isinstance(layouts.get(key), dict)
+        }
+        if cleaned_layouts:
+            cleaned["layouts"] = cleaned_layouts
+    return cleaned
 
 
 class SavedDesignSerializer(serializers.ModelSerializer):

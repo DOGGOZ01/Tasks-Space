@@ -33,15 +33,23 @@ def collect_background_image_url(background) -> set[str]:
 def collect_design_image_urls(design) -> set[str]:
     if not isinstance(design, dict):
         return set()
-    return collect_layout_image_urls(design.get("layout")) | collect_background_image_url(
+    urls = collect_layout_image_urls(design.get("layout")) | collect_background_image_url(
         design.get("background")
     )
+    layouts = design.get("layouts")
+    if isinstance(layouts, dict):
+        for layout in layouts.values():
+            urls |= collect_layout_image_urls(layout)
+    return urls
 
 
 def rewrite_design_image_urls(design: dict, url_map: dict) -> dict:
     design = copy.deepcopy(design)
-    layout = design.get("layout")
-    if isinstance(layout, dict):
+    layouts = design.get("layouts")
+    all_layouts = [design.get("layout")] + (list(layouts.values()) if isinstance(layouts, dict) else [])
+    for layout in all_layouts:
+        if not isinstance(layout, dict):
+            continue
         for node in layout.values():
             if not isinstance(node, dict):
                 continue
