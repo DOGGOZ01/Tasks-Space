@@ -35,12 +35,23 @@ import { Toolbox } from './Toolbox'
 import { useDragOffset } from './useDragOffset'
 import { useGoogleFonts } from './useGoogleFonts'
 import { useIsMobileDevice } from './useIsMobileDevice'
+import { usePendingIframeCount } from './iframeLoadTracker'
+import {
+  cacheLoadingScreen,
+  DEFAULT_LOADING_SCREEN,
+  LOADING_SCREEN_TIMEOUT_MS,
+  readCachedLoadingScreen,
+} from './loadingScreen'
+import type { LoadingScreen } from './loadingScreen'
+import { LoadingScreenOverlay } from './LoadingScreenOverlay'
+import { LoadingScreenPanel, LoadingScreenToggle } from './LoadingScreenPanel'
 
 interface PageResponse {
   layout: SerializedNodes
   mobile_layout: SerializedNodes
   background: BoardBackground
   header_style: HeaderStyle
+  loading_screen?: LoadingScreen
   date_format: DateFormatPref
   updated_at: string
 }
@@ -333,11 +344,11 @@ const TRANSFER_POPOVER_WIDTH = 260
 
 function ExportDesignButton() {
   const { query } = useEditor()
-  const { device, background, headerStyle } = useBoardUi()
+  const { device, background, headerStyle, loadingScreen } = useBoardUi()
 
   function handleExport() {
     const layout = JSON.parse(query.serialize()) as SerializedNodes
-    downloadBoardDesignExport(buildBoardDesignExport(device, layout, background, headerStyle))
+    downloadBoardDesignExport(buildBoardDesignExport(device, layout, background, headerStyle, { loadingScreen }))
   }
 
   return (
@@ -408,7 +419,7 @@ function ImportDesignButton() {
     if (!pending) return
     const layoutForDevice = pending.layouts?.[device] ?? pending.layout
     actions.deserialize(layoutForDevice)
-    applyDesignNow(layoutForDevice, pending.background, pending.headerStyle, pending.layouts)
+    applyDesignNow(layoutForDevice, pending.background, pending.headerStyle, pending.layouts, pending.loadingScreen)
     createSavedDesign(pendingName, { ...pending, device, layout: layoutForDevice }).catch(() => {})
     close()
   }
@@ -480,7 +491,7 @@ type DesignsScreen =
 
 function DesignsButton() {
   const { actions, query } = useEditor()
-  const { device, background, headerStyle, applyDesignNow, revertToOriginalDesign } = useBoardUi()
+  const { device, background, headerStyle, loadingScreen, applyDesignNow, revertToOriginalDesign } = useBoardUi()
   const { anchor, toggleRef, toggle, close } = useAnchoredPanel(TRANSFER_POPOVER_WIDTH)
   const [designs, setDesigns] = useState<SavedDesignSummary[] | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -530,7 +541,10 @@ function DesignsButton() {
       return
     }
     const layout = JSON.parse(query.serialize()) as SerializedNodes
-    const design = buildBoardDesignExport(device, layout, background, headerStyle, { stripImages: false })
+    const design = buildBoardDesignExport(device, layout, background, headerStyle, {
+      stripImages: false,
+      loadingScreen,
+    })
     setSaving(true)
     setSaveError(null)
     createSavedDesign(trimmed, design)
@@ -550,7 +564,7 @@ function DesignsButton() {
       .then((design) => {
         const layoutForDevice = design.layouts?.[device] ?? design.layout
         actions.deserialize(layoutForDevice)
-        applyDesignNow(layoutForDevice, design.background, design.headerStyle, design.layouts)
+        applyDesignNow(layoutForDevice, design.background, design.headerStyle, design.layouts, design.loadingScreen)
         close()
       })
       .catch(() => setApplyError('Could not apply that design. Try again.'))
@@ -815,7 +829,7 @@ function BackgroundToggle() {
   )
 }
 
-type DesignMenuStep = 'menu' | 'background' | 'buttons'
+type DesignMenuStep = 'menu' | 'background' | 'loading' | 'buttons'
 
 function MobileDesignMenu() {
   const { background, setBackground, headerStyle, setHeaderStyle } = useBoardUi()
@@ -868,6 +882,9 @@ function MobileDesignMenu() {
                   >
                     Board background
                   </button>
+                  <button type="button" className="design-menu-item" onClick={() => setStep('loading')}>
+                    Loading screen
+                  </button>
                   <button type="button" className="design-menu-item" onClick={() => setStep('buttons')}>
                     Top bar buttons
                   </button>
@@ -881,6 +898,7 @@ function MobileDesignMenu() {
                   dragHandleProps={dragHandleProps}
                 />
               )}
+              {step === 'loading' && <LoadingScreenPanel onClose={closeAll} dragHandleProps={dragHandleProps} />}
               {step === 'buttons' && (
                 <>
                   <div className="board-bg-type-tabs" role="tablist">
@@ -1037,6 +1055,7 @@ function BoardChrome({
           {editMode && !isRealMobile && <DeviceToggle />}
           {editMode && isRealMobile && <MobileDesignMenu />}
           {editMode && !isRealMobile && <BackgroundToggle />}
+          {editMode && !isRealMobile && <LoadingScreenToggle />}
           {editMode && !isRealMobile && <HeaderStyleToggle />}
           {editMode && <SettingsButton />}
           {editMode && <HoverRevealToggle />}
@@ -1111,10 +1130,10 @@ function useBoardImagesLoaded(active: boolean): boolean {
       })
     }
 
-    const raf = requestAnimationFrame(check)
+    const checkId = window.setTimeout(check, 50)
     return () => {
       cancelled = true
-      cancelAnimationFrame(raf)
+      window.clearTimeout(checkId)
       window.clearTimeout(timeoutId)
     }
   }, [active, loaded])
@@ -1122,34 +1141,24 @@ function useBoardImagesLoaded(active: boolean): boolean {
   return loaded
 }
 
-function BoardInitialLoadingOverlay({ visible }: { visible: boolean }) {
-  const [mounted, setMounted] = useState(visible)
+const IFRAMES_SETTLE_MS = 150
 
-  useEffect(() => {
-    if (visible) {
-      setMounted(true)
-      return
-    }
-    const timeoutId = window.setTimeout(() => setMounted(false), 300)
-    return () => window.clearTimeout(timeoutId)
-  }, [visible])
-
-  if (!mounted) return null
-
-  return (
-    <div className={`board-initial-loading${visible ? '' : ' board-initial-loading-hidden'}`}>
-      <div className="board-initial-loading-spinner" />
-      <p>Loading your board...</p>
-    </div>
-  )
-}
-
-function InitialLoadGate({ craftReady }: { craftReady: boolean }) {
+function InitialLoadGate({ craftReady, onReady }: { craftReady: boolean; onReady: () => void }) {
   const { tasksLoaded } = useTaskBoard()
   const readyForImages = craftReady && tasksLoaded
   const imagesLoaded = useBoardImagesLoaded(readyForImages)
+  const pendingIframes = usePendingIframeCount()
+  const allLoaded = readyForImages && imagesLoaded && pendingIframes === 0
+  const onReadyRef = useRef(onReady)
+  onReadyRef.current = onReady
 
-  return <BoardInitialLoadingOverlay visible={!(readyForImages && imagesLoaded)} />
+  useEffect(() => {
+    if (!allLoaded) return
+    const timeoutId = window.setTimeout(() => onReadyRef.current(), IFRAMES_SETTLE_MS)
+    return () => window.clearTimeout(timeoutId)
+  }, [allLoaded])
+
+  return null
 }
 
 export function BoardCanvas({ username, onLogout }: { username?: string; onLogout: () => void }) {
@@ -1157,6 +1166,12 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
   const [layouts, setLayouts] = useState<LayoutsByDevice | null>(null)
   const [background, setBackgroundState] = useState<BoardBackground>(DEFAULT_BOARD_BACKGROUND)
   const [headerStyle, setHeaderStyleState] = useState<HeaderStyle>(DEFAULT_HEADER_STYLE)
+  const [loadingScreen, setLoadingScreenState] = useState<LoadingScreen>(DEFAULT_LOADING_SCREEN)
+  const [cachedLoadingScreen] = useState(() => readCachedLoadingScreen(username))
+  const usernameRef = useRef(username)
+  usernameRef.current = username
+  const [boardReady, setBoardReady] = useState(false)
+  const [previewingLoadingScreen, setPreviewingLoadingScreen] = useState(false)
   const [dateFormat, setDateFormatState] = useState<DateFormatPref>(DEFAULT_DATE_FORMAT)
   const [editMode, setEditMode] = useState(false)
   const [editDevice, setEditDeviceState] = useState<DeviceMode>(() =>
@@ -1192,11 +1207,25 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
   const device: DeviceMode = editMode ? editDevice : isMobileDevice ? 'mobile' : 'desktop'
 
   useEffect(() => {
+    const timeoutId = window.setTimeout(() => setBoardReady(true), LOADING_SCREEN_TIMEOUT_MS)
+    return () => window.clearTimeout(timeoutId)
+  }, [])
+
+  useEffect(() => {
+    if (!previewingLoadingScreen) return
+    const timeoutId = window.setTimeout(() => setPreviewingLoadingScreen(false), 6000)
+    return () => window.clearTimeout(timeoutId)
+  }, [previewingLoadingScreen])
+
+  useEffect(() => {
     let cancelled = false
     apiFetch<PageResponse>('/api/page/')
       .then((page) => {
         if (!cancelled) {
           setLayouts({ desktop: page.layout, mobile: page.mobile_layout })
+          const nextLoadingScreen = page.loading_screen ?? DEFAULT_LOADING_SCREEN
+          setLoadingScreenState(nextLoadingScreen)
+          cacheLoadingScreen(usernameRef.current, nextLoadingScreen)
           if (page.background && Object.keys(page.background).length > 0) {
             setBackgroundState(page.background)
           }
@@ -1270,6 +1299,12 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
     scheduleFieldSave('date_format', next)
   }
 
+  function setLoadingScreen(next: LoadingScreen) {
+    setLoadingScreenState(next)
+    cacheLoadingScreen(username, next)
+    scheduleFieldSave('loading_screen', next)
+  }
+
   function revertToOriginalDesign() {
     Object.values(fieldSaveTimeoutsRef.current).forEach((timeoutId) => {
       if (timeoutId) window.clearTimeout(timeoutId)
@@ -1281,6 +1316,8 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
     setLayouts({ desktop: {}, mobile: {} })
     setBackgroundState(DEFAULT_BOARD_BACKGROUND)
     setHeaderStyleState(DEFAULT_HEADER_STYLE)
+    setLoadingScreenState(DEFAULT_LOADING_SCREEN)
+    cacheLoadingScreen(username, DEFAULT_LOADING_SCREEN)
 
     setStatus('saving')
     apiFetch('/api/page/', {
@@ -1290,6 +1327,7 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
         mobile_layout: {},
         background: DEFAULT_BOARD_BACKGROUND,
         header_style: DEFAULT_HEADER_STYLE,
+        loading_screen: DEFAULT_LOADING_SCREEN,
       }),
     })
       .then(() => setStatus('saved'))
@@ -1304,6 +1342,7 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
     nextBackground: BoardBackground,
     nextHeaderStyle: HeaderStyle,
     otherLayouts: Partial<Record<DeviceMode, SerializedNodes>> = {},
+    nextLoadingScreen: LoadingScreen = DEFAULT_LOADING_SCREEN,
   ) {
     Object.values(fieldSaveTimeoutsRef.current).forEach((timeoutId) => {
       if (timeoutId) window.clearTimeout(timeoutId)
@@ -1316,6 +1355,8 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
     setLayouts((prev) => (prev ? { ...prev, ...nextLayouts } : prev))
     setBackgroundState(nextBackground)
     setHeaderStyleState(nextHeaderStyle)
+    setLoadingScreenState(nextLoadingScreen)
+    cacheLoadingScreen(username, nextLoadingScreen)
 
     const layoutFields = Object.fromEntries(
       (Object.keys(nextLayouts) as DeviceMode[]).map((key) => [LAYOUT_FIELD[key], nextLayouts[key]]),
@@ -1327,6 +1368,7 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
         ...layoutFields,
         background: nextBackground,
         header_style: nextHeaderStyle,
+        loading_screen: nextLoadingScreen,
       }),
     })
       .then(() => setStatus('saved'))
@@ -1343,45 +1385,56 @@ export function BoardCanvas({ username, onLogout }: { username?: string; onLogou
     scheduleFieldSave(LAYOUT_FIELD[forDevice], parsedLayout)
   }
 
-  if (layouts === null) {
-    return <div className="page-loading">Loading board...</div>
-  }
+  const overlayScreen = previewingLoadingScreen ? loadingScreen : (cachedLoadingScreen ?? loadingScreen)
 
   return (
-    <TaskBoardProvider>
-      <BoardUiProvider
-        editMode={editMode}
-        toggleEditMode={() => setEditMode((v) => !v)}
-        device={device}
-        onDeviceChange={setEditDevice}
-        canEditDesktop={!isMobileDevice}
-        background={background}
-        onBackgroundChange={setBackground}
-        headerStyle={headerStyle}
-        onHeaderStyleChange={setHeaderStyle}
-        dateFormat={dateFormat}
-        onDateFormatChange={setDateFormat}
-        onRevertToOriginalDesign={revertToOriginalDesign}
-        onApplyDesignNow={applyDesignNow}
-        onFlushFieldSaves={flushFieldSaves}
-      >
-        <BoardEditor
-          layout={layouts[device]}
-          onNodesChange={(query) => handleNodesChange(device, query)}
-          onLoaded={() => {
-            readyRef.current = true
-            setCraftReady(true)
-          }}
-          username={username}
-          onLogout={onLogout}
-        />
-      </BoardUiProvider>
-      <InitialLoadGate craftReady={craftReady} />
-      <div className="board-status">
-        {status === 'saving' && 'Saving...'}
-        {status === 'saved' && 'Saved'}
-        {status === 'error' && 'Save failed'}
-      </div>
-    </TaskBoardProvider>
+    <>
+      {layouts !== null && (
+        <TaskBoardProvider>
+          <BoardUiProvider
+            editMode={editMode}
+            toggleEditMode={() => setEditMode((v) => !v)}
+            device={device}
+            onDeviceChange={setEditDevice}
+            canEditDesktop={!isMobileDevice}
+            background={background}
+            onBackgroundChange={setBackground}
+            headerStyle={headerStyle}
+            onHeaderStyleChange={setHeaderStyle}
+            dateFormat={dateFormat}
+            onDateFormatChange={setDateFormat}
+            loadingScreen={loadingScreen}
+            onLoadingScreenChange={setLoadingScreen}
+            onPreviewLoadingScreen={() => setPreviewingLoadingScreen(true)}
+            onRevertToOriginalDesign={revertToOriginalDesign}
+            onApplyDesignNow={applyDesignNow}
+            onFlushFieldSaves={flushFieldSaves}
+          >
+            <BoardEditor
+              layout={layouts[device]}
+              onNodesChange={(query) => handleNodesChange(device, query)}
+              onLoaded={() => {
+                readyRef.current = true
+                setCraftReady(true)
+              }}
+              username={username}
+              onLogout={onLogout}
+            />
+          </BoardUiProvider>
+          <InitialLoadGate craftReady={craftReady} onReady={() => setBoardReady(true)} />
+          <div className="board-status">
+            {status === 'saving' && 'Saving...'}
+            {status === 'saved' && 'Saved'}
+            {status === 'error' && 'Save failed'}
+          </div>
+        </TaskBoardProvider>
+      )}
+      <LoadingScreenOverlay
+        visible={!boardReady || previewingLoadingScreen}
+        screen={overlayScreen}
+        username={username}
+        onDismiss={previewingLoadingScreen ? () => setPreviewingLoadingScreen(false) : undefined}
+      />
+    </>
   )
 }

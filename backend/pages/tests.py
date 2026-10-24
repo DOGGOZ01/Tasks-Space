@@ -571,3 +571,85 @@ class RenderPreviewTests(APITestCase):
         self.assertIn("style-src 'unsafe-inline' https://fonts.googleapis.com", csp)
         self.assertIn("font-src https://fonts.gstatic.com", csp)
         self.assertIn("default-src 'none'", csp)
+
+
+class SanitizeCheckTests(APITestCase):
+    def setUp(self):
+        self.alex = User.objects.create_user(username="alex", password="pw")
+        self.client.force_authenticate(self.alex)
+
+    def check(self, *items):
+        return self.client.post(
+            "/api/ai/sanitize-check/",
+            {"items": [{"kind": kind, "value": value} for kind, value in items]},
+            format="json",
+        )
+
+    def test_requires_auth(self):
+        self.client.force_authenticate(None)
+        self.assertEqual(self.check(("customCss", "color: red;")).status_code, 401)
+
+    def test_reports_dropped_css_properties(self):
+        response = self.check(("customCss", "color: red; margin-top: 4px; pointer-events: none;"))
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(response.data["results"][0]["dropped_properties"], ["margin-top", "pointer-events"])
+
+    def test_reports_dropped_animation_selectors_and_properties(self):
+        css = "& { transform: scale(1); }\n.child:hover { opacity: 1; }\n@keyframes a { 0% { width: 10px; opacity: 0; } }"
+        result = self.check(("animationCss", css)).data["results"][0]
+        self.assertEqual(result["dropped_selectors"], [".child:hover"])
+        self.assertEqual(result["dropped_properties"], ["width"])
+
+    def test_reports_dropped_html_tags_and_style_properties(self):
+        html = '<style>.a { color: red; text-transform: uppercase; }</style><iframe src="x"></iframe><div style="inset: 0">x</div>'
+        result = self.check(("html", html)).data["results"][0]
+        self.assertEqual(result["dropped_tags"], ["iframe"])
+        self.assertEqual(result["dropped_properties"], ["inset", "text-transform"])
+
+    def test_clean_values_report_nothing(self):
+        result = self.check(("customCss", "color: red; box-shadow: 0 0 4px #000;")).data["results"][0]
+        self.assertEqual(result["dropped_properties"], [])
+        self.assertFalse(result["truncated"])
+
+    def test_rejects_unknown_kind(self):
+        self.assertEqual(self.check(("javascript", "alert(1)")).status_code, 400)
+
+    def test_rejects_too_many_items(self):
+        self.assertEqual(self.check(*[("customCss", "color: red;")] * 41).status_code, 400)
+
+
+class LoadingScreenTests(APITestCase):
+    def setUp(self):
+        self.alex = User.objects.create_user(username="alex", password="pw")
+        self.client.force_authenticate(self.alex)
+
+    @override_settings(ALLOW_CUSTOM_SCRIPTS=False)
+    def test_page_patch_sanitizes_loading_screen(self):
+        response = self.client.patch(
+            "/api/page/",
+            {"loading_screen": {"html": "<b>Loading</b><script>alert(1)</script>", "color": "red", "extra": 1}},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertNotIn("<script", response.data["loading_screen"]["html"])
+        self.assertNotIn("color", response.data["loading_screen"])
+        self.assertNotIn("extra", response.data["loading_screen"])
+
+    def test_page_keeps_valid_loading_screen(self):
+        payload = {"html": "<div>Booting</div>", "color": "#06060c"}
+        self.client.patch("/api/page/", {"loading_screen": payload}, format="json")
+        self.assertEqual(self.client.get("/api/page/").data["loading_screen"], payload)
+
+    def test_saved_design_keeps_loading_screen(self):
+        design = {
+            "kind": "task-tracker-board-design",
+            "version": 1,
+            "device": "desktop",
+            "layout": {},
+            "background": {"type": "color", "color": "#000000"},
+            "headerStyle": {},
+            "loadingScreen": {"html": "<div>Booting</div>", "color": "#06060c"},
+        }
+        response = self.client.post("/api/designs/", {"name": "Cyber", "design": design}, format="json")
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertEqual(response.data["design"]["loadingScreen"], design["loadingScreen"])

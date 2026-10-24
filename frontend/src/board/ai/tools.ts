@@ -297,6 +297,119 @@ export function buildTools(allowCustomScripts: boolean): ToolDefinition[] {
     },
   },
   {
+    name: 'patch_block',
+    description:
+      'Make precise text edits inside ONE field of an existing block without rewriting the rest. Prefer ' +
+      'this over update_block whenever the field already has content you want to keep: adding a rule to ' +
+      'animationCss, changing a color inside customCss, fixing a line in html. Each edit replaces the ' +
+      'exact `find` text with `replace`; `find` must appear exactly once in the current value, copied ' +
+      'from the board state as plain text (not JSON-escaped). An empty `find` appends `replace` to the end ' +
+      'on a new line. Edits run in order; if any one fails, nothing is changed and you get the reason.',
+    parameters: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        field: {
+          type: 'string',
+          enum: [
+            'html',
+            'text',
+            'body.customCss',
+            'body.animationCss',
+            'header.customCss',
+            'header.animationCss',
+            'input.customCss',
+            'input.animationCss',
+            'addButton.customCss',
+            'addButton.animationCss',
+            ...(allowCustomScripts
+              ? ['body.overlayHtml', 'header.overlayHtml', 'input.overlayHtml', 'addButton.overlayHtml']
+              : []),
+          ],
+          description:
+            "'html' is a CustomHtmlBlock's html, 'text' a NoteBlock's text, '<part>.<field>' a part style " +
+            '(the same parts as partStyles).',
+        },
+        edits: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              find: { type: 'string', description: 'Exact unique text to replace. Empty string = append.' },
+              replace: { type: 'string', description: 'Replacement text. Empty string = delete `find`.' },
+            },
+            required: ['find', 'replace'],
+          },
+        },
+      },
+      required: ['id', 'field', 'edits'],
+    },
+  },
+  {
+    name: 'patch_background',
+    description:
+      'Precise text edits inside the html of an "html" board background, same rules as patch_block. ' +
+      'Use it to tweak a color, speed or element of the background instead of resending the whole html ' +
+      'with set_background.',
+    parameters: {
+      type: 'object',
+      properties: {
+        edits: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              find: { type: 'string', description: 'Exact unique text to replace. Empty string = append.' },
+              replace: { type: 'string', description: 'Replacement text. Empty string = delete `find`.' },
+            },
+            required: ['find', 'replace'],
+          },
+        },
+      },
+      required: ['edits'],
+    },
+  },
+  {
+    name: 'set_loading_screen',
+    description:
+      'Set the full-screen loading screen shown while the board loads (until every block, image and ' +
+      'HTML frame is ready, 8 seconds at most). It is part of the design and shared by desktop and phone. ' +
+      'Send every field you want to keep; a call with no fields resets it to the default spinner.',
+    parameters: {
+      type: 'object',
+      properties: {
+        html: {
+          type: 'string',
+          description: allowCustomScripts
+            ? 'Sandboxed HTML/CSS/JS, rendered like the html background (a full-screen iframe).'
+            : 'Sandboxed HTML/CSS, rendered like the html background. <script> tags are removed on this server',
+        },
+        color: { type: 'string', description: 'Hex backdrop color, shown instantly before the html has loaded' },
+      },
+    },
+  },
+  {
+    name: 'patch_loading_screen',
+    description: 'Precise text edits inside the loading screen html, same rules as patch_block.',
+    parameters: {
+      type: 'object',
+      properties: {
+        edits: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              find: { type: 'string', description: 'Exact unique text to replace. Empty string = append.' },
+              replace: { type: 'string', description: 'Replacement text. Empty string = delete `find`.' },
+            },
+            required: ['find', 'replace'],
+          },
+        },
+      },
+      required: ['edits'],
+    },
+  },
+  {
     name: 'remove_block',
     description: 'Remove an existing block by id.',
     parameters: {

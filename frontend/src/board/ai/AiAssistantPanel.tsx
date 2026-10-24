@@ -4,6 +4,10 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useAnchoredPanel } from '../BoardCanvas'
 import { useBoardUi } from '../BoardUiContext'
+import type { BoardBackground } from '../boardBackground'
+import type { DeviceMode } from '../geometry'
+import type { HeaderStyle } from '../headerStyle'
+import type { LoadingScreen } from '../loadingScreen'
 import { useAuth } from '../../context/AuthContext'
 import type { ApplyContext, ApplyResult } from './applyToolCalls'
 import { applyToolCall, describeToolCall } from './applyToolCalls'
@@ -20,6 +24,7 @@ import type { StoredCredentials } from './keyStore'
 import { clearConversationMemory, loadConversationMemory, saveConversationMemory } from './memory'
 import { PROVIDERS, sendChat, sendChatViaBackend } from './providers'
 import type { ProviderId } from './providers'
+import { SERVER_DROP_PREFIX, toToolResults } from './serverCheck'
 import { buildSystemPrompt } from './systemPrompt'
 import { buildTools } from './tools'
 import type { ConversationEntry, ToolCallRequest } from './types'
@@ -40,6 +45,14 @@ function readStoredAgentMode(): boolean {
 
 type Screen = 'loading' | 'setup' | 'unlock' | 'chat'
 
+interface AiUndoSnapshot {
+  device: DeviceMode
+  layout: string
+  background: BoardBackground
+  headerStyle: HeaderStyle
+  loadingScreen: LoadingScreen
+}
+
 function ForgetKeyConfirm({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
   return (
     <div className="ai-assistant-confirm-forget">
@@ -58,8 +71,18 @@ function ForgetKeyConfirm({ onCancel, onConfirm }: { onCancel: () => void; onCon
 
 export function AiAssistantButton() {
   const { actions, query } = useEditor()
-  const { background, headerStyle, setBackground, setHeaderStyle, canvasWidth, canvasHeight, device, flushFieldSaves } =
-    useBoardUi()
+  const {
+    background,
+    headerStyle,
+    loadingScreen,
+    setBackground,
+    setHeaderStyle,
+    setLoadingScreen,
+    canvasWidth,
+    canvasHeight,
+    device,
+    flushFieldSaves,
+  } = useBoardUi()
   const { aiAssistant, allowCustomScripts } = useAuth()
   const tools = buildTools(allowCustomScripts)
   const { anchor, toggleRef, toggle, close } = useAnchoredPanel(PANEL_WIDTH)
@@ -84,10 +107,14 @@ export function AiAssistantButton() {
   const [running, setRunning] = useState(false)
   const [agentMode, setAgentModeState] = useState(readStoredAgentMode)
   const [chatError, setChatError] = useState<string | null>(null)
+  const [undoSnapshot, setUndoSnapshot] = useState<AiUndoSnapshot | null>(null)
+  const [undoNote, setUndoNote] = useState<string | null>(null)
+  const [applying, setApplying] = useState(false)
   const stopRequestedRef = useRef(false)
   const chatScrollRef = useRef<HTMLDivElement | null>(null)
   const backgroundRef = useRef(background)
   const headerStyleRef = useRef(headerStyle)
+  const loadingScreenRef = useRef(loadingScreen)
 
   function setAgentMode(next: boolean) {
     setAgentModeState(next)
@@ -107,6 +134,10 @@ export function AiAssistantButton() {
   useEffect(() => {
     headerStyleRef.current = headerStyle
   }, [headerStyle])
+
+  useEffect(() => {
+    loadingScreenRef.current = loadingScreen
+  }, [loadingScreen])
 
   useLayoutEffect(() => {
     if (screen !== 'chat' || !anchor) return
@@ -208,6 +239,9 @@ export function AiAssistantButton() {
       get headerStyle() {
         return headerStyleRef.current
       },
+      get loadingScreen() {
+        return loadingScreenRef.current
+      },
       setBackground: (next) => {
         backgroundRef.current = next
         setBackground(next)
@@ -216,8 +250,36 @@ export function AiAssistantButton() {
         headerStyleRef.current = next
         setHeaderStyle(next)
       },
+      setLoadingScreen: (next) => {
+        loadingScreenRef.current = next
+        setLoadingScreen(next)
+      },
     }
     return toolCalls.map((call) => applyToolCall(call, ctx))
+  }
+
+  function takeSnapshot(): AiUndoSnapshot {
+    return {
+      device,
+      layout: query.serialize(),
+      background: backgroundRef.current,
+      headerStyle: headerStyleRef.current,
+      loadingScreen: loadingScreenRef.current,
+    }
+  }
+
+  function undoAiChanges() {
+    if (!undoSnapshot || undoSnapshot.device !== device) return
+    actions.deserialize(undoSnapshot.layout)
+    backgroundRef.current = undoSnapshot.background
+    setBackground(undoSnapshot.background)
+    headerStyleRef.current = undoSnapshot.headerStyle
+    setHeaderStyle(undoSnapshot.headerStyle)
+    loadingScreenRef.current = undoSnapshot.loadingScreen
+    setLoadingScreen(undoSnapshot.loadingScreen)
+    flushFieldSaves()
+    setUndoSnapshot(null)
+    setUndoNote('The board is back to how it was before the last AI changes.')
   }
 
   async function handleSend() {
@@ -227,7 +289,9 @@ export function AiAssistantButton() {
 
     setInput('')
     setChatError(null)
+    setUndoNote(null)
     stopRequestedRef.current = false
+    let snapshotTaken = false
 
     let conv: ConversationEntry[] = [...conversation, { kind: 'user', content: text }]
     setConversation(conv)
@@ -242,7 +306,13 @@ export function AiAssistantButton() {
         if (step > 1 && stopRequestedRef.current) break
 
         const layout = JSON.parse(query.serialize()) as SerializedNodes
-        const boardState = summarizeBoardState(layout, device, backgroundRef.current, headerStyleRef.current)
+        const boardState = summarizeBoardState(
+          layout,
+          device,
+          backgroundRef.current,
+          headerStyleRef.current,
+          loadingScreenRef.current,
+        )
         const systemPrompt = buildSystemPrompt({
           allowCustomScripts,
           agentMode,
@@ -271,20 +341,13 @@ export function AiAssistantButton() {
         if (result.toolCalls.length === 0) break
         if (!agentMode) break
 
+        if (!snapshotTaken) {
+          setUndoSnapshot(takeSnapshot())
+          snapshotTaken = true
+        }
         const results = runApplyBatch(result.toolCalls)
         flushFieldSaves()
-        conv = [
-          ...conv,
-          {
-            kind: 'tool_results',
-            results: results.map((r) => ({
-              callId: r.toolCall.id,
-              name: r.toolCall.name,
-              output: r.error ?? 'Done.',
-              isError: Boolean(r.error),
-            })),
-          },
-        ]
+        conv = [...conv, { kind: 'tool_results', results: await toToolResults(results) }]
         setConversation(conv)
 
         if (step === MAX_AGENT_STEPS) cappedOut = true
@@ -309,25 +372,27 @@ export function AiAssistantButton() {
     stopRequestedRef.current = true
   }
 
-  function applyPendingEntry(entryIndex: number) {
-    setConversation((prev) => {
-      const entry = prev[entryIndex]
-      if (!entry || entry.kind !== 'assistant' || entry.toolCalls.length === 0) return prev
+  async function applyPendingEntry(entryIndex: number) {
+    const entry = conversation[entryIndex]
+    if (applying || !entry || entry.kind !== 'assistant' || entry.toolCalls.length === 0) return
+    if (conversation[entryIndex + 1]?.kind === 'tool_results') return
 
-      const results = runApplyBatch(entry.toolCalls)
-      flushFieldSaves()
-      const next = [...prev]
-      next.splice(entryIndex + 1, 0, {
-        kind: 'tool_results',
-        results: results.map((r) => ({
-          callId: r.toolCall.id,
-          name: r.toolCall.name,
-          output: r.error ?? 'Done.',
-          isError: Boolean(r.error),
-        })),
+    setApplying(true)
+    setUndoNote(null)
+    setUndoSnapshot(takeSnapshot())
+    const results = runApplyBatch(entry.toolCalls)
+    flushFieldSaves()
+    try {
+      const toolResults = await toToolResults(results)
+      setConversation((prev) => {
+        if (prev[entryIndex] !== entry || prev[entryIndex + 1]?.kind === 'tool_results') return prev
+        const next = [...prev]
+        next.splice(entryIndex + 1, 0, { kind: 'tool_results', results: toolResults })
+        return next
       })
-      return next
-    })
+    } finally {
+      setApplying(false)
+    }
   }
 
   function discardPendingEntry(entryIndex: number) {
@@ -353,7 +418,7 @@ export function AiAssistantButton() {
   const lastEntry = conversation[conversation.length - 1]
   const hasUnresolvedProposal =
     lastEntry?.kind === 'assistant' && lastEntry.toolCalls.length > 0 && !lastEntry.discarded
-  const inputDisabled = sending || running || hasUnresolvedProposal
+  const inputDisabled = sending || running || applying || hasUnresolvedProposal
 
   return (
     <>
@@ -492,6 +557,21 @@ export function AiAssistantButton() {
                   <div className="ai-assistant-chat-header">
                     <span>AI Assistant</span>
                     <div className="ai-assistant-chat-header-actions">
+                      {undoSnapshot && (
+                        <button
+                          type="button"
+                          className="ai-forget-link"
+                          onClick={undoAiChanges}
+                          disabled={sending || running || applying || undoSnapshot.device !== device}
+                          title={
+                            undoSnapshot.device !== device
+                              ? `Switch back to the ${undoSnapshot.device} layout to undo`
+                              : 'Restore the board to how it was before the last AI changes'
+                          }
+                        >
+                          Undo AI changes
+                        </button>
+                      )}
                       {conversation.length > 0 && (
                         <button
                           type="button"
@@ -560,6 +640,7 @@ export function AiAssistantButton() {
                                   type="button"
                                   className="confirm-popover-primary"
                                   onClick={() => applyPendingEntry(idx)}
+                                  disabled={applying}
                                 >
                                   Apply
                                 </button>
@@ -580,7 +661,9 @@ export function AiAssistantButton() {
                                   >
                                     {result?.isError
                                       ? `Failed: ${describeToolCall(call)} (${result.output})`
-                                      : describeToolCall(call)}
+                                      : result?.output.startsWith(SERVER_DROP_PREFIX)
+                                        ? `${describeToolCall(call)} Some CSS or tags will be dropped by the server.`
+                                        : describeToolCall(call)}
                                   </li>
                                 )
                               })}
@@ -591,6 +674,7 @@ export function AiAssistantButton() {
                     })}
                     {sending && <p className="confirm-popover-hint">{running ? 'Working...' : 'Thinking...'}</p>}
                     {chatError && <p className="confirm-popover-hint">{chatError}</p>}
+                    {undoNote && <p className="confirm-popover-hint">{undoNote}</p>}
                   </div>
                   {hasUnresolvedProposal && (
                     <p className="confirm-popover-hint">Apply or discard the proposed changes above to continue.</p>

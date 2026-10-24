@@ -4,10 +4,11 @@ import type { ElementLayout } from '../elementLayout'
 import type { DeviceMode } from '../geometry'
 import { boardHeightFor, boardWidthFor } from '../geometry'
 import type { HeaderStyle } from '../headerStyle'
+import type { LoadingScreen } from '../loadingScreen'
 import { BLOCK_PROP_KEYS, HEADER_STYLE_BLOCK_TYPES, INPUT_STYLE_BLOCK_TYPES } from './tools'
 import type { BlockTypeName } from './tools'
 
-const CONTENT_PREVIEW_LIMIT = 4000
+const CONTENT_PREVIEW_LIMIT = 20000
 
 function truncate(value: unknown): unknown {
   if (typeof value === 'string' && value.length > CONTENT_PREVIEW_LIMIT) {
@@ -42,6 +43,7 @@ export interface BoardStateSummary {
   canvasHeight: number
   background: BoardBackground
   headerStyle: HeaderStyle
+  loadingScreen: LoadingScreen
   blocks: BoardStateBlockSummary[]
 }
 
@@ -50,6 +52,7 @@ export function summarizeBoardState(
   device: DeviceMode,
   background: BoardBackground,
   headerStyle: HeaderStyle,
+  loadingScreen: LoadingScreen,
 ): BoardStateSummary {
   const blocks: BoardStateBlockSummary[] = Object.entries(layout)
     .filter(([id]) => id !== 'ROOT')
@@ -92,6 +95,7 @@ export function summarizeBoardState(
     canvasHeight: boardHeightFor(device),
     background,
     headerStyle,
+    loadingScreen,
     blocks,
   }
 }

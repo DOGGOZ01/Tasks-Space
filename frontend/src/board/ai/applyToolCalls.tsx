@@ -5,6 +5,7 @@ import type { BoardBackground } from '../boardBackground'
 import type { BlockElementId, ElementLayout, ElementRect } from '../elementLayout'
 import { clamp, MIN_BLOCK_HEIGHT, MIN_BLOCK_WIDTH } from '../geometry'
 import type { HeaderStyle, HeaderStyleTarget } from '../headerStyle'
+import type { LoadingScreen } from '../loadingScreen'
 import { CustomHtmlBlock } from '../blocks/CustomHtmlBlock'
 import { DailyTaskListBlock } from '../blocks/DailyTaskListBlock'
 import { ImageBlock } from '../blocks/ImageBlock'
@@ -41,15 +42,44 @@ export interface ApplyContext {
   canvasHeight: number
   background: BoardBackground
   headerStyle: HeaderStyle
+  loadingScreen: LoadingScreen
   allowCustomScripts: boolean
   setBackground: (next: BoardBackground) => void
   setHeaderStyle: (next: HeaderStyle) => void
+  setLoadingScreen: (next: LoadingScreen) => void
+}
+
+export type SanitizeCheckKind = 'html' | 'customCss' | 'animationCss'
+
+export interface SanitizeCheck {
+  label: string
+  kind: SanitizeCheckKind
+  value: string
 }
 
 export interface ApplyResult {
   toolCall: ToolCallRequest
   summary: string
   error?: string
+  checks?: SanitizeCheck[]
+}
+
+function styleChecks(label: string, style: BlockStyle | null): SanitizeCheck[] {
+  if (!style) return []
+  const checks: SanitizeCheck[] = []
+  if (style.customCss) checks.push({ label: `${label}.customCss`, kind: 'customCss', value: style.customCss })
+  if (style.animationCss) checks.push({ label: `${label}.animationCss`, kind: 'animationCss', value: style.animationCss })
+  if (style.overlayHtml) checks.push({ label: `${label}.overlayHtml`, kind: 'html', value: style.overlayHtml })
+  return checks
+}
+
+function partStyleChecks(partStyles: PartStyles): SanitizeCheck[] {
+  return [
+    ...styleChecks('body', partStyles.body),
+    ...styleChecks('header', partStyles.header),
+    ...styleChecks('input', partStyles.input),
+    ...styleChecks('addButton', partStyles.addButton),
+  ]
 }
 
 function cleanStyle(raw: unknown, allowCustomScripts: boolean): BlockStyle {
@@ -206,7 +236,11 @@ function applySetBackground(call: ToolCallRequest, ctx: ApplyContext): ApplyResu
   if (typeof args.customCss === 'string') next.customCss = args.customCss.slice(0, 4000)
 
   ctx.setBackground(next)
-  return { toolCall: call, summary: `Set board background to type "${type}".` }
+  return {
+    toolCall: call,
+    summary: `Set board background to type "${type}".`,
+    checks: next.html ? [{ label: 'background.html', kind: 'html', value: next.html }] : [],
+  }
 }
 
 function applySetHeaderStyle(call: ToolCallRequest, ctx: ApplyContext): ApplyResult {
@@ -217,7 +251,7 @@ function applySetHeaderStyle(call: ToolCallRequest, ctx: ApplyContext): ApplyRes
   }
   const style = cleanStyle(args.style, false)
   ctx.setHeaderStyle({ ...ctx.headerStyle, [target as HeaderStyleTarget]: style })
-  return { toolCall: call, summary: `Styled the ${target} button/label.` }
+  return { toolCall: call, summary: `Styled the ${target} button/label.`, checks: styleChecks(target, style) }
 }
 
 function applyAddBlock(call: ToolCallRequest, ctx: ApplyContext): ApplyResult {
@@ -269,7 +303,13 @@ function applyAddBlock(call: ToolCallRequest, ctx: ApplyContext): ApplyResult {
   }
 
   ctx.actions.addNodeTree(tree, ROOT_NODE)
-  return { toolCall: call, summary: `Added a ${blockType} block (id ${rootId}).` }
+  const htmlCheck: SanitizeCheck[] =
+    typeof nodeProps.html === 'string' && nodeProps.html ? [{ label: 'html', kind: 'html', value: nodeProps.html }] : []
+  return {
+    toolCall: call,
+    summary: `Added a ${blockType} block (id ${rootId}).`,
+    checks: [...htmlCheck, ...partStyleChecks(partStyles)],
+  }
 }
 
 function applyUpdateBlock(call: ToolCallRequest, ctx: ApplyContext): ApplyResult {
@@ -326,7 +366,196 @@ function applyUpdateBlock(call: ToolCallRequest, ctx: ApplyContext): ApplyResult
     }
     if (zIndexUpdate !== null) props.zIndex = zIndexUpdate
   })
-  return { toolCall: call, summary: `Updated block "${id}".` }
+  const htmlCheck: SanitizeCheck[] =
+    typeof propUpdates.html === 'string' && propUpdates.html
+      ? [{ label: 'html', kind: 'html', value: propUpdates.html }]
+      : []
+  return {
+    toolCall: call,
+    summary: `Updated block "${id}".`,
+    checks: [...htmlCheck, ...partStyleChecks(partStyles)],
+  }
+}
+
+const PART_STYLE_PROP: Record<string, string> = {
+  body: 'style',
+  header: 'headerStyle',
+  input: 'inputStyle',
+  addButton: 'addButtonStyle',
+}
+
+const STYLE_FIELD_LIMITS: Record<string, number> = { customCss: 4000, animationCss: 4000, overlayHtml: 20000 }
+
+interface TextEdit {
+  find: string
+  replace: string
+}
+
+function readEdits(raw: unknown): TextEdit[] | string {
+  if (!Array.isArray(raw) || raw.length === 0) return 'Missing "edits".'
+  const edits: TextEdit[] = []
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') return 'Each edit must be an object.'
+    const { find, replace } = item as Record<string, unknown>
+    if (typeof find !== 'string' || typeof replace !== 'string') return 'Each edit needs string "find" and "replace".'
+    edits.push({ find, replace })
+  }
+  return edits
+}
+
+function applyTextEdits(current: string, edits: TextEdit[], label: string): string | { error: string } {
+  let text = current
+  for (const { find, replace } of edits) {
+    if (find === '') {
+      text = text && !text.endsWith('\n') ? `${text}\n${replace}` : `${text}${replace}`
+      continue
+    }
+    const at = text.indexOf(find)
+    if (at === -1) {
+      return {
+        error:
+          `"find" text was not found in ${label}. Copy it exactly from the current board state ` +
+          '(unescaped, same spaces and line breaks) or use a shorter unique fragment.',
+      }
+    }
+    if (text.indexOf(find, at + 1) !== -1) {
+      return { error: `"find" text occurs more than once in ${label}. Include more surrounding text so it is unique.` }
+    }
+    text = text.slice(0, at) + replace + text.slice(at + find.length)
+  }
+  return text
+}
+
+function checkKindForField(field: string): SanitizeCheckKind | null {
+  if (field === 'html' || field.endsWith('.overlayHtml')) return 'html'
+  if (field.endsWith('.customCss')) return 'customCss'
+  if (field.endsWith('.animationCss')) return 'animationCss'
+  return null
+}
+
+function applyPatchBlock(call: ToolCallRequest, ctx: ApplyContext): ApplyResult {
+  const args = call.arguments
+  const id = args.id
+  if (typeof id !== 'string') return { toolCall: call, summary: '', error: 'Missing block id.' }
+  let existing: any = null
+  try {
+    existing = ctx.query.node(id).get()
+  } catch {
+    existing = null
+  }
+  if (!existing) return { toolCall: call, summary: '', error: `Block "${id}" not found.` }
+  const blockType = existing.data.name as BlockTypeName | undefined
+  const currentProps = existing.data.props as Record<string, unknown>
+
+  const field = args.field
+  if (typeof field !== 'string') return { toolCall: call, summary: '', error: 'Missing "field".' }
+  const edits = readEdits(args.edits)
+  if (typeof edits === 'string') return { toolCall: call, summary: '', error: edits }
+
+  let current: string
+  let limit: number
+  let write: (props: Record<string, unknown>, value: string) => void
+  if (field === 'html' || field === 'text') {
+    if (!blockType || !BLOCK_PROP_KEYS[blockType].includes(field)) {
+      return { toolCall: call, summary: '', error: `A ${String(blockType)} block has no "${field}".` }
+    }
+    current = typeof currentProps[field] === 'string' ? (currentProps[field] as string) : ''
+    limit = field === 'html' ? MAX_HTML_PROP_LENGTH : MAX_NOTE_TEXT_LENGTH
+    write = (props, value) => {
+      props[field] = value
+    }
+  } else {
+    const [part, styleField] = field.split('.')
+    const propKey = PART_STYLE_PROP[part]
+    if (!propKey || !(styleField in STYLE_FIELD_LIMITS)) {
+      return { toolCall: call, summary: '', error: `Unknown field "${field}".` }
+    }
+    if (styleField === 'overlayHtml' && !ctx.allowCustomScripts) {
+      return { toolCall: call, summary: '', error: 'overlayHtml is disabled on this server.' }
+    }
+    if (part === 'header' && !(blockType && HEADER_STYLE_BLOCK_TYPES.has(blockType))) {
+      return { toolCall: call, summary: '', error: `A ${String(blockType)} block has no header.` }
+    }
+    if ((part === 'input' || part === 'addButton') && !(blockType && INPUT_STYLE_BLOCK_TYPES.has(blockType))) {
+      return { toolCall: call, summary: '', error: `A ${String(blockType)} block has no ${part}.` }
+    }
+    const style = (currentProps[propKey] as Record<string, unknown> | undefined) ?? {}
+    current = typeof style[styleField] === 'string' ? (style[styleField] as string) : ''
+    limit = STYLE_FIELD_LIMITS[styleField]
+    write = (props, value) => {
+      props[propKey] = { ...((props[propKey] as object) ?? {}), [styleField]: value }
+    }
+  }
+
+  const next = applyTextEdits(current, edits, field)
+  if (typeof next !== 'string') return { toolCall: call, summary: '', error: next.error }
+  if (next.length > limit) {
+    return { toolCall: call, summary: '', error: `${field} would be ${next.length} characters; the limit is ${limit}.` }
+  }
+
+  ctx.actions.setProp(id, (props: Record<string, unknown>) => write(props, next))
+  const kind = checkKindForField(field)
+  return {
+    toolCall: call,
+    summary: `Edited ${field} of block "${id}".`,
+    checks: kind && next ? [{ label: field, kind, value: next }] : [],
+  }
+}
+
+function applySetLoadingScreen(call: ToolCallRequest, ctx: ApplyContext): ApplyResult {
+  const args = call.arguments
+  const next: LoadingScreen = {}
+  if (typeof args.html === 'string' && args.html) next.html = args.html.slice(0, MAX_BACKGROUND_HTML_LENGTH)
+  if (typeof args.color === 'string' && HEX_COLOR_RE.test(args.color)) next.color = args.color
+  ctx.setLoadingScreen(next)
+  return {
+    toolCall: call,
+    summary: next.html || next.color ? 'Set the loading screen.' : 'Reset the loading screen to the default.',
+    checks: next.html ? [{ label: 'loadingScreen.html', kind: 'html', value: next.html }] : [],
+  }
+}
+
+function applyPatchLoadingScreen(call: ToolCallRequest, ctx: ApplyContext): ApplyResult {
+  const edits = readEdits(call.arguments.edits)
+  if (typeof edits === 'string') return { toolCall: call, summary: '', error: edits }
+  const next = applyTextEdits(ctx.loadingScreen.html ?? '', edits, 'loadingScreen.html')
+  if (typeof next !== 'string') return { toolCall: call, summary: '', error: next.error }
+  if (next.length > MAX_BACKGROUND_HTML_LENGTH) {
+    return {
+      toolCall: call,
+      summary: '',
+      error: `loadingScreen.html would be ${next.length} characters; the limit is ${MAX_BACKGROUND_HTML_LENGTH}.`,
+    }
+  }
+  ctx.setLoadingScreen({ ...ctx.loadingScreen, html: next })
+  return {
+    toolCall: call,
+    summary: 'Edited the loading screen html.',
+    checks: next ? [{ label: 'loadingScreen.html', kind: 'html', value: next }] : [],
+  }
+}
+
+function applyPatchBackground(call: ToolCallRequest, ctx: ApplyContext): ApplyResult {
+  if (ctx.background.type !== 'html') {
+    return { toolCall: call, summary: '', error: 'The background is not an html background. Use set_background.' }
+  }
+  const edits = readEdits(call.arguments.edits)
+  if (typeof edits === 'string') return { toolCall: call, summary: '', error: edits }
+  const next = applyTextEdits(ctx.background.html ?? '', edits, 'background.html')
+  if (typeof next !== 'string') return { toolCall: call, summary: '', error: next.error }
+  if (next.length > MAX_BACKGROUND_HTML_LENGTH) {
+    return {
+      toolCall: call,
+      summary: '',
+      error: `background.html would be ${next.length} characters; the limit is ${MAX_BACKGROUND_HTML_LENGTH}.`,
+    }
+  }
+  ctx.setBackground({ ...ctx.background, html: next })
+  return {
+    toolCall: call,
+    summary: 'Edited the background html.',
+    checks: next ? [{ label: 'background.html', kind: 'html', value: next }] : [],
+  }
 }
 
 function applyRemoveBlock(call: ToolCallRequest, ctx: ApplyContext): ApplyResult {
@@ -357,6 +586,14 @@ export function describeToolCall(call: ToolCallRequest): string {
       return `Update block "${String(args.id)}".`
     case 'remove_block':
       return `Remove block "${String(args.id)}".`
+    case 'patch_block':
+      return `Edit ${String(args.field)} of block "${String(args.id)}".`
+    case 'patch_background':
+      return 'Edit the background html.'
+    case 'set_loading_screen':
+      return 'Set the loading screen.'
+    case 'patch_loading_screen':
+      return 'Edit the loading screen html.'
     default:
       return `Unknown action "${call.name}".`
   }
@@ -375,6 +612,14 @@ export function applyToolCall(call: ToolCallRequest, ctx: ApplyContext): ApplyRe
         return applyUpdateBlock(call, ctx)
       case 'remove_block':
         return applyRemoveBlock(call, ctx)
+      case 'patch_block':
+        return applyPatchBlock(call, ctx)
+      case 'patch_background':
+        return applyPatchBackground(call, ctx)
+      case 'set_loading_screen':
+        return applySetLoadingScreen(call, ctx)
+      case 'patch_loading_screen':
+        return applyPatchLoadingScreen(call, ctx)
       default:
         return { toolCall: call, summary: '', error: `Unknown tool "${call.name}".` }
     }

@@ -8,7 +8,8 @@ import { useAuth } from '../../context/AuthContext'
 import { applyGeometry } from '../geometry'
 import { useTaskBoard } from '../TaskBoardContext'
 import { useDragOffset } from '../useDragOffset'
-import { useRenderPreviewUrl } from '../useRenderPreviewUrl'
+import { useIframeLoadTracking } from '../iframeLoadTracker'
+import { useRenderPreview } from '../useRenderPreviewUrl'
 import { reorderZIndex } from '../zOrder'
 import { startOfWeekKey, todayKey } from './taskListHelpers'
 
@@ -41,9 +42,10 @@ export function CustomHtmlBlock() {
   const [draft, setDraft] = useState(html)
   const { offset, dragHandleProps, reset: resetOffset } = useDragOffset()
 
-  const previewUrl = useRenderPreviewUrl(html, 'html_block', {
+  const { url: previewUrl, settled: previewSettled } = useRenderPreview(html, 'html_block', {
     taskData: { dailyTasks, weeklyTasks, todayKey: todayKey(), startOfWeekKey: startOfWeekKey() },
   })
+  const handleFrameLoad = useIframeLoadTracking(Boolean(html), previewUrl, previewSettled)
 
   function openModal() {
     setDraft(html)
@@ -97,6 +99,7 @@ export function CustomHtmlBlock() {
             className={`custom-html-frame${editMode ? '' : ' custom-html-frame-bare'}`}
             sandbox={allowCustomScripts ? 'allow-scripts' : ''}
             src={previewUrl}
+            onLoad={handleFrameLoad}
             title="Custom HTML block preview"
           />
         )}

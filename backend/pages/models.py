@@ -27,6 +27,7 @@ class Page(models.Model):
     mobile_layout = models.JSONField(default=dict, blank=True)
     background = models.JSONField(default=dict, blank=True)
     header_style = models.JSONField(default=dict, blank=True)
+    loading_screen = models.JSONField(default=dict, blank=True)
     date_format = models.CharField(
         max_length=3, choices=DATE_FORMAT_CHOICES, default=DATE_FORMAT_US
     )

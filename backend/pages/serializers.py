@@ -5,7 +5,7 @@ from django.conf import settings
 from rest_framework import serializers
 
 from .models import Page, SavedDesign, TaskBoard, UploadedImage
-from .sanitize import sanitize_board_background, sanitize_header_style, sanitize_layout
+from .sanitize import sanitize_board_background, sanitize_header_style, sanitize_layout, sanitize_loading_screen
 
 SAVED_DESIGN_KIND = "task-tracker-board-design"
 SAVED_DESIGN_VERSION = 1
@@ -25,7 +25,15 @@ def _clean_layout(value, field_label):
 class PageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Page
-        fields = ("layout", "mobile_layout", "background", "header_style", "date_format", "updated_at")
+        fields = (
+            "layout",
+            "mobile_layout",
+            "background",
+            "header_style",
+            "loading_screen",
+            "date_format",
+            "updated_at",
+        )
         read_only_fields = ("updated_at",)
 
     def validate_layout(self, value):
@@ -40,12 +48,16 @@ class PageSerializer(serializers.ModelSerializer):
     def validate_header_style(self, value):
         return sanitize_header_style(value)
 
+    def validate_loading_screen(self, value):
+        return sanitize_loading_screen(value)
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data["layout"] = sanitize_layout(copy.deepcopy(data.get("layout")) or {})
         data["mobile_layout"] = sanitize_layout(copy.deepcopy(data.get("mobile_layout")) or {})
         data["background"] = sanitize_board_background(copy.deepcopy(data.get("background")) or {})
         data["header_style"] = sanitize_header_style(copy.deepcopy(data.get("header_style")) or {})
+        data["loading_screen"] = sanitize_loading_screen(copy.deepcopy(data.get("loading_screen")) or {})
         return data
 
 
@@ -113,6 +125,7 @@ def _clean_design_payload(value):
 
     background = value.get("background")
     header_style = value.get("headerStyle")
+    loading_screen = value.get("loadingScreen")
 
     cleaned = {
         "kind": SAVED_DESIGN_KIND,
@@ -121,6 +134,7 @@ def _clean_design_payload(value):
         "layout": sanitize_layout(layout),
         "background": sanitize_board_background(background if isinstance(background, dict) else {}),
         "headerStyle": sanitize_header_style(header_style if isinstance(header_style, dict) else {}),
+        "loadingScreen": sanitize_loading_screen(loading_screen if isinstance(loading_screen, dict) else {}),
     }
     layouts = value.get("layouts")
     if isinstance(layouts, dict):

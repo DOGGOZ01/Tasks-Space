@@ -6,6 +6,7 @@ import type { DateFormatPref } from './dateFormat'
 import type { DeviceMode } from './geometry'
 import { boardHeightFor, boardWidthFor } from './geometry'
 import type { HeaderStyle } from './headerStyle'
+import type { LoadingScreen } from './loadingScreen'
 
 interface BoardUiValue {
   editMode: boolean
@@ -23,12 +24,16 @@ interface BoardUiValue {
   setHeaderStyle: (style: HeaderStyle) => void
   dateFormat: DateFormatPref
   setDateFormat: (format: DateFormatPref) => void
+  loadingScreen: LoadingScreen
+  setLoadingScreen: (screen: LoadingScreen) => void
+  previewLoadingScreen: () => void
   revertToOriginalDesign: () => void
   applyDesignNow: (
     layout: SerializedNodes,
     background: BoardBackground,
     headerStyle: HeaderStyle,
     otherLayouts?: Partial<Record<DeviceMode, SerializedNodes>>,
+    loadingScreen?: LoadingScreen,
   ) => void
   flushFieldSaves: () => void
   hoverToRevealBlocks: boolean
@@ -62,12 +67,16 @@ interface BoardUiProviderProps {
   onHeaderStyleChange: (style: HeaderStyle) => void
   dateFormat: DateFormatPref
   onDateFormatChange: (format: DateFormatPref) => void
+  loadingScreen: LoadingScreen
+  onLoadingScreenChange: (screen: LoadingScreen) => void
+  onPreviewLoadingScreen: () => void
   onRevertToOriginalDesign: () => void
   onApplyDesignNow: (
     layout: SerializedNodes,
     background: BoardBackground,
     headerStyle: HeaderStyle,
     otherLayouts?: Partial<Record<DeviceMode, SerializedNodes>>,
+    loadingScreen?: LoadingScreen,
   ) => void
   onFlushFieldSaves: () => void
 }
@@ -85,6 +94,9 @@ export function BoardUiProvider({
   onHeaderStyleChange,
   dateFormat,
   onDateFormatChange,
+  loadingScreen,
+  onLoadingScreenChange,
+  onPreviewLoadingScreen,
   onRevertToOriginalDesign,
   onApplyDesignNow,
   onFlushFieldSaves,
@@ -117,6 +129,9 @@ export function BoardUiProvider({
       setHeaderStyle: onHeaderStyleChange,
       dateFormat,
       setDateFormat: onDateFormatChange,
+      loadingScreen,
+      setLoadingScreen: onLoadingScreenChange,
+      previewLoadingScreen: onPreviewLoadingScreen,
       revertToOriginalDesign: onRevertToOriginalDesign,
       applyDesignNow: onApplyDesignNow,
       flushFieldSaves: onFlushFieldSaves,
@@ -138,6 +153,9 @@ export function BoardUiProvider({
       onHeaderStyleChange,
       dateFormat,
       onDateFormatChange,
+      loadingScreen,
+      onLoadingScreenChange,
+      onPreviewLoadingScreen,
       onRevertToOriginalDesign,
       onApplyDesignNow,
       onFlushFieldSaves,

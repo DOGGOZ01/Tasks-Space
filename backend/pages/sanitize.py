@@ -495,6 +495,22 @@ def sanitize_board_background(value) -> dict:
     return cleaned
 
 
+def sanitize_loading_screen(value) -> dict:
+    if not isinstance(value, dict):
+        return {}
+
+    cleaned = {}
+    html = value.get("html")
+    if isinstance(html, str) and html:
+        sanitized_html = sanitize_custom_html(html)
+        if sanitized_html:
+            cleaned["html"] = sanitized_html
+    color = _clean_hex_color(value.get("color"))
+    if color:
+        cleaned["color"] = color
+    return cleaned
+
+
 HEADER_STYLE_TARGETS = {"edit", "logout", "username"}
 
 

@@ -3,6 +3,7 @@ import { DEFAULT_BOARD_BACKGROUND } from './boardBackground'
 import type { BoardBackground } from './boardBackground'
 import type { DeviceMode } from './geometry'
 import type { HeaderStyle } from './headerStyle'
+import type { LoadingScreen } from './loadingScreen'
 
 export const EXPORT_KIND = 'task-tracker-board-design'
 export const EXPORT_VERSION = 1
@@ -15,6 +16,7 @@ export interface BoardDesignExport {
   layouts?: Partial<Record<DeviceMode, SerializedNodes>>
   background: BoardBackground
   headerStyle: HeaderStyle
+  loadingScreen?: LoadingScreen
 }
 
 export class BoardDesignImportError extends Error {}
@@ -55,7 +57,7 @@ export function buildBoardDesignExport(
   layout: SerializedNodes,
   background: BoardBackground,
   headerStyle: HeaderStyle,
-  options: { stripImages?: boolean } = {},
+  options: { stripImages?: boolean; loadingScreen?: LoadingScreen } = {},
 ): BoardDesignExport {
   const stripImages = options.stripImages ?? true
   return {
@@ -65,7 +67,17 @@ export function buildBoardDesignExport(
     layout: stripImages ? stripImageUrls(layout) : (JSON.parse(JSON.stringify(layout ?? {})) as SerializedNodes),
     background: stripImages ? stripBackgroundImage(background) : { ...(background ?? {}) },
     headerStyle: headerStyle ?? {},
+    loadingScreen: { ...(options.loadingScreen ?? {}) },
   }
+}
+
+function parseLoadingScreen(value: unknown): LoadingScreen {
+  if (!value || typeof value !== 'object') return {}
+  const raw = value as Record<string, unknown>
+  const screen: LoadingScreen = {}
+  if (typeof raw.html === 'string' && raw.html) screen.html = raw.html
+  if (typeof raw.color === 'string' && raw.color) screen.color = raw.color
+  return screen
 }
 
 export function downloadBoardDesignExport(data: BoardDesignExport) {
@@ -119,5 +131,6 @@ export function parseBoardDesignImport(raw: string): BoardDesignExport {
         ? stripBackgroundImage(data.background)
         : DEFAULT_BOARD_BACKGROUND,
     headerStyle: data.headerStyle && typeof data.headerStyle === 'object' ? data.headerStyle : {},
+    loadingScreen: parseLoadingScreen(data.loadingScreen),
   }
 }

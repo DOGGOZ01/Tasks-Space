@@ -121,11 +121,12 @@ python manage.py test
 | Route | What it does |
 |---|---|
 | `api/auth/` | `register/`, `login/`, `refresh/`, `logout/`, `me/`, `registration-status/` |
-| `api/page/` | The board: desktop and phone layouts, background, top bar style, date format |
+| `api/page/` | The board: desktop and phone layouts, background, top bar style, loading screen, date format |
 | `api/tasks/` | Daily and weekly tasks |
 | `api/uploads/images/` | Image upload |
 | `api/designs/` | Saved designs: list, create, delete, `<id>/use/` |
 | `api/ai/chat/` | AI assistant with the server key |
+| `api/ai/sanitize-check/` | Tells the AI assistant which CSS properties, selectors and tags the sanitizer will drop |
 | `api/render-preview/` | Sandboxed documents for custom HTML, backgrounds and overlays |
 
 Routes are in `accounts/urls.py` and `pages/urls.py`. All sanitizers are in

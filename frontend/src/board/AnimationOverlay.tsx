@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { RefObject } from 'react'
-import { useRenderPreviewUrl } from './useRenderPreviewUrl'
+import { useIframeLoadTracking } from './iframeLoadTracker'
+import { useRenderPreview } from './useRenderPreviewUrl'
 
 export const OVERLAY_HTML_PLACEHOLDER = `<style>.fx{width:100%;height:100%;border-radius:inherit;box-shadow:0 0 0 0 rgba(255,90,31,.6);transition:box-shadow .4s ease;}</style>
 <div class="fx" id="fx"></div>
@@ -21,7 +22,8 @@ interface AnimationOverlayProps {
 
 export function AnimationOverlay({ html, targetRef, allowScripts }: AnimationOverlayProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const previewUrl = useRenderPreviewUrl(html ?? '', 'overlay', { enabled: !!html })
+  const { url: previewUrl, settled } = useRenderPreview(html ?? '', 'overlay', { enabled: !!html })
+  const handleFrameLoad = useIframeLoadTracking(Boolean(html), previewUrl, settled)
 
   useEffect(() => {
     const target = targetRef.current
@@ -59,6 +61,7 @@ export function AnimationOverlay({ html, targetRef, allowScripts }: AnimationOve
       className="block-animation-overlay"
       sandbox={allowScripts ? 'allow-scripts' : ''}
       src={previewUrl}
+      onLoad={handleFrameLoad}
       title="Animation overlay"
     />
   )

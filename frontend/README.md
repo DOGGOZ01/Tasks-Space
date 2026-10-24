@@ -62,6 +62,14 @@ Custom HTML blocks, animated backgrounds and overlays are not rendered with
 the returned URL in a sandboxed iframe, so the document gets its own CSP from the
 backend. Scripts only run with `ALLOW_CUSTOM_SCRIPTS=True` on the server.
 
+## Loading screen
+
+The loading screen covers the page until the layout, tasks, images and every
+custom HTML iframe (blocks, overlays, background) have loaded, for 8 seconds at
+most. Its HTML is part of the design and is rendered like the animated background.
+The last loading screen and its render-preview URL are cached in `localStorage`,
+so from the second visit it shows before the board data arrives.
+
 `useGoogleFonts` looks for `font-family` names in the board styles and loads them
 from Google Fonts. Standard families like `Arial` or `monospace` are skipped. A
 font used only from a canvas script (`ctx.font`) is not detected unless it also
@@ -69,10 +77,15 @@ appears in a CSS `font-family`.
 
 ## AI assistant
 
-The assistant edits the board through five tools: `set_background`,
-`set_header_style`, `add_block`, `update_block` and `remove_block`. Every tool call
-is checked again in `applyToolCalls.tsx` before it touches the board, and the
-server sanitizes the result like any other edit.
+The assistant edits the board through nine tools: `set_background`,
+`set_header_style`, `set_loading_screen`, `add_block`, `update_block`, `remove_block`,
+and `patch_block` / `patch_background` / `patch_loading_screen` for find-and-replace
+edits inside html and CSS fields. Every tool call is checked again in
+`applyToolCalls.tsx` before it touches the board, and the server sanitizes the result
+like any other edit. After each change the panel asks `/api/ai/sanitize-check/` what
+the sanitizer will drop and passes that back to the model. "Undo AI changes" restores
+the layout, background, top bar and loading screen from before the last applied AI
+request.
 
 With a personal key, the key is encrypted with a passphrase (AES-GCM, PBKDF2) and
 stored in IndexedDB. Requests go from the browser straight to the provider. With

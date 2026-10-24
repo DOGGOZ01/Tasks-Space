@@ -45,7 +45,21 @@ const THOROUGHNESS_NOTE =
   '- Before add_block, check the board state for an existing block the request is about (e.g. "make ' +
   'my images sepia", "recolor the note"). If one exists, update it with update_block instead of adding ' +
   'a new block. Use add_block only when the user asks for something new or no matching block exists. ' +
-  'Never reuse an id from earlier in the conversation without checking it is still in the board state.'
+  'Never reuse an id from earlier in the conversation without checking it is still in the board state.\n' +
+  '- Change only the fields the request needs and leave everything else exactly as it is. An entrance ' +
+  'animation or hover effect touches animationCss only. Moving or resizing touches x/y/width/height only. ' +
+  'Recoloring touches the color fields and customCss of the parts involved. Do not send `props.html` ' +
+  'unless the user asked to change what that block shows or does. Never rewrite a working widget, game ' +
+  'or script from scratch.\n' +
+  '- To change part of a field that already has content (html, text, customCss, animationCss, ' +
+  'overlayHtml, the html background), use patch_block / patch_background with small find/replace edits ' +
+  'instead of resending the whole value with update_block or set_background. A full rewrite drops ' +
+  'everything you forget to copy. Use update_block for a field only when it is empty or the user wants ' +
+  'it replaced entirely. If a patch fails because `find` was not found, copy the text again from the ' +
+  'board state and retry with a shorter unique fragment.\n' +
+  '- Tool results tell you when the server will drop parts of what you wrote ("Applied, but the server ' +
+  'will drop ..."): unknown CSS properties, selectors or tags. Fix those parts with allowed alternatives ' +
+  'in your next step instead of assuming they work.'
 
 const FULL_REDESIGN_NOTE =
   'A full redesign request ("поменяй весь дизайн", "перекрась всё", restyle everything, etc.) covers ALL ' +
@@ -57,11 +71,13 @@ const FULL_REDESIGN_NOTE =
   "5. Every task list block's input field and \"+\" button (partStyles.input, partStyles.addButton).\n" +
   '6. CustomHtmlBlock instances. Their `html` prop does not follow a new palette automatically. Rewrite ' +
   'it with update_block and a new `props.html` that matches the new look. Do not skip a block because ' +
-  'it contains a <script> or its html looks truncated in the board state ("... (truncated, N chars ' +
-  'total)"). You can write a full replacement without seeing the old content.\n' +
+  'it contains a <script>. Keep its behavior: change colors, fonts and texts in the existing html and ' +
+  'leave the script logic working.\n' +
   '7. Block positions and sizes (x/y/width/height on update_block). A redesign can also improve the ' +
   'layout. Move or resize blocks when the new direction needs it.\n' +
-  '8. Optional: elementLayout (sub-element arrangement), animationCss/overlayHtml (motion) and zIndex ' +
+  '8. The loading screen (set_loading_screen), so the first thing people see matches the new look. ' +
+  'If it is already custom, restyle it with patch_loading_screen.\n' +
+  '9. Optional: elementLayout (sub-element arrangement), animationCss/overlayHtml (motion) and zIndex ' +
   '(layering). Touch these only if the user asked for motion, hidden or moved sub-elements, or layering. ' +
   'Steps 1-7 are required for a redesign, and using most of your tool-call turns for it is expected.'
 
@@ -127,6 +143,12 @@ const RENDERING_NOTE =
   '- window.taskBoardData exists only inside CustomHtmlBlock scripts, not in the background or overlays.\n' +
   '- The html background is one iframe behind everything, pinned to the visible screen on desktop and ' +
   'on phones. Use position: fixed layers sized with vw/vh/vmin inside it.\n' +
+  '- The loading screen covers the whole page while the board loads: until every block, image and HTML ' +
+  'frame is ready, 8 seconds at most, then it fades out. It is rendered like the html background and ' +
+  'works on desktop and phones alike, so center its content and size it with vw/vh/vmin. It is often ' +
+  'shown for well under a second, so loop its animation and make it look complete from the first ' +
+  'frame (no long intro). Set `color` to the same color as the html body so the screen does not ' +
+  'flash before the html arrives. Keep it light: no images from other sites, no heavy canvas work.\n' +
   '- An ImageBlock is an image fitted into the block. You cannot upload files. Leave imageUrl empty ' +
   'unless the user gave an https:// link, and tell the user to add their picture through the block ' +
   'menu (Upload image). Size the block to the expected aspect ratio (16:9 -> 400x225, 3:2 -> 360x240). ' +
@@ -155,6 +177,22 @@ const ANIMATION_NOTE =
   'block, animate box-shadow, filter or opacity instead.\n' +
   '- Hover only reaches the block under the pointer. Two blocks stacked on top of each other cannot ' +
   'tilt together, so give stacked pairs a static transform or none.\n' +
+  '- Entrance cascade (blocks appear one after another on page load): sort the blocks of the current ' +
+  'layout by y (then by x for blocks in the same row), so the top of the page appears first. Give every ' +
+  'block the same keyframes and duration and a delay that grows by 0.1-0.15s per position, starting ' +
+  'around 0.2s: "& { animation: enter .8s cubic-bezier(.2,.8,.2,1) 0.35s both; }\\n@keyframes enter { 0% ' +
+  '{ opacity: 0; transform: translateY(14px); } 100% { opacity: 1; transform: translateY(0); } }". Add it ' +
+  'to the existing animationCss of each block with patch_block and keep the rules that are already there. ' +
+  'A later `animation` declaration replaces an earlier one, so if the block\'s `&` rule already has an ' +
+  '`animation` (an idle glow, a pulse), add the entrance to that same declaration, comma-separated ' +
+  '("animation: neon 4s ease-in-out infinite, enter .8s ease-out .35s both"), and append only the new ' +
+  '@keyframes. On a block that ' +
+  'tilts or moves on hover, animate only opacity in the entrance keyframes, because a transform keyframe ' +
+  'with fill "both" overrides the hover transform. Blocks covered by another block (such as an image ' +
+  'under a game) keep their own animation and are not part of the cascade.\n' +
+  '- Never hide a block for good. Every keyframe animation that sets opacity must end at the opacity the ' +
+  'block should keep, normally 1. An animation whose last keyframe is opacity 0 makes the block ' +
+  'invisible forever.\n' +
   '- Add motion only if the user asked for it or it clearly fits. Keep it restrained: 150-400ms for ' +
   'hover/press feedback, 1-6s for ambient loops, ease-out or ease-in-out, small transforms. No spinning, ' +
   'bouncing or rainbow effects unless the user asks for something loud.'

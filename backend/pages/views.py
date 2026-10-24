@@ -26,6 +26,7 @@ from .image_utils import process_uploaded_image
 from .models import Page, RenderPreview, SavedDesign, TaskBoard, UploadedImage
 from .render_preview import build_document, build_preview_csp
 from .sanitize import sanitize_custom_html
+from .sanitize_report import sanitize_report
 from .serializers import (
     PageSerializer,
     SavedDesignSerializer,
@@ -181,6 +182,31 @@ class ImageUploadView(APIView):
             UploadedImageSerializer(image, context={"request": request}).data,
             status=status.HTTP_201_CREATED,
         )
+
+
+SANITIZE_CHECK_KINDS = {"html", "customCss", "animationCss"}
+SANITIZE_CHECK_MAX_ITEMS = 40
+SANITIZE_CHECK_MAX_VALUE_LENGTH = 50_000
+
+
+class SanitizeCheckView(APIView):
+    def post(self, request):
+        items = request.data.get("items") if isinstance(request.data, dict) else None
+        if not isinstance(items, list) or len(items) > SANITIZE_CHECK_MAX_ITEMS:
+            return Response({"detail": "Send up to 40 items."}, status=status.HTTP_400_BAD_REQUEST)
+
+        results = []
+        for item in items:
+            if not isinstance(item, dict):
+                return Response({"detail": "Each item must be an object."}, status=status.HTTP_400_BAD_REQUEST)
+            kind = item.get("kind")
+            value = item.get("value")
+            if kind not in SANITIZE_CHECK_KINDS or not isinstance(value, str):
+                return Response({"detail": "Invalid item."}, status=status.HTTP_400_BAD_REQUEST)
+            if len(value) > SANITIZE_CHECK_MAX_VALUE_LENGTH:
+                return Response({"detail": "Value is too large."}, status=status.HTTP_400_BAD_REQUEST)
+            results.append(sanitize_report(kind, value))
+        return Response({"results": results})
 
 
 class AiAssistantChatView(APIView):

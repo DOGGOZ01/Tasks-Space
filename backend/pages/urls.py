@@ -7,6 +7,7 @@ from .views import (
     RenderPreviewView,
     SavedDesignDetailView,
     SavedDesignListView,
+    SanitizeCheckView,
     SavedDesignUseView,
     TaskBoardView,
 )
@@ -19,5 +20,6 @@ urlpatterns = [
     path("designs/<int:pk>/", SavedDesignDetailView.as_view(), name="saved-design-detail"),
     path("designs/<int:pk>/use/", SavedDesignUseView.as_view(), name="saved-design-use"),
     path("ai/chat/", AiAssistantChatView.as_view(), name="ai-chat"),
+    path("ai/sanitize-check/", SanitizeCheckView.as_view(), name="ai-sanitize-check"),
     path("render-preview/", RenderPreviewView.as_view(), name="render-preview"),
 ]
